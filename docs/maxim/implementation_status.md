@@ -48,18 +48,28 @@ The setup prompt referenced v2.0/v1.0 document filenames, but the available sour
 - Implemented networking contact ranking and five-part ready-to-send draft validation.
 - Implemented recruiter thread state helpers.
 - Implemented dry-run Discord notification planner with duplicate suppression.
+- Implemented historical tracker import for CSV and XLSX using local-only raw copies, separate normalized JSON output, SQLite batch/row persistence, and audit events.
 - Implemented analytics snapshot helper with NoVA/DC interview-rate KPI and small-sample warnings.
 - Implemented application packet and duplicate-risk helpers.
 - Implemented platform safety scanner for prohibited LinkedIn sending, auto-submit, CAPTCHA bypass, and anti-bot evasion patterns.
 - Added isolated native Go dashboard Maxim mode under `dashboard/internal/maxim`.
 - Added a small Career-Ops dashboard hook: press `m` from the pipeline to open Maxim mode; press `m`, `q`, or `esc` to return.
+- Installed local Node dependencies with `npm install`.
+- Installed Playwright Chromium with `npx playwright install chromium`.
+- Created local user-layer Career-Ops onboarding files:
+  - `cv.md`
+  - `config/profile.yml`
+  - `modes/_profile.md`
+  - `portals.yml`
+  - `data/applications.md`
+- The local `cv.md` is intentionally evidence-gated and contains only approved high-level positioning plus restrictions. Detailed resume claims remain pending approved source material.
 
 ## Not Completed
 
 - Real Discord sends require `MAXIM_DISCORD_WEBHOOK_URL`.
 - LinkedIn sending and full auto-submit are intentionally not implemented.
-- Node-side historical import supports CSV. XLSX import can be added later with a deliberate dependency or a Python helper.
 - Career-Ops reports/PDFs are not present beyond `.gitkeep` in the fresh fork, so `maxim:sync` currently has no real artifacts to ingest.
+- Native Go dashboard tests still require Go/gofmt to be installed locally.
 
 ## How To Run
 
@@ -69,6 +79,7 @@ npm run doctor
 npm run verify
 npm run maxim:doctor
 npm run maxim:sync
+npm run maxim:import-history -- path\to\historical-tracker.xlsx
 npm run maxim:tier -- --score 4.6 --location 'Arlington, VA' --salary '$95,000 - $125,000'
 npm run maxim:analytics
 npm run maxim:notify
@@ -100,7 +111,7 @@ go test ./...
 ## Verification Run
 
 - `node update-system.mjs check` -> `up-to-date`, local and remote Career-Ops `1.8.1`.
-- `npm run maxim:test` -> 12 passed.
+- `npm run maxim:test` -> 15 passed.
 - `npm run maxim:doctor` -> passed with no warnings.
 - `npm run maxim:safety` -> passed with no prohibited automation findings.
 - `npm run maxim:sync` -> passed; 0 evaluations and 0 applications because this fresh fork has no real reports/tracker rows yet.
@@ -108,29 +119,23 @@ go test ./...
 - `npm run maxim:analytics` -> passed on empty data with a small-sample warning.
 - `npm run maxim:notify` -> dry-run passed and planned the 3-week resume/PDF variant reminder placeholder.
 - `npm run verify` -> passed; reported no `data/applications.md`, which is normal for a fresh setup.
-- `npm run doctor` -> failed with expected onboarding issues:
-  - dependencies not installed,
-  - Playwright Chromium not installed,
-  - `cv.md` missing,
-  - `config/profile.yml` missing,
-  - `portals.yml` missing.
+- `npm install` -> passed.
+- `npx playwright install chromium` -> passed.
+- `npm run doctor` -> passed after local user-layer onboarding files were created.
+- `npm run verify` -> passed after `data/applications.md` was created; 0 tracker rows, 0 errors, 0 warnings.
+- `npm run maxim:import-history -- maxim/tests/fixtures/history-sample.csv` -> passed; copied raw CSV, wrote separate normalized JSON, and stored 2 raw/normalized rows with 1 interview signal.
 - `go version` and `gofmt` were unavailable on this machine, so native Go dashboard formatting/tests could not be run locally.
 
 ## Remaining Manual Setup Steps
 
 - Confirm the GitHub repo is private in GitHub settings.
 - Push branch `maxim/v2-career-ops-fork` to `origin`.
-- Run `npm install`.
-- Run `npx playwright install chromium`.
 - Provide `MAXIM_DISCORD_WEBHOOK_URL` for live Discord notifications.
-- Add Xavier user-layer files:
-  - `cv.md`
-  - `config/profile.yml`
-  - `modes/_profile.md`
-  - `portals.yml`
 - Provide approved evidence/resume claims before trusting generated materials.
 - Provide contact list and target-company list for networking output.
-- Generate or import real Career-Ops reports/PDFs/tracker rows for `maxim:sync`.
+- Generate real Career-Ops reports/PDFs/tracker rows for `maxim:sync`.
+- Import Xavier's real historical tracker with `npm run maxim:import-history -- path\to\tracker.xlsx`.
+- Install Go locally to run dashboard `gofmt` and `go test ./...`.
 
 ## Assumptions
 
@@ -138,3 +143,4 @@ go test ./...
 - v2.1/v1.1 are the latest available authority documents.
 - SQLite uses Python standard-library `sqlite3` from Node scripts to avoid adding a new production npm dependency.
 - No secrets are committed.
+- User-layer files are ignored by git according to Career-Ops' data contract and exist only in the local working copy.

@@ -10,11 +10,11 @@ This file tracks what Xavier needs to provide before Maxim Apply can become full
 
 ## User Data
 
-- Approved source resume/CV content for Career-Ops user-layer configuration.
+- Approved source resume/CV content for Career-Ops user-layer configuration. A local evidence-gated `cv.md` scaffold exists, but detailed claims are intentionally pending.
 - Approved evidence bank for resume claims, metrics, tools, Wabtec restrictions, and portfolio links.
-- Target company list.
+- Target company list. A starter local `portals.yml` exists, but it should be reviewed and expanded.
 - Contact list with optional Subjective Connection Strength Rating 1-3.
-- Historical tracker file for import, if not already in `data/maxim/imports/raw/`.
+- Historical tracker file for import. CSV and XLSX are supported; raw copies are preserved under ignored local Maxim import storage.
 - Prior application-answer examples for approved answer memory.
 - Prior outreach examples approved as style baselines.
 

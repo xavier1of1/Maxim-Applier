@@ -9,6 +9,7 @@ data/parser-output/**/*.json
 data/maxim/*.db
 data/maxim/events/*.jsonl
 data/maxim/imports/raw/*
+data/maxim/imports/normalized/*
 !data/maxim/README.md
 !data/maxim/**/.gitkeep
 reports/*.md

@@ -240,6 +240,84 @@ export class SQLiteMaximStore {
     return { ...application, id };
   }
 
+  upsertHistoricalImport(importResult) {
+    this.init();
+    const timestamp = nowIso();
+    this.execute(
+      `INSERT INTO historical_import_batches
+      (id, source_path, raw_copy_path, started_at, raw_row_count, normalized_row_count,
+       issue_count, summary_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         source_path=excluded.source_path,
+         raw_copy_path=excluded.raw_copy_path,
+         raw_row_count=excluded.raw_row_count,
+         normalized_row_count=excluded.normalized_row_count,
+         issue_count=excluded.issue_count,
+         summary_json=excluded.summary_json`,
+      [
+        importResult.batchId,
+        importResult.sourcePath,
+        importResult.rawCopyPath ?? null,
+        timestamp,
+        importResult.report?.rawRowCount ?? importResult.rows.length,
+        importResult.report?.normalizedRowCount ?? importResult.rows.length,
+        importResult.report?.issueCount ?? 0,
+        json(importResult.report ?? {}),
+      ],
+    );
+
+    this.execute("DELETE FROM historical_application_raw_rows WHERE batch_id = ?", [importResult.batchId]);
+    this.execute("DELETE FROM historical_application_normalized_rows WHERE batch_id = ?", [importResult.batchId]);
+
+    for (const row of importResult.rows) {
+      const rawId = stableId("hist_raw", `${importResult.batchId}|${row.rowNumber}`);
+      const normalizedId = stableId("hist_norm", `${importResult.batchId}|${row.rowNumber}`);
+      this.execute(
+        `INSERT INTO historical_application_raw_rows
+        (id, batch_id, row_number, raw_payload_json)
+        VALUES (?, ?, ?, ?)`,
+        [rawId, importResult.batchId, row.rowNumber, json(row.raw)],
+      );
+      this.execute(
+        `INSERT INTO historical_application_normalized_rows
+        (id, batch_id, row_number, company, role, source, link, salary, date_submitted,
+         interview_round, application_status_raw, interview_signal, normalized_outcome, issues_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          normalizedId,
+          importResult.batchId,
+          row.rowNumber,
+          row.normalized.company ?? null,
+          row.normalized.role ?? null,
+          row.normalized.source ?? null,
+          row.normalized.link ?? null,
+          row.normalized.salary ?? null,
+          row.normalized.dateSubmitted ?? null,
+          row.normalized.interviewRound ?? null,
+          row.normalized.applicationStatusRaw ?? null,
+          row.normalized.interviewSignal ? 1 : 0,
+          row.normalized.normalizedOutcome,
+          json(row.normalized.issues ?? []),
+        ],
+      );
+    }
+
+    this.appendAuditEvent({
+      event_type: "historical_import_upserted",
+      entity_type: "historical_import_batch",
+      entity_id: importResult.batchId,
+      reason: "Historical tracker import recorded in Maxim local store",
+      payload: importResult.report ?? {},
+    });
+
+    return {
+      batchId: importResult.batchId,
+      rawRows: importResult.rows.length,
+      normalizedRows: importResult.rows.length,
+    };
+  }
+
   listHighConviction() {
     return this.query(
       `SELECT j.*, group_concat(f.flag_type || ':' || f.severity, ', ') AS flags
