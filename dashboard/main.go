@@ -10,6 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/santifer/career-ops/dashboard/internal/data"
+	"github.com/santifer/career-ops/dashboard/internal/maxim"
 	"github.com/santifer/career-ops/dashboard/internal/model"
 	"github.com/santifer/career-ops/dashboard/internal/theme"
 	"github.com/santifer/career-ops/dashboard/internal/ui/screens"
@@ -21,12 +22,14 @@ const (
 	viewPipeline viewState = iota
 	viewReport
 	viewProgress
+	viewMaxim
 )
 
 type appModel struct {
 	pipeline        screens.PipelineModel
 	viewer          screens.ViewerModel
 	progress        screens.ProgressModel
+	maxim           maxim.Model
 	state           viewState
 	careerOpsPath   string
 	theme           theme.Theme
@@ -53,6 +56,9 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if m.state == viewProgress {
 			m.progress.Resize(msg.Width, msg.Height)
+		}
+		if m.state == viewMaxim {
+			m.maxim.Resize(msg.Width, msg.Height)
 		}
 		pm, cmd := m.pipeline.Update(msg)
 		m.pipeline = pm
@@ -101,7 +107,24 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.state = viewProgress
 		return m, nil
 
+	case screens.PipelineOpenMaximMsg:
+		apps := data.ParseApplications(m.careerOpsPath)
+		if apps == nil {
+			apps = []model.CareerApplication{}
+		}
+		m.maxim = maxim.NewModel(
+			m.theme,
+			apps,
+			m.pipeline.Width(), m.pipeline.Height(),
+		)
+		m.state = viewMaxim
+		return m, nil
+
 	case screens.ProgressClosedMsg:
+		m.state = viewPipeline
+		return m, nil
+
+	case maxim.ClosedMsg:
 		m.state = viewPipeline
 		return m, nil
 
@@ -134,6 +157,11 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.progress = pg
 			return m, cmd
 		}
+		if m.state == viewMaxim {
+			mm, cmd := m.maxim.Update(msg)
+			m.maxim = mm
+			return m, cmd
+		}
 		pm, cmd := m.pipeline.Update(msg)
 		m.pipeline = pm
 		return m, cmd
@@ -146,6 +174,8 @@ func (m appModel) View() string {
 		return m.viewer.View()
 	case viewProgress:
 		return m.progress.View()
+	case viewMaxim:
+		return m.maxim.View()
 	default:
 		return m.pipeline.View()
 	}

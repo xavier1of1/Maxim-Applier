@@ -6,6 +6,11 @@ data/scan-history.tsv
 data/parser-output/**/*.json
 !data/parser-output/.gitkeep
 !data/parser-output/**/.gitkeep
+data/maxim/*.db
+data/maxim/events/*.jsonl
+data/maxim/imports/raw/*
+!data/maxim/README.md
+!data/maxim/**/.gitkeep
 reports/*.md
 !reports/.gitkeep
 output/*

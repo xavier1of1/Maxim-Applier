@@ -22,6 +22,19 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
 **THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
 
+## Maxim Apply Fork Addendum
+
+This repository is Xavier Kubancik's private Maxim Apply fork of Career-Ops.
+
+- Preserve Career-Ops as the engine for evaluation, 1.0-5.0 scoring, PDF generation, scanning, apply assistant, tracker artifacts, and the native dashboard.
+- Keep Maxim-specific logic isolated in `maxim/`, `data/maxim/`, `docs/maxim/`, and `dashboard/internal/maxim/`.
+- The Career-Ops score drives Maxim tiering. Do not create a competing fit score.
+- Maxim may add priority flags, overlays, next-action orchestration, networking shortlist workflows, recruiter tracking, Discord accountability, and historical analytics.
+- Do not implement LinkedIn message sending or full application auto-submit in this version.
+- Do not add anti-bot evasion, CAPTCHA bypassing, hidden platform automation, or fabricated candidate claims.
+- Do not claim active clearance. Xavier is a U.S. citizen and willing/eligible to obtain clearance, but does not have active clearance.
+- Preserve raw imported data exactly and keep Maxim local-first.
+
 ## Update Check
 
 On the first message of each session, run the update checker silently:

@@ -1,0 +1,49 @@
+location:
+  allowed_primary:
+    - Northern Virginia
+    - Washington, DC
+    - Arlington
+    - Alexandria
+    - Fairfax
+    - Reston
+    - Herndon
+    - Chantilly
+    - Tysons
+    - McLean
+    - Ashburn
+    - Manassas
+    - Gainesville
+  excluded_by_default:
+    - Maryland
+  remote_rule: allow_only_if_strong_fit
+
+salary:
+  global_minimum: 85000
+  t3_flat_minimum: 90000
+  range_minimum_floor: 80000
+  range_maximum_required: 95000
+  expected_salary_default: 100000
+  expected_salary_high_fit: 110000
+  text_answer: "Negotiable based on role scope and total compensation."
+
+clearance:
+  us_citizen: true
+  active_clearance: false
+  ever_held_clearance: false
+  willing_to_obtain: true
+
+networking:
+  linkedin_auto_send: false
+  prioritize_vt_alumni: true
+  message_structure:
+    - person_research
+    - role
+    - xavier_information
+    - fit_rationale
+    - call_to_action
+
+notifications:
+  channel: discord
+  urgent_freshness_hours: 48
+  batch_routine_items: true
+  resume_variant_review_cadence_days: 21
