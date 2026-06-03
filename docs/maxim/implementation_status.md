@@ -24,6 +24,7 @@ The setup prompt referenced v2.0/v1.0 document filenames, but the available sour
 - Created branch `maxim/v2-career-ops-fork`.
 - Added `MAXIM_APPLY.md`.
 - Added Maxim fork ADRs and testing docs under `docs/maxim/`.
+- Added `docs/maxim/alignment_audit.md`.
 - Added operational input tracker under `docs/V2 Redesign/maxim_apply_operational_inputs_needed.md`.
 - Added Maxim-owned local data skeleton under `data/maxim/`.
 - Added root npm scripts:
@@ -38,6 +39,7 @@ The setup prompt referenced v2.0/v1.0 document filenames, but the available sour
   - `maxim:notify`
   - `maxim:analytics`
   - `maxim:safety`
+  - `maxim:alignment`
   - `maxim:test`
 - Implemented local SQLite extension store at `data/maxim/maxim.db`, ignored by git.
 - Implemented append-only event logging under `data/maxim/events/`, ignored by git except `.gitkeep`.
@@ -56,6 +58,7 @@ The setup prompt referenced v2.0/v1.0 document filenames, but the available sour
 - Implemented analytics snapshot helper with NoVA/DC interview-rate KPI and small-sample warnings.
 - Implemented application packet, duplicate-risk helpers, and manual application status tracking for packet-created, assisted-started, and submitted-manually states.
 - Implemented platform safety scanner for prohibited LinkedIn sending, auto-submit, CAPTCHA bypass, and anti-bot evasion patterns.
+- Implemented alignment guard for authority docs, package scripts, SQLite schema, local-only user data, patch boundaries, and platform safety.
 - Added isolated native Go dashboard Maxim mode under `dashboard/internal/maxim`.
 - Added a small Career-Ops dashboard hook: press `m` from the pipeline to open Maxim mode; press `m`, `q`, or `esc` to return.
 - Installed local Node dependencies with `npm install`.
@@ -74,6 +77,7 @@ The setup prompt referenced v2.0/v1.0 document filenames, but the available sour
 - LinkedIn sending and full auto-submit are intentionally not implemented.
 - Career-Ops reports/PDFs are not present beyond `.gitkeep` in the fresh fork, so `maxim:sync` currently has no real artifacts to ingest.
 - Native Go dashboard tests still require Go/gofmt to be installed locally.
+- Full roadmap `DashboardService` package is not implemented yet; current dashboard integration is an MVP hook that avoids direct SQLite access.
 
 ## How To Run
 
@@ -92,6 +96,7 @@ npm run maxim:tier -- --score 4.6 --location 'Arlington, VA' --salary '$95,000 -
 npm run maxim:analytics
 npm run maxim:notify
 npm run maxim:safety
+npm run maxim:alignment
 ```
 
 Native dashboard:
@@ -110,6 +115,7 @@ Press `m` inside the pipeline dashboard to enter Maxim Apply mode.
 cd "d:\VSC Programs\maxim-apply"
 npm run maxim:test
 npm run maxim:safety
+npm run maxim:alignment
 npm run doctor
 npm run verify
 cd dashboard
@@ -119,9 +125,10 @@ go test ./...
 ## Verification Run
 
 - `node update-system.mjs check` -> `up-to-date`, local and remote Career-Ops `1.8.1`.
-- `npm run maxim:test` -> 20 passed.
+- `npm run maxim:test` -> 21 passed.
 - `npm run maxim:doctor` -> passed with no warnings.
 - `npm run maxim:safety` -> passed with no prohibited automation findings.
+- `npm run maxim:alignment` -> passed against `upstream/main`; warning only for missing full DashboardService package.
 - `npm run maxim:sync` -> passed; 0 evaluations and 0 applications because this fresh fork has no real reports/tracker rows yet.
 - `npm run maxim:tier -- --score 4.6 --location 'Arlington, VA' --salary '$95,000 - $125,000' --posted-at '2026-06-01T12:00:00Z'` -> produced `T3` and urgent high-conviction next action.
 - `npm run maxim:analytics` -> passed on empty data with a small-sample warning.
@@ -135,6 +142,7 @@ go test ./...
 - Networking store integration test -> passed; persisted one contact, one networking target, one ready-to-send manual draft, and an audit event.
 - Recruiter/notification store integration tests -> passed; Needs Response clears on respond, and notification planning reads stored jobs, ready drafts, and recruiter reminders.
 - Application tracker integration tests -> passed; records preserve Career-Ops score/tier, duplicate risk is visible, and submission is a manual status only.
+- Alignment integration test -> passed; Maxim fork changes stay inside documented project boundaries.
 - `go version` and `gofmt` were unavailable on this machine, so native Go dashboard formatting/tests could not be run locally.
 
 ## Remaining Manual Setup Steps
