@@ -60,6 +60,7 @@ The setup prompt referenced v2.0/v1.0 document filenames, but the available sour
 - Implemented platform safety scanner for prohibited LinkedIn sending, auto-submit, CAPTCHA bypass, and anti-bot evasion patterns.
 - Implemented alignment guard for authority docs, package scripts, SQLite schema, local-only user data, patch boundaries, and platform safety.
 - Added isolated native Go dashboard Maxim mode under `dashboard/internal/maxim`.
+- Added `dashboard/internal/maxim/service` with the `DashboardService` DTO seam required by the roadmap.
 - Added a small Career-Ops dashboard hook: press `m` from the pipeline to open Maxim mode; press `m`, `q`, or `esc` to return.
 - Installed local Node dependencies with `npm install`.
 - Installed Playwright Chromium with `npx playwright install chromium`.
@@ -77,7 +78,7 @@ The setup prompt referenced v2.0/v1.0 document filenames, but the available sour
 - LinkedIn sending and full auto-submit are intentionally not implemented.
 - Career-Ops reports/PDFs are not present beyond `.gitkeep` in the fresh fork, so `maxim:sync` currently has no real artifacts to ingest.
 - Native Go dashboard tests still require Go/gofmt to be installed locally.
-- Full roadmap `DashboardService` package is not implemented yet; current dashboard integration is an MVP hook that avoids direct SQLite access.
+- Store-backed recruiter/message/application dashboard DTOs remain a future enhancement; current dashboard service derives MVP views from Career-Ops tracker rows and CLI-backed Maxim workflows.
 
 ## How To Run
 
@@ -128,7 +129,7 @@ go test ./...
 - `npm run maxim:test` -> 21 passed.
 - `npm run maxim:doctor` -> passed with no warnings.
 - `npm run maxim:safety` -> passed with no prohibited automation findings.
-- `npm run maxim:alignment` -> passed against `upstream/main`; warning only for missing full DashboardService package.
+- `npm run maxim:alignment` -> passed against `upstream/main`.
 - `npm run maxim:sync` -> passed; 0 evaluations and 0 applications because this fresh fork has no real reports/tracker rows yet.
 - `npm run maxim:tier -- --score 4.6 --location 'Arlington, VA' --salary '$95,000 - $125,000' --posted-at '2026-06-01T12:00:00Z'` -> produced `T3` and urgent high-conviction next action.
 - `npm run maxim:analytics` -> passed on empty data with a small-sample warning.

@@ -23,6 +23,7 @@ const requiredPaths = [
   "maxim/lib/sqlite-store.mjs",
   "maxim/lib/tracker-sync.mjs",
   "dashboard/internal/maxim/model.go",
+  "dashboard/internal/maxim/service/service.go",
 ];
 
 const requiredScripts = [
@@ -152,12 +153,6 @@ export function runAlignmentCheck() {
   const safety = runSafetyCheck();
   if (!safety.ok) {
     issues.push(`Platform safety check failed: ${JSON.stringify(safety.findings)}`);
-  }
-
-  if (!fs.existsSync(fromRoot("dashboard/internal/maxim/service"))) {
-    warnings.push(
-      "DashboardService package is not implemented yet; current dashboard mode is an MVP that avoids direct SQLite access.",
-    );
   }
 
   return {

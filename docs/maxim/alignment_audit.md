@@ -26,7 +26,7 @@ Last updated: 2026-06-03
 | Notifications | Aligned | Dry-run works without secrets; live Discord requires env var; duplicate suppression exists. |
 | Analytics | Partially aligned | Empty/small data works and NoVA/DC KPI exists. Deeper breakdowns depend on real outcome data. |
 | Application tracking | Aligned for v1 | Packet/manual status tracking exists; no automated submission path exists. |
-| Dashboard integration | Partially aligned | Native dashboard has a Maxim mode hook and useful empty states. The roadmap's full `DashboardService` package and SQLite-backed dashboard DTOs are still future work. |
+| Dashboard integration | Aligned for MVP | Native dashboard has a Maxim mode hook, `DashboardService` DTO seam, and useful empty states. Store-backed recruiter/message/application dashboard DTOs remain future enhancement work. |
 | Go dashboard tests | Blocked locally | Go/gofmt are not installed on this machine. |
 
 ## Runnable Alignment Guard
@@ -46,7 +46,7 @@ The guard checks:
 - fork changes remain inside documented patch boundaries,
 - platform safety scanner passes.
 
-The guard currently reports one warning: the full dashboard service package is not implemented yet. This is intentional and documented as remaining work rather than hidden scope.
+The guard should pass without issues. Go dashboard compilation still depends on local Go/gofmt availability.
 
 ## Verification Commands
 
