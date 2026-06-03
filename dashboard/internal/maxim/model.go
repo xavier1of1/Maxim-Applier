@@ -39,7 +39,7 @@ var screens = []screenName{
 
 // Model renders the Maxim Apply command-center mode.
 type Model struct {
-	service      maximservice.DashboardService
+	service       maximservice.DashboardService
 	width, height int
 	theme         theme.Theme
 	activeScreen  int

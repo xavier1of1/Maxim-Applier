@@ -30,6 +30,10 @@ test("networking shortlist and manual message drafts persist to the Maxim store"
       company: "Acme Systems",
       title: "Technical Recruiter",
       connectionStrength: 2,
+      vtAlumni: true,
+      recruiterSignal: true,
+      founderSignal: false,
+      roleRelevance: "software automation",
       notes: "Virginia Tech alumni signal.",
     },
   ]);
@@ -58,5 +62,11 @@ test("networking shortlist and manual message drafts persist to the Maxim store"
   assert.equal(store.query("SELECT COUNT(*) AS count FROM contacts")[0].count, 1);
   assert.equal(store.query("SELECT COUNT(*) AS count FROM networking_targets")[0].count, 1);
   assert.equal(store.query("SELECT COUNT(*) AS count FROM message_drafts")[0].count, 1);
+  const storedContact = store.query("SELECT * FROM contacts WHERE id = ?", [contact.id])[0];
+  assert.equal(storedContact.vt_alumni, 1);
+  assert.equal(storedContact.recruiter_signal, 1);
+  assert.equal(storedContact.founder_signal, 0);
+  assert.equal(storedContact.role_relevance, "software automation");
+  assert.match(storedContact.raw_payload_json, /Technical Recruiter/);
   assert.equal(store.query("SELECT COUNT(*) AS count FROM audit_events")[0].count, 1);
 });

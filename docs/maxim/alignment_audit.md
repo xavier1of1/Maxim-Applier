@@ -28,7 +28,7 @@ Last updated: 2026-06-03
 | Application tracking | Aligned for v1 | Packet/manual status tracking exists; no automated submission path exists. |
 | Dashboard integration | Aligned for MVP | Native dashboard has a Maxim mode hook, `DashboardService` DTO seam, Today, High Conviction, Networking, Recruiter, Applications, Analytics, Settings, and optional store-backed DTOs via `npm run maxim:dashboard-state`. |
 | Release hardening docs | Aligned | Setup guide, release notes, known limitations, dashboard test plan, and upstream merge test plan are present and enforced by `maxim:alignment`. |
-| Go dashboard tests | Blocked locally | Go/gofmt are not installed on this machine. |
+| Go dashboard tests | Aligned | Go `1.26.4` is available, Maxim-owned Go files are gofmt-clean, and `go test ./...` passes under `dashboard/`. Interactive TUI smoke testing remains manual. |
 
 ## Runnable Alignment Guard
 
@@ -73,4 +73,4 @@ cd dashboard
 go test ./...
 ```
 
-This requires Go/gofmt locally.
+Interactive TUI verification is documented in `docs/maxim/testing/dashboard-smoke-test.md`.

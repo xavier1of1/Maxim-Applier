@@ -1,0 +1,17 @@
+{
+  "contact": {
+    "name": "Example Recruiter",
+    "company": "Federal Platform Labs",
+    "title": "Technical Recruiter",
+    "linkedinUrl": "https://www.linkedin.com/in/example-recruiter",
+    "connectionStrength": 2,
+    "recruiterSignal": true,
+    "notes": "Fixture only."
+  },
+  "job": {
+    "id": "job_fixture_federal_platform_labs",
+    "company": "Federal Platform Labs",
+    "role": "Software Engineer, Mission Systems"
+  },
+  "research": "I saw your team works on mission systems hiring."
+}

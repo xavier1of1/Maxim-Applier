@@ -24,6 +24,18 @@ These files are intentionally ignored by git and stay local:
 
 The current local `cv.md` is evidence-gated. Add approved resume evidence before trusting generated application materials.
 
+## Data Templates
+
+Example-only onboarding templates live in `data/maxim/templates/`:
+
+- `contacts.example.csv`
+- `target_companies.example.csv`
+- `application_outcomes.example.csv`
+- `evidence_claims.example.yml`
+- `prior_outreach_examples.example.md`
+
+Copy templates to private local files before adding real contacts, evidence, outcomes, or outreach examples.
+
 ## Daily Commands
 
 ```powershell
@@ -54,6 +66,8 @@ go run . -path ..
 ```
 
 Press `m` from the Career-Ops pipeline to enter Maxim Apply mode.
+
+Manual dashboard smoke-test steps are documented in `docs/maxim/testing/dashboard-smoke-test.md`.
 
 ## Secrets
 

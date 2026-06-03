@@ -1,0 +1,2 @@
+company,role,job_url,career_ops_score,maxim_tier,source,location,application_status,outcome,interview_round,date_submitted,pdf_variant,networking_status,connection_strength,notes
+Example GovTech,Software Engineer,https://example.invalid/jobs/123,4.5,T3,company_careers,"Arlington, VA",submitted_manually,interview,Phone Screen,2026-06-03,default,ready_to_send,2,"Template row only. Preserve real outcomes locally; do not commit private tracker data."

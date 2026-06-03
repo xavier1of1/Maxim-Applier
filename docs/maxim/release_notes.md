@@ -21,6 +21,12 @@ Date: 2026-06-03
 - Maxim mode inside the native Career-Ops Go dashboard.
 - `DashboardService` DTO seam and `maxim:dashboard-state` snapshot bridge.
 - Safety and alignment checks.
+- Operational data templates for contacts, target companies, application outcomes, evidence claims, and prior outreach examples.
+- Data onboarding guide, release candidate checklist, and dashboard smoke-test documentation.
+- Contact store persistence for VT alumni, recruiter, founder, role-relevance, and raw contact payload signals.
+- Fixture-backed CLI smoke paths for networking shortlist and message drafts.
+- Sync fixture validation for report-to-PDF path linking.
+- Operational readiness warnings in `maxim:doctor`.
 
 ### Preserved
 
@@ -35,3 +41,10 @@ Date: 2026-06-03
 - No CAPTCHA bypass.
 - No anti-bot evasion.
 - No fabricated candidate claims or active-clearance claims.
+
+### Validation Update
+
+- Native Career-Ops `doctor` and `verify` pass.
+- Maxim tests, safety, alignment, dashboard snapshot, sync, tier, analytics, notification dry-run, fixture history import, fixture networking, and fixture message-draft commands pass.
+- Dashboard `go test ./...` passes with Go `1.26.4`.
+- Interactive dashboard smoke testing remains manual.

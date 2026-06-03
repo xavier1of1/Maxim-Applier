@@ -50,6 +50,13 @@ function json(value) {
   return JSON.stringify(value ?? {});
 }
 
+function boolInt(value) {
+  if (typeof value === "string") {
+    return ["1", "true", "yes", "y"].includes(value.trim().toLowerCase()) ? 1 : 0;
+  }
+  return value ? 1 : 0;
+}
+
 function runPythonSqlite(payload) {
   const proc = spawnSync("python", ["-c", PY_SQLITE_BRIDGE], {
     input: JSON.stringify(payload),
@@ -70,12 +77,42 @@ export class SQLiteMaximStore {
     this.dbPath = dbPath;
     this.schemaPath = schemaPath;
     this.eventLog = eventLog;
+    this.initialized = false;
   }
 
   init() {
+    if (this.initialized) {
+      return;
+    }
     fs.mkdirSync(path.dirname(this.dbPath), { recursive: true });
     const schema = fs.readFileSync(this.schemaPath, "utf8");
     runPythonSqlite({ op: "script", dbPath: this.dbPath, script: schema });
+    this.migrateLegacyColumns();
+    this.initialized = true;
+  }
+
+  migrateLegacyColumns() {
+    const migrations = [
+      ["contacts", "vt_alumni", "INTEGER NOT NULL DEFAULT 0"],
+      ["contacts", "recruiter_signal", "INTEGER NOT NULL DEFAULT 0"],
+      ["contacts", "founder_signal", "INTEGER NOT NULL DEFAULT 0"],
+      ["contacts", "role_relevance", "TEXT"],
+      ["contacts", "raw_payload_json", "TEXT NOT NULL DEFAULT '{}'"],
+    ];
+    for (const [table, column, definition] of migrations) {
+      const columns = runPythonSqlite({
+        op: "query",
+        dbPath: this.dbPath,
+        sql: `PRAGMA table_info(${table})`,
+      }).rows;
+      if (!columns.some((row) => row.name === column)) {
+        runPythonSqlite({
+          op: "execute",
+          dbPath: this.dbPath,
+          sql: `ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`,
+        });
+      }
+    }
   }
 
   execute(sql, params = []) {
@@ -341,10 +378,15 @@ export class SQLiteMaximStore {
       contact.id ??
       contact.contactId ??
       stableId("contact", `${contact.name ?? contact.fullName ?? ""}|${contact.company ?? ""}|${contact.linkedinUrl ?? ""}|${contact.email ?? ""}`);
+    const vtAlumni = contact.vtAlumni ?? contact.vt_alumni ?? false;
+    const recruiterSignal = contact.recruiterSignal ?? contact.recruiter_signal ?? false;
+    const founderSignal = contact.founderSignal ?? contact.founder_signal ?? false;
     this.execute(
       `INSERT INTO contacts
-      (id, name, company, title, linkedin_url, email, connection_strength, source, notes, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (id, name, company, title, linkedin_url, email, connection_strength,
+       vt_alumni, recruiter_signal, founder_signal, role_relevance, source, notes,
+       raw_payload_json, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         name=excluded.name,
         company=excluded.company,
@@ -352,8 +394,13 @@ export class SQLiteMaximStore {
         linkedin_url=excluded.linkedin_url,
         email=excluded.email,
         connection_strength=excluded.connection_strength,
+        vt_alumni=excluded.vt_alumni,
+        recruiter_signal=excluded.recruiter_signal,
+        founder_signal=excluded.founder_signal,
+        role_relevance=excluded.role_relevance,
         source=excluded.source,
         notes=excluded.notes,
+        raw_payload_json=excluded.raw_payload_json,
         updated_at=excluded.updated_at`,
       [
         id,
@@ -363,13 +410,25 @@ export class SQLiteMaximStore {
         contact.linkedinUrl ?? contact.linkedin_url ?? null,
         contact.email ?? null,
         contact.connectionStrength ?? contact.connection_strength ?? null,
+        boolInt(vtAlumni),
+        boolInt(recruiterSignal),
+        boolInt(founderSignal),
+        contact.roleRelevance ?? contact.role_relevance ?? null,
         contact.source ?? "manual_import",
         contact.notes ?? null,
+        json(contact.rawPayload ?? contact),
         contact.createdAt ?? timestamp,
         timestamp,
       ],
     );
-    return { ...contact, id };
+    return {
+      ...contact,
+      id,
+      vtAlumni: boolInt(vtAlumni) === 1,
+      recruiterSignal: boolInt(recruiterSignal) === 1,
+      founderSignal: boolInt(founderSignal) === 1,
+      roleRelevance: contact.roleRelevance ?? contact.role_relevance ?? null,
+    };
   }
 
   upsertNetworkingTarget(target) {
@@ -519,6 +578,10 @@ export class SQLiteMaximStore {
          c.company AS contact_company,
          c.title AS contact_title,
          c.connection_strength,
+         c.vt_alumni,
+         c.recruiter_signal,
+         c.founder_signal,
+         c.role_relevance,
          j.company AS job_company,
          j.role AS job_role,
          j.tier AS job_tier

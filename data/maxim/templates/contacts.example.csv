@@ -1,0 +1,2 @@
+name,company,title,linkedin_url,email,connection_strength,vt_alumni,recruiter_signal,founder_signal,role_relevance,source,notes
+Example Contact,Example GovTech,Technical Recruiter,https://www.linkedin.com/in/example-contact,,2,false,true,false,software automation,manual_template,"Template row only. Replace with Xavier-approved contact data before importing."

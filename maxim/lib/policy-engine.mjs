@@ -143,11 +143,13 @@ export class MaximPolicyEngine {
       return [flag("salary", "positive", "Flat salary satisfies the configured minimum.")];
     }
     if (salaryMin && salaryMax) {
-      if (
+      const rangeSupportsTarget =
         salaryMax >= this.policy.salary.rangeMaximumRequired &&
         salaryMin >= this.policy.salary.rangeMinimumFloor &&
-        salaryMin <= this.policy.salary.t3FlatMinimum &&
-        salaryMax >= this.policy.salary.t3FlatMinimum
+        (salaryMin >= this.policy.salary.t3FlatMinimum ||
+          (salaryMin <= this.policy.salary.t3FlatMinimum && salaryMax >= this.policy.salary.t3FlatMinimum));
+      if (
+        rangeSupportsTarget
       ) {
         return [flag("salary", "positive", "Salary range supports the target compensation policy.")];
       }

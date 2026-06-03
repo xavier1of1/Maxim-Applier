@@ -25,6 +25,7 @@ test("applies salary policy for flat and range postings", () => {
   assert.equal(engine.evaluate({ locationText: "Arlington, VA", salaryText: "$84,000" }, { tier: "T2" }).allowed, false);
   assert.equal(engine.evaluate({ locationText: "Arlington, VA", salaryText: "$89,000" }, { tier: "T3" }).allowed, false);
   assert.equal(engine.evaluate({ locationText: "Arlington, VA", salaryText: "$80,000 - $95,000" }, { tier: "T3" }).allowed, true);
+  assert.equal(engine.evaluate({ locationText: "Arlington, VA", salaryText: "$95,000 - $125,000" }, { tier: "T3" }).allowed, true);
 });
 
 test("blocks active-clearance-only roles and preserves eligible-to-obtain posture", () => {

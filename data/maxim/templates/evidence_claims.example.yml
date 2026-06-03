@@ -1,0 +1,28 @@
+# Template only. Replace with Xavier-approved evidence before using generated materials.
+candidate:
+  approved_positioning: "I am a computer science engineer from Virginia Tech with experience in full-stack software engineering, systems engineering, automation, and entrepreneurship."
+  citizenship:
+    us_citizen: true
+    active_clearance: false
+    willing_to_obtain_clearance: true
+claims:
+  - claim_id: example_full_stack
+    claim_text: "Experience building full-stack software systems."
+    approved: false
+    evidence_source: "Add resume, project, or work sample reference here."
+    allowed_uses:
+      - resume
+      - application_answers
+      - networking_drafts
+    restricted_contexts:
+      - "Do not include proprietary Wabtec internal details."
+  - claim_id: example_aws
+    claim_text: "Modest AWS exposure."
+    approved: false
+    evidence_source: "Add exact approved AWS evidence here before use."
+    allowed_uses: []
+    restricted_contexts:
+      - "Do not overstate AWS production ownership unless evidence is explicitly approved."
+restricted_claims:
+  - "Never claim active clearance."
+  - "Never fabricate metrics, titles, dates, credentials, tools, or Wabtec proprietary details."

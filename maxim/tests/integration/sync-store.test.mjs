@@ -13,10 +13,15 @@ import { fromRoot } from "../../lib/path-utils.mjs";
 function copyFixtureTree() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-sync-"));
   fs.mkdirSync(path.join(root, "reports"), { recursive: true });
+  fs.mkdirSync(path.join(root, "output"), { recursive: true });
   fs.mkdirSync(path.join(root, "data"), { recursive: true });
   fs.copyFileSync(
     fromRoot("maxim/tests/fixtures/reports/sample-report.md"),
     path.join(root, "reports", "sample-report.md"),
+  );
+  fs.copyFileSync(
+    fromRoot("maxim/tests/fixtures/output/federal-platform-labs-software-engineer.pdf"),
+    path.join(root, "output", "federal-platform-labs-software-engineer.pdf"),
   );
   fs.copyFileSync(
     fromRoot("maxim/tests/fixtures/data/applications.md"),
@@ -37,5 +42,6 @@ test("sync stores reports and tracker rows idempotently", () => {
   assert.equal(second.evaluations, 1);
   assert.equal(store.query("SELECT COUNT(*) AS count FROM career_ops_evaluations")[0].count, 1);
   assert.equal(store.query("SELECT COUNT(*) AS count FROM applications")[0].count, 1);
+  assert.match(store.query("SELECT pdf_path FROM career_ops_evaluations")[0].pdf_path, /federal-platform-labs-software-engineer\.pdf$/);
   assert.equal(store.query("SELECT tier FROM maxim_jobs")[0].tier, "T3");
 });

@@ -91,7 +91,7 @@ type AnalyticsDTO struct {
 }
 
 type dashboardSnapshot struct {
-	GeneratedAt         string               `json:"generatedAt"`
+	GeneratedAt        string               `json:"generatedAt"`
 	TodayActions       []TodayActionDTO     `json:"todayActions"`
 	HighConvictionJobs []JobDTO             `json:"highConvictionJobs"`
 	NetworkingQueue    []NetworkingDTO      `json:"networkingQueue"`

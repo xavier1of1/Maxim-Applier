@@ -18,6 +18,16 @@ This file tracks what Xavier needs to provide before Maxim Apply can become full
 - Prior application-answer examples for approved answer memory.
 - Prior outreach examples approved as style baselines.
 
+## Templates Now Available
+
+- `data/maxim/templates/contacts.example.csv`
+- `data/maxim/templates/target_companies.example.csv`
+- `data/maxim/templates/application_outcomes.example.csv`
+- `data/maxim/templates/evidence_claims.example.yml`
+- `data/maxim/templates/prior_outreach_examples.example.md`
+
+Copy these to private local files before entering real personal data. Do not commit private contacts, tracker rows, recruiter notes, webhook URLs, or sensitive evidence.
+
 ## Policy Choices Still Manual
 
 - Optional demographic/self-identification answer behavior.

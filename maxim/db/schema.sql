@@ -82,8 +82,13 @@ CREATE TABLE IF NOT EXISTS contacts (
   linkedin_url TEXT,
   email TEXT,
   connection_strength INTEGER,
+  vt_alumni INTEGER NOT NULL DEFAULT 0,
+  recruiter_signal INTEGER NOT NULL DEFAULT 0,
+  founder_signal INTEGER NOT NULL DEFAULT 0,
+  role_relevance TEXT,
   source TEXT,
   notes TEXT,
+  raw_payload_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
