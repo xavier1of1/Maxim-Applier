@@ -25,6 +25,7 @@ The setup prompt referenced v2.0/v1.0 document filenames, but the available sour
 - Added `MAXIM_APPLY.md`.
 - Added Maxim fork ADRs and testing docs under `docs/maxim/`.
 - Added `docs/maxim/alignment_audit.md`.
+- Added Maxim setup guide, release notes, known limitations, dashboard test plan, and upstream merge test plan.
 - Added operational input tracker under `docs/V2 Redesign/maxim_apply_operational_inputs_needed.md`.
 - Added Maxim-owned local data skeleton under `data/maxim/`.
 - Added root npm scripts:
@@ -58,7 +59,7 @@ The setup prompt referenced v2.0/v1.0 document filenames, but the available sour
 - Implemented historical tracker import for CSV and XLSX using local-only raw copies, separate normalized JSON output, SQLite batch/row persistence, and audit events.
 - Implemented analytics snapshot helper with NoVA/DC interview-rate KPI and small-sample warnings.
 - Implemented application packet, duplicate-risk helpers, and manual application status tracking for packet-created, assisted-started, and submitted-manually states.
-- Implemented platform safety scanner for prohibited LinkedIn sending, auto-submit, CAPTCHA bypass, and anti-bot evasion patterns.
+- Implemented platform safety scanner for prohibited LinkedIn sending, auto-submit, CAPTCHA bypass, anti-bot evasion, unbounded retry loops, and high-frequency polling patterns.
 - Implemented alignment guard for authority docs, package scripts, SQLite schema, local-only user data, patch boundaries, and platform safety.
 - Added isolated native Go dashboard Maxim mode under `dashboard/internal/maxim`.
 - Added `dashboard/internal/maxim/service` with the `DashboardService` DTO seam required by the roadmap.

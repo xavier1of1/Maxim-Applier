@@ -27,6 +27,7 @@ Last updated: 2026-06-03
 | Analytics | Partially aligned | Empty/small data works and NoVA/DC KPI exists. Deeper breakdowns depend on real outcome data. |
 | Application tracking | Aligned for v1 | Packet/manual status tracking exists; no automated submission path exists. |
 | Dashboard integration | Aligned for MVP | Native dashboard has a Maxim mode hook, `DashboardService` DTO seam, Today, High Conviction, Networking, Recruiter, Applications, Analytics, Settings, and optional store-backed DTOs via `npm run maxim:dashboard-state`. |
+| Release hardening docs | Aligned | Setup guide, release notes, known limitations, dashboard test plan, and upstream merge test plan are present and enforced by `maxim:alignment`. |
 | Go dashboard tests | Blocked locally | Go/gofmt are not installed on this machine. |
 
 ## Runnable Alignment Guard

@@ -10,6 +10,8 @@ const prohibited = [
   { code: "auto_submit", pattern: /\b(auto[-_\s]?submit|submit\s*\(\)|click\s*\(\s*['"]submit)/i },
   { code: "captcha_bypass", pattern: /\b(captcha).{0,80}\b(bypass|solve|solver|token)/i },
   { code: "anti_bot_evasion", pattern: /\b(stealth|undetected|fingerprint\s*spoof|proxy\s*rotation|user-agent\s*rotation)\b/i },
+  { code: "unbounded_retry_loop", pattern: /\b(while\s*\(\s*true\s*\)|for\s*\(\s*;\s*;\s*\))/i },
+  { code: "high_frequency_polling", pattern: /\b(setInterval\s*\(|requestAnimationFrame\s*\()/i },
 ];
 
 function listFiles(root) {
@@ -49,8 +51,8 @@ export function runSafetyCheck() {
     scannedRoots,
     message:
       findings.length === 0
-        ? "No prohibited LinkedIn sending, auto-submit, CAPTCHA bypass, or anti-bot evasion patterns found."
-        : "Safety check failed; remove prohibited automation patterns.",
+        ? "No prohibited LinkedIn sending, auto-submit, CAPTCHA bypass, anti-bot evasion, unbounded retry, or high-frequency polling patterns found."
+        : "Safety check failed; remove prohibited automation or unbounded retry/polling patterns.",
   };
 }
 
