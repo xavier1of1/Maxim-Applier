@@ -33,9 +33,11 @@ Result: `maxim:sync` ingests nonzero evaluations and links reports/PDFs.
 npm run verify
 npm run maxim:sync
 npm run maxim:dashboard-state
+npm run maxim:operational
 ```
 
 Expected result: `maxim:sync` reports one or more evaluations, and `maxim:dashboard-state` shows nonzero job/application counts when eligible records exist.
+`maxim:operational` should clear the report/PDF/tracker/evaluation/application blockers once the real artifacts are present.
 
 ## 3. Historical Tracker
 
@@ -57,8 +59,22 @@ Result: T2/T3 jobs can produce ranked people shortlists and ready-to-send manual
 1. Copy `data/maxim/templates/contacts.example.csv` to a local private contacts file.
 2. Fill in real contacts with company, name, title, LinkedIn URL, notes, connection strength 1-3, and optional VT/recruiter/founder signals.
 3. Copy `data/maxim/templates/target_companies.example.csv` to a local private target-company file.
-4. Convert contacts to JSON before running the current shortlist script, or use the template as a source for a future importer.
-5. Run:
+4. Validate and import CSV contacts:
+
+```powershell
+npm run maxim:import-contacts -- data\maxim\contacts.csv --no-store
+npm run maxim:import-contacts -- data\maxim\contacts.csv
+```
+
+5. Validate and import CSV target companies:
+
+```powershell
+npm run maxim:import-target-companies -- data\maxim\target_companies.csv --no-store
+npm run maxim:import-target-companies -- data\maxim\target_companies.csv
+```
+
+6. Convert contacts to JSON for a job-specific shortlist, or use stored contacts in future dashboard-backed shortlist flows.
+7. Run:
 
 ```powershell
 npm run maxim:networking -- "path\to\job.json" "path\to\contacts.json"
@@ -66,6 +82,29 @@ npm run maxim:message-drafts -- "path\to\draft-payload.json"
 ```
 
 Expected result: no LinkedIn message is sent. Drafts are stored as `ready_to_send` for Xavier to send manually.
+
+### Current Local Contact Data
+
+The current workspace contains `data/maxim/contacts.csv`. It has been validated and imported locally:
+
+- Parsed contacts: 747
+- Imported contacts: 747
+- Connection-strength signals: 747
+- VT alumni signals: 99
+- Recruiter signals: 20
+- Founder/startup signals: 26
+
+This data must remain local and ignored by git.
+
+The current workspace also contains `data/maxim/target_companies.csv`. It has been validated and imported locally:
+
+- Parsed target companies: 176
+- Imported target companies: 176
+- Connection-strength signals: 175
+- Location-focus signals: 176
+- Role-lane signals: 176
+
+This data must remain local and ignored by git.
 
 ## 5. Application Outcomes
 
@@ -105,7 +144,7 @@ npm run maxim:notify
 node maxim/scripts/discord-notify.mjs
 ```
 
-Expected result: no webhook value is committed. Duplicate suppression prevents already-recorded fingerprints from being resent.
+Expected result: no webhook value is committed. Duplicate suppression prevents already-recorded fingerprints from being resent. Live validation was completed on 2026-06-03; the first direct run sent one safe reminder, and the second direct run sent zero because the fingerprint was already recorded.
 
 ## 7. Dashboard
 

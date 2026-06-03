@@ -4,17 +4,20 @@ This file tracks what Xavier needs to provide before Maxim Apply can become full
 
 ## Accounts and Secrets
 
-- Discord webhook URL for accountability notifications (`MAXIM_DISCORD_WEBHOOK_URL`).
-- Dedicated application Gmail account connection details if managed inbox automation is enabled later.
-- Any Career-Ops upstream repository remote or artifact locations if this repo is not the full fork root.
+- COMPLETE: Discord webhook URL for accountability notifications (`MAXIM_DISCORD_WEBHOOK_URL`) exists in local `.env`; live notification validation completed without exposing the value.
+- OPTIONAL FUTURE: Dedicated application Gmail account connection details if managed inbox automation is enabled later.
+- COMPLETE: Career-Ops upstream remote is configured for this fork.
 
 ## User Data
 
-- Approved source resume/CV content for Career-Ops user-layer configuration. A local evidence-gated `cv.md` scaffold exists, but detailed claims are intentionally pending.
-- Approved evidence bank for resume claims, metrics, tools, Wabtec restrictions, and portfolio links.
-- Target company list. A starter local `portals.yml` exists, but it should be reviewed and expanded.
-- Contact list with optional Subjective Connection Strength Rating 1-3.
-- Historical tracker file for import. CSV and XLSX are supported; raw copies are preserved under ignored local Maxim import storage.
+- PARTIAL: Approved source resume/CV content exists locally under raw imports and `article-digest.md`, but claims still need user approval before generated materials rely on them.
+- PARTIAL: Approved evidence bank for resume claims, metrics, tools, Wabtec restrictions, and portfolio links still needs review/approval.
+- COMPLETE: Target company data exists locally and imports through `npm run maxim:import-target-companies`.
+- PARTIAL: Imported target-company/source preferences still need user review before strategic use.
+- COMPLETE: Contact list with Subjective Connection Strength Rating 1-3 exists and imports through `npm run maxim:import-contacts`.
+- PARTIAL: Historical tracker/source workbook exists locally, but real outcome analytics need user-reviewed import/interpretation.
+- COMPLETE: Basic real Career-Ops artifact path is proven with one BLEN report, generated PDF, tracker row, sync, dashboard snapshot, and operational readiness pass.
+- PARTIAL: Application outcomes/interview rounds still need real rows before analytics can guide strategy.
 - Prior application-answer examples for approved answer memory.
 - Prior outreach examples approved as style baselines.
 

@@ -286,6 +286,7 @@ let role       = 'unknown';
 let score      = '?';
 let archetype  = 'unknown';
 let legitimacy = 'unknown';
+let sourceUrl  = '';
 
 if (summaryMatch) {
   const block = summaryMatch[1];
@@ -307,6 +308,37 @@ if (summaryMatch) {
   legitimacy = extract('LEGITIMACY');
 }
 
+// Fallback for models that follow the visible report header but omit
+// SCORE_SUMMARY. This keeps saved reports syncable instead of "unknown".
+if (!summaryMatch) {
+  const titleMatch = evaluationText.match(/^#\s*Evaluation:\s*(.+?)\s+[—-]\s+(.+)$/im);
+  const scoreMatch = evaluationText.match(/\*\*Score:\*\*\s*([0-5](?:\.\d+)?)(?:\s*\/\s*5)?/i);
+  const archetypeMatch = evaluationText.match(/\*\*Archetype:\*\*\s*(.+)/i);
+  const legitimacyMatch = evaluationText.match(/\*\*Legitimacy:\*\*\s*(.+)/i);
+  const urlMatch = evaluationText.match(/\*\*URL:\*\*\s*(https?:\/\/\S+)/i);
+  if (titleMatch) {
+    company = titleMatch[1].trim();
+    role = titleMatch[2].trim();
+  }
+  if (scoreMatch) {
+    score = scoreMatch[1].trim();
+  }
+  if (archetypeMatch) {
+    archetype = archetypeMatch[1].trim();
+  }
+  if (legitimacyMatch) {
+    legitimacy = legitimacyMatch[1].trim();
+  }
+  if (urlMatch) {
+    sourceUrl = urlMatch[1].trim();
+  }
+}
+
+const jdSourceUrlMatch = jdText.match(/^Source URL:\s*(https?:\/\/\S+)/im);
+if (jdSourceUrlMatch) {
+  sourceUrl = jdSourceUrlMatch[1].trim();
+}
+
 // ---------------------------------------------------------------------------
 // Save report
 // ---------------------------------------------------------------------------
@@ -325,6 +357,7 @@ if (saveReport) {
     const reportContent = `# Evaluation: ${company} — ${role}
 
 **Date:** ${today}
+**URL:** ${sourceUrl}
 **Archetype:** ${archetype}
 **Score:** ${score}/5
 **Legitimacy:** ${legitimacy}
@@ -341,7 +374,7 @@ ${evaluationText.replace(/---SCORE_SUMMARY---[\s\S]*?---END_SUMMARY---/, '').tri
 
     // Append tracker entry reminder
     console.log(`\n📊  Tracker entry (add to data/applications.md):`);
-    console.log(`    | ${num} | ${today} | ${company} | ${role} | ${score} | Evaluada | ❌ | [${num}](reports/${filename}) |`);
+    console.log(`    | ${num} | ${today} | ${company} | ${role} | ${score} | Evaluated | ❌ | [${num}](reports/${filename}) |`);
   } catch (err) {
     console.warn(`⚠️   Could not save report: ${err.message}`);
   }

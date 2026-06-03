@@ -21,6 +21,8 @@
     "maxim:sync": "node maxim/scripts/maxim-sync.mjs",
     "maxim:tier": "node maxim/scripts/maxim-tier.mjs",
     "maxim:import-history": "node maxim/scripts/import-history.mjs",
+    "maxim:import-contacts": "node maxim/scripts/import-contacts.mjs",
+    "maxim:import-target-companies": "node maxim/scripts/import-target-companies.mjs",
     "maxim:networking": "node maxim/scripts/build-networking-shortlist.mjs",
     "maxim:message-drafts": "node maxim/scripts/message-drafts.mjs",
     "maxim:recruiter-inbox": "node maxim/scripts/recruiter-inbox.mjs",
@@ -30,6 +32,8 @@
     "maxim:analytics": "node maxim/scripts/analytics-snapshot.mjs",
     "maxim:safety": "node maxim/scripts/website-safety-check.mjs",
     "maxim:alignment": "node maxim/scripts/alignment-check.mjs",
+    "maxim:operational": "node maxim/scripts/operational-readiness.mjs",
+    "maxim:e2e": "node maxim/scripts/e2e-fixture-validation.mjs",
     "maxim:test": "node maxim/scripts/run-tests.mjs"
   },
   "keywords": [

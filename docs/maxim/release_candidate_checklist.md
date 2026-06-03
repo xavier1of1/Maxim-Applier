@@ -12,6 +12,8 @@ Use this before calling the fork operationally ready.
 - [ ] `npm run maxim:test`
 - [ ] `npm run maxim:safety`
 - [ ] `npm run maxim:alignment`
+- [ ] `npm run maxim:operational`
+- [ ] `npm run maxim:e2e`
 - [ ] `npm run maxim:dashboard-state`
 - [ ] `cd dashboard; gofmt -l internal\maxim\model.go internal\maxim\service\service.go`
 - [ ] `cd dashboard; go test ./...`
@@ -24,7 +26,11 @@ Use this before calling the fork operationally ready.
 - [ ] `data/applications.md` has real tracker rows.
 - [ ] Historical tracker import has been run on Xavier's real tracker.
 - [ ] Contacts list exists locally with connection strength 1-3 where known.
+- [ ] `npm run maxim:import-contacts -- data\maxim\contacts.csv --no-store`
+- [ ] `npm run maxim:import-contacts -- data\maxim\contacts.csv`
 - [ ] Target-company list exists locally.
+- [ ] `npm run maxim:import-target-companies -- data\maxim\target_companies.csv --no-store`
+- [ ] `npm run maxim:import-target-companies -- data\maxim\target_companies.csv`
 - [ ] Application outcomes have enough NoVA/DC-compatible records for meaningful analytics.
 - [ ] Discord dry-run reviewed.
 - [ ] Optional live Discord notification tested with `MAXIM_DISCORD_WEBHOOK_URL`.

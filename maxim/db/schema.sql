@@ -93,6 +93,21 @@ CREATE TABLE IF NOT EXISTS contacts (
   updated_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS target_companies (
+  id TEXT PRIMARY KEY,
+  company TEXT NOT NULL,
+  priority TEXT,
+  source_preference TEXT,
+  connection_strength INTEGER,
+  location_focus TEXT,
+  role_lanes TEXT,
+  notes TEXT,
+  raw_payload_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE(company)
+);
+
 CREATE TABLE IF NOT EXISTS networking_targets (
   id TEXT PRIMARY KEY,
   job_id TEXT NOT NULL,

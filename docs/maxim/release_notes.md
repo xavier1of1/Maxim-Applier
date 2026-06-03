@@ -27,6 +27,13 @@ Date: 2026-06-03
 - Fixture-backed CLI smoke paths for networking shortlist and message drafts.
 - Sync fixture validation for report-to-PDF path linking.
 - Operational readiness warnings in `maxim:doctor`.
+- `maxim:import-contacts` for local CSV contact ingestion with connection strength, VT alumni, recruiter, founder, role-relevance, and Unicode sanitization.
+- `maxim:import-target-companies` for local CSV target-company ingestion with priority/source/location/role-lane context.
+- `maxim:operational` for a single readiness report that distinguishes runnable system health from missing real-data blockers.
+- `maxim:e2e` for fixture-based end-to-end validation.
+- Dashboard render tests for every Maxim view.
+- Analytics segmentation for score band, salary band, freshness, PDF variant, company type, and recruiter involvement.
+- Dashboard validation, end-to-end validation, networking validation, analytics validation, operator guide, and gap analysis docs.
 
 ### Preserved
 
@@ -45,6 +52,6 @@ Date: 2026-06-03
 ### Validation Update
 
 - Native Career-Ops `doctor` and `verify` pass.
-- Maxim tests, safety, alignment, dashboard snapshot, sync, tier, analytics, notification dry-run, fixture history import, fixture networking, and fixture message-draft commands pass.
+- Maxim tests, safety, alignment, E2E validation, dashboard snapshot, sync, tier, analytics, operational readiness report, notification dry-run/live, contact import, fixture history import, fixture networking, and fixture message-draft commands pass.
 - Dashboard `go test ./...` passes with Go `1.26.4`.
 - Interactive dashboard smoke testing remains manual.

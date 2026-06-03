@@ -19,38 +19,45 @@ function firstMatch(text, patterns) {
 }
 
 export function parseCareerOpsReport(text, { reportPath = undefined } = {}) {
+  const evaluationTitle = text.match(/^#\s*Evaluation:\s*(.+?)\s+[—–-]\s+(.+?)\s*$/im);
+  const genericTitle = text.match(/^#\s+(.+?)\s+[-|]\s+(.+?)\s*$/im);
   const scoreRaw = firstMatch(text, [
-    /(?:career-ops\s*)?score\s*[:\-]\s*([0-5](?:\.\d+)?)(?:\s*\/\s*5)?/i,
-    /fit\s*score\s*[:\-]\s*([0-5](?:\.\d+)?)(?:\s*\/\s*5)?/i,
-    /rating\s*[:\-]\s*([0-5](?:\.\d+)?)(?:\s*\/\s*5)?/i,
+    /^\s*\*\*(?:career-ops\s*)?score:\*\*\s*([0-5](?:\.\d+)?)(?:\s*\/\s*5)?/im,
+    /^\s*(?:career-ops\s*)?score\s*[:\-]\s*([0-5](?:\.\d+)?)(?:\s*\/\s*5)?/im,
+    /^\s*fit\s*score\s*[:\-]\s*([0-5](?:\.\d+)?)(?:\s*\/\s*5)?/im,
+    /^\s*rating\s*[:\-]\s*([0-5](?:\.\d+)?)(?:\s*\/\s*5)?/im,
   ]);
   const company = firstMatch(text, [
-    /company\s*[:\-]\s*(.+)/i,
-    /employer\s*[:\-]\s*(.+)/i,
+    /^\s*\*\*company:\*\*\s*(.+)$/im,
+    /^\s*company\s*[:\-]\s*(.+)$/im,
+    /^\s*employer\s*[:\-]\s*(.+)$/im,
   ]);
   const role = firstMatch(text, [
-    /(?:role|title|position)\s*[:\-]\s*(.+)/i,
-    /^#\s+(.+?)\s+[-|]\s+(.+)$/im,
+    /^\s*\*\*(?:role|title|position):\*\*\s*(.+)$/im,
+    /^\s*(?:role|title|position)\s*[:\-]\s*(.+)$/im,
   ]);
   const url = firstMatch(text, [
-    /(?:job\s*)?url\s*[:\-]\s*(https?:\/\/\S+)/i,
+    /^\s*\*\*(?:job\s*)?url:\*\*\s*(https?:\/\/\S+)/im,
+    /^\s*(?:job\s*)?url\s*[:\-]\s*(https?:\/\/\S+)/im,
     /\b(https?:\/\/\S+)/i,
   ]);
-  const locationText = firstMatch(text, [/location(?:s)?\s*[:\-]\s*(.+)/i]);
-  const salaryText = firstMatch(text, [/(?:salary|compensation)\s*[:\-]\s*(.+)/i]);
-  const postedAt = firstMatch(text, [/(?:posted|date posted)\s*[:\-]\s*(.+)/i]);
-  const source = firstMatch(text, [/source\s*[:\-]\s*(.+)/i]) ?? "career_ops_report";
+  const locationText = firstMatch(text, [/^\s*(?:\*\*)?location(?:s)?(?:\*\*)?\s*[:\-]\s*(.+)$/im]);
+  const salaryText = firstMatch(text, [/^\s*(?:\*\*)?(?:salary|compensation)(?:\*\*)?\s*[:\-]\s*(.+)$/im]);
+  const postedAt = firstMatch(text, [/^\s*(?:\*\*)?(?:posted|date posted)(?:\*\*)?\s*[:\-]\s*(.+)$/im]);
+  const source = firstMatch(text, [/^\s*(?:\*\*)?source(?:\*\*)?\s*[:\-]\s*(.+)$/im]) ?? "career_ops_report";
   const summary = firstMatch(text, [
-    /summary\s*[:\-]\s*(.+)/i,
-    /recommendation\s*[:\-]\s*(.+)/i,
+    /^\s*(?:\*\*)?summary(?:\*\*)?\s*[:\-]\s*(.+)$/im,
+    /^\s*(?:\*\*)?recommendation(?:\*\*)?\s*[:\-]\s*(.+)$/im,
   ]);
 
   const pathStem = reportPath ? path.basename(reportPath, path.extname(reportPath)) : "report";
+  const titleCompany = evaluationTitle?.[1]?.trim() ?? genericTitle?.[1]?.trim();
+  const titleRole = evaluationTitle?.[2]?.trim() ?? genericTitle?.[2]?.trim();
   return {
     id: `eval_${hash(reportPath ? `${reportPath}|${text}` : text)}`,
     reportPath,
-    company: company ?? inferCompanyFromPath(pathStem),
-    role: role ?? inferRoleFromPath(pathStem),
+    company: titleCompany ?? company ?? inferCompanyFromPath(pathStem),
+    role: titleRole ?? role ?? inferRoleFromPath(pathStem),
     score: scoreRaw ? Number(scoreRaw) : undefined,
     source,
     jobUrl: url,

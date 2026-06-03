@@ -12,6 +12,15 @@ import sqlite3
 import sys
 
 req = json.load(sys.stdin)
+def clean_value(value):
+    if isinstance(value, str):
+        return ''.join(ch for ch in value if not 0xD800 <= ord(ch) <= 0xDFFF)
+    if isinstance(value, list):
+        return [clean_value(item) for item in value]
+    if isinstance(value, dict):
+        return {key: clean_value(item) for key, item in value.items()}
+    return value
+req = clean_value(req)
 conn = sqlite3.connect(req["dbPath"])
 conn.row_factory = sqlite3.Row
 try:
@@ -98,6 +107,11 @@ export class SQLiteMaximStore {
       ["contacts", "founder_signal", "INTEGER NOT NULL DEFAULT 0"],
       ["contacts", "role_relevance", "TEXT"],
       ["contacts", "raw_payload_json", "TEXT NOT NULL DEFAULT '{}'"],
+      ["target_companies", "source_preference", "TEXT"],
+      ["target_companies", "connection_strength", "INTEGER"],
+      ["target_companies", "location_focus", "TEXT"],
+      ["target_companies", "role_lanes", "TEXT"],
+      ["target_companies", "raw_payload_json", "TEXT NOT NULL DEFAULT '{}'"],
     ];
     for (const [table, column, definition] of migrations) {
       const columns = runPythonSqlite({
@@ -429,6 +443,56 @@ export class SQLiteMaximStore {
       founderSignal: boolInt(founderSignal) === 1,
       roleRelevance: contact.roleRelevance ?? contact.role_relevance ?? null,
     };
+  }
+
+  upsertTargetCompany(targetCompany) {
+    this.init();
+    const timestamp = nowIso();
+    const company = targetCompany.company ?? targetCompany.name ?? "Unknown Company";
+    const id = targetCompany.id ?? stableId("target_company", company.toLowerCase());
+    this.execute(
+      `INSERT INTO target_companies
+      (id, company, priority, source_preference, connection_strength, location_focus,
+       role_lanes, notes, raw_payload_json, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(company) DO UPDATE SET
+        priority=excluded.priority,
+        source_preference=excluded.source_preference,
+        connection_strength=excluded.connection_strength,
+        location_focus=excluded.location_focus,
+        role_lanes=excluded.role_lanes,
+        notes=excluded.notes,
+        raw_payload_json=excluded.raw_payload_json,
+        updated_at=excluded.updated_at`,
+      [
+        id,
+        company,
+        targetCompany.priority ?? null,
+        targetCompany.sourcePreference ?? targetCompany.source_preference ?? null,
+        targetCompany.connectionStrength ?? targetCompany.connection_strength ?? null,
+        targetCompany.locationFocus ?? targetCompany.location_focus ?? null,
+        targetCompany.roleLanes ?? targetCompany.role_lanes ?? null,
+        targetCompany.notes ?? null,
+        json(targetCompany.rawPayload ?? targetCompany),
+        targetCompany.createdAt ?? timestamp,
+        timestamp,
+      ],
+    );
+    return { ...targetCompany, id, company };
+  }
+
+  listTargetCompanies() {
+    return this.query(
+      `SELECT * FROM target_companies
+       ORDER BY
+         CASE lower(priority)
+           WHEN 'high' THEN 0
+           WHEN 'medium' THEN 1
+           WHEN 'low' THEN 2
+           ELSE 3
+         END,
+         company ASC`,
+    );
   }
 
   upsertNetworkingTarget(target) {

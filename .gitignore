@@ -7,6 +7,10 @@ data/parser-output/**/*.json
 !data/parser-output/.gitkeep
 !data/parser-output/**/.gitkeep
 data/maxim/*.db
+data/maxim/*.csv
+data/maxim/*.json
+data/maxim/*.xlsx
+data/maxim/*.xls
 data/maxim/dashboard-state.json
 data/maxim/events/*.jsonl
 data/maxim/imports/raw/*

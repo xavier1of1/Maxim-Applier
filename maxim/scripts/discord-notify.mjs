@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { planNotifications, suppressDuplicateNotifications } from "../lib/notification-planner.mjs";
 import { createStore } from "../lib/sqlite-store.mjs";
 
