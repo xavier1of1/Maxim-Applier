@@ -240,6 +240,22 @@ export class SQLiteMaximStore {
     return { ...application, id };
   }
 
+  getEvaluation(id) {
+    return this.query("SELECT * FROM career_ops_evaluations WHERE id = ?", [id])[0] ?? null;
+  }
+
+  getJobByEvaluation(evaluationId) {
+    return this.query("SELECT * FROM maxim_jobs WHERE evaluation_id = ?", [evaluationId])[0] ?? null;
+  }
+
+  getApplication(id) {
+    return this.query("SELECT * FROM applications WHERE id = ?", [id])[0] ?? null;
+  }
+
+  listApplications() {
+    return this.query("SELECT * FROM applications ORDER BY updated_at DESC");
+  }
+
   upsertHistoricalImport(importResult) {
     this.init();
     const timestamp = nowIso();

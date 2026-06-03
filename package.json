@@ -24,6 +24,7 @@
     "maxim:networking": "node maxim/scripts/build-networking-shortlist.mjs",
     "maxim:message-drafts": "node maxim/scripts/message-drafts.mjs",
     "maxim:recruiter-inbox": "node maxim/scripts/recruiter-inbox.mjs",
+    "maxim:application": "node maxim/scripts/application-tracker.mjs",
     "maxim:notify": "node maxim/scripts/discord-notify.mjs --dry-run",
     "maxim:analytics": "node maxim/scripts/analytics-snapshot.mjs",
     "maxim:safety": "node maxim/scripts/website-safety-check.mjs",
