@@ -32,6 +32,7 @@ The setup prompt referenced v2.0/v1.0 document filenames, but the available sour
   - `maxim:tier`
   - `maxim:import-history`
   - `maxim:networking`
+  - `maxim:message-drafts`
   - `maxim:notify`
   - `maxim:analytics`
   - `maxim:safety`
@@ -45,7 +46,8 @@ The setup prompt referenced v2.0/v1.0 document filenames, but the available sour
   - `4.0-4.4` -> `T2`
   - `4.5+` -> `T3`
 - Implemented Maxim policy flags for NoVA/DC location, salary, clearance, freshness, connection overlays, and caution categories.
-- Implemented networking contact ranking and five-part ready-to-send draft validation.
+- Implemented networking contact ranking, contact/shortlist persistence, and five-part ready-to-send draft validation.
+- Implemented message-draft persistence for manual LinkedIn/accountability workflows; no send path exists.
 - Implemented recruiter thread state helpers.
 - Implemented dry-run Discord notification planner with duplicate suppression.
 - Implemented historical tracker import for CSV and XLSX using local-only raw copies, separate normalized JSON output, SQLite batch/row persistence, and audit events.
@@ -80,6 +82,8 @@ npm run verify
 npm run maxim:doctor
 npm run maxim:sync
 npm run maxim:import-history -- path\to\historical-tracker.xlsx
+npm run maxim:networking -- path\to\job.json path\to\contacts.json
+npm run maxim:message-drafts -- path\to\draft-payload.json
 npm run maxim:tier -- --score 4.6 --location 'Arlington, VA' --salary '$95,000 - $125,000'
 npm run maxim:analytics
 npm run maxim:notify
@@ -111,7 +115,7 @@ go test ./...
 ## Verification Run
 
 - `node update-system.mjs check` -> `up-to-date`, local and remote Career-Ops `1.8.1`.
-- `npm run maxim:test` -> 15 passed.
+- `npm run maxim:test` -> 16 passed.
 - `npm run maxim:doctor` -> passed with no warnings.
 - `npm run maxim:safety` -> passed with no prohibited automation findings.
 - `npm run maxim:sync` -> passed; 0 evaluations and 0 applications because this fresh fork has no real reports/tracker rows yet.
@@ -124,6 +128,7 @@ go test ./...
 - `npm run doctor` -> passed after local user-layer onboarding files were created.
 - `npm run verify` -> passed after `data/applications.md` was created; 0 tracker rows, 0 errors, 0 warnings.
 - `npm run maxim:import-history -- maxim/tests/fixtures/history-sample.csv` -> passed; copied raw CSV, wrote separate normalized JSON, and stored 2 raw/normalized rows with 1 interview signal.
+- Networking store integration test -> passed; persisted one contact, one networking target, one ready-to-send manual draft, and an audit event.
 - `go version` and `gofmt` were unavailable on this machine, so native Go dashboard formatting/tests could not be run locally.
 
 ## Remaining Manual Setup Steps

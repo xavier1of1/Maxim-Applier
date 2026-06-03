@@ -318,6 +318,115 @@ export class SQLiteMaximStore {
     };
   }
 
+  upsertContact(contact) {
+    this.init();
+    const timestamp = nowIso();
+    const id =
+      contact.id ??
+      contact.contactId ??
+      stableId("contact", `${contact.name ?? contact.fullName ?? ""}|${contact.company ?? ""}|${contact.linkedinUrl ?? ""}|${contact.email ?? ""}`);
+    this.execute(
+      `INSERT INTO contacts
+      (id, name, company, title, linkedin_url, email, connection_strength, source, notes, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        name=excluded.name,
+        company=excluded.company,
+        title=excluded.title,
+        linkedin_url=excluded.linkedin_url,
+        email=excluded.email,
+        connection_strength=excluded.connection_strength,
+        source=excluded.source,
+        notes=excluded.notes,
+        updated_at=excluded.updated_at`,
+      [
+        id,
+        contact.name ?? contact.fullName ?? "Unknown Contact",
+        contact.company ?? null,
+        contact.title ?? null,
+        contact.linkedinUrl ?? contact.linkedin_url ?? null,
+        contact.email ?? null,
+        contact.connectionStrength ?? contact.connection_strength ?? null,
+        contact.source ?? "manual_import",
+        contact.notes ?? null,
+        contact.createdAt ?? timestamp,
+        timestamp,
+      ],
+    );
+    return { ...contact, id };
+  }
+
+  upsertNetworkingTarget(target) {
+    this.init();
+    const timestamp = nowIso();
+    const id = target.id ?? stableId("target", `${target.jobId}|${target.contactId}`);
+    this.execute(
+      `INSERT INTO networking_targets
+      (id, job_id, contact_id, rank_score, ranking_reason, status, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(job_id, contact_id) DO UPDATE SET
+        rank_score=excluded.rank_score,
+        ranking_reason=excluded.ranking_reason,
+        status=excluded.status,
+        updated_at=excluded.updated_at`,
+      [
+        id,
+        target.jobId,
+        target.contactId,
+        target.rankScore,
+        target.rankingReason,
+        target.status ?? "ready_to_research",
+        target.createdAt ?? timestamp,
+        timestamp,
+      ],
+    );
+    const rows = this.query("SELECT id FROM networking_targets WHERE job_id = ? AND contact_id = ?", [
+      target.jobId,
+      target.contactId,
+    ]);
+    return { ...target, id: rows[0]?.id ?? id };
+  }
+
+  upsertMessageDraft(draft) {
+    this.init();
+    const timestamp = nowIso();
+    const id =
+      draft.id ??
+      stableId("draft", `${draft.targetId ?? ""}|${draft.jobId ?? ""}|${draft.contactId ?? ""}|${draft.draftText}`);
+    this.execute(
+      `INSERT INTO message_drafts
+      (id, target_id, job_id, contact_id, channel, draft_text, cta, status, validation_json, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        draft_text=excluded.draft_text,
+        cta=excluded.cta,
+        status=excluded.status,
+        validation_json=excluded.validation_json,
+        updated_at=excluded.updated_at`,
+      [
+        id,
+        draft.targetId ?? null,
+        draft.jobId ?? null,
+        draft.contactId ?? null,
+        draft.channel ?? "linkedin_manual",
+        draft.draftText,
+        draft.cta ?? "",
+        draft.status ?? "ready_to_send",
+        json(draft.validation ?? {}),
+        draft.createdAt ?? timestamp,
+        timestamp,
+      ],
+    );
+    this.appendAuditEvent({
+      event_type: "message_draft_upserted",
+      entity_type: "message_draft",
+      entity_id: id,
+      reason: "Ready-to-send manual networking draft recorded",
+      payload: { channel: draft.channel ?? "linkedin_manual", status: draft.status ?? "ready_to_send" },
+    });
+    return { ...draft, id };
+  }
+
   listHighConviction() {
     return this.query(
       `SELECT j.*, group_concat(f.flag_type || ':' || f.severity, ', ') AS flags
