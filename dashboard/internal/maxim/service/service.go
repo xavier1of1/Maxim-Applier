@@ -1,7 +1,10 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -68,6 +71,15 @@ type AnalyticsDTO struct {
 	RecommendationScaffold string
 }
 
+type dashboardSnapshot struct {
+	GeneratedAt         string               `json:"generatedAt"`
+	TodayActions       []TodayActionDTO     `json:"todayActions"`
+	HighConvictionJobs []JobDTO             `json:"highConvictionJobs"`
+	NetworkingQueue    []NetworkingDTO      `json:"networkingQueue"`
+	RecruiterInbox     []RecruiterThreadDTO `json:"recruiterInbox"`
+	Analytics          AnalyticsDTO         `json:"analytics"`
+}
+
 // UserDecisionDTO is reserved for future dashboard-driven manual decisions.
 type UserDecisionDTO struct {
 	EntityType string
@@ -78,19 +90,22 @@ type UserDecisionDTO struct {
 
 // CareerOpsService adapts native Career-Ops tracker rows into Maxim dashboard DTOs.
 type CareerOpsService struct {
-	apps []careermodel.CareerApplication
-	jobs []JobDTO
+	apps          []careermodel.CareerApplication
+	jobs          []JobDTO
+	careerOpsPath string
+	snapshot      *dashboardSnapshot
 }
 
 // NewCareerOpsService creates a dashboard service from already-loaded Career-Ops rows.
-func NewCareerOpsService(apps []careermodel.CareerApplication) *CareerOpsService {
-	s := &CareerOpsService{apps: apps}
+func NewCareerOpsService(apps []careermodel.CareerApplication, careerOpsPath string) *CareerOpsService {
+	s := &CareerOpsService{apps: apps, careerOpsPath: careerOpsPath}
 	_ = s.Refresh()
 	return s
 }
 
 // Refresh rebuilds dashboard DTOs from the current tracker snapshot.
 func (s *CareerOpsService) Refresh() error {
+	s.snapshot = loadSnapshot(s.careerOpsPath)
 	s.jobs = make([]JobDTO, 0, len(s.apps))
 	for _, app := range s.apps {
 		tier := maximTier(app.Score)
@@ -111,6 +126,9 @@ func (s *CareerOpsService) Refresh() error {
 
 // LoadToday returns urgent Maxim actions derived from Career-Ops tracker data.
 func (s *CareerOpsService) LoadToday() ([]TodayActionDTO, error) {
+	if s.snapshot != nil {
+		return s.snapshot.TodayActions, nil
+	}
 	var actions []TodayActionDTO
 	for _, job := range s.jobs {
 		if job.Tier == "T3" || (job.Tier == "T2" && hasFlag(job.Flags, "fresh")) {
@@ -128,6 +146,9 @@ func (s *CareerOpsService) LoadToday() ([]TodayActionDTO, error) {
 
 // LoadHighConviction returns T3 and priority-overlay T2 jobs.
 func (s *CareerOpsService) LoadHighConviction() ([]JobDTO, error) {
+	if s.snapshot != nil {
+		return s.snapshot.HighConvictionJobs, nil
+	}
 	var jobs []JobDTO
 	for _, job := range s.jobs {
 		if job.Tier == "T3" || (job.Tier == "T2" && hasFlag(job.Flags, "priority")) {
@@ -139,6 +160,9 @@ func (s *CareerOpsService) LoadHighConviction() ([]JobDTO, error) {
 
 // LoadNetworking returns role-level queue hints. Message generation remains manual.
 func (s *CareerOpsService) LoadNetworking() ([]NetworkingDTO, error) {
+	if s.snapshot != nil {
+		return s.snapshot.NetworkingQueue, nil
+	}
 	var queue []NetworkingDTO
 	for _, job := range s.jobs {
 		if job.Tier == "T2" || job.Tier == "T3" {
@@ -155,11 +179,17 @@ func (s *CareerOpsService) LoadNetworking() ([]NetworkingDTO, error) {
 
 // LoadRecruiterInbox returns a dashboard-safe empty state until stored recruiter DTOs are wired in.
 func (s *CareerOpsService) LoadRecruiterInbox() ([]RecruiterThreadDTO, error) {
+	if s.snapshot != nil {
+		return s.snapshot.RecruiterInbox, nil
+	}
 	return []RecruiterThreadDTO{}, nil
 }
 
 // LoadAnalytics returns the dashboard KPI scaffold from tracker rows.
 func (s *CareerOpsService) LoadAnalytics() (AnalyticsDTO, error) {
+	if s.snapshot != nil {
+		return s.snapshot.Analytics, nil
+	}
 	count := 0
 	for _, app := range s.apps {
 		if locationAllowed(app) {
@@ -182,6 +212,22 @@ func (s *CareerOpsService) LoadAnalytics() (AnalyticsDTO, error) {
 // RecordDecision is present for the v1 dashboard seam; writes remain CLI-backed for now.
 func (s *CareerOpsService) RecordDecision(UserDecisionDTO) error {
 	return nil
+}
+
+func loadSnapshot(careerOpsPath string) *dashboardSnapshot {
+	if careerOpsPath == "" {
+		careerOpsPath = "."
+	}
+	path := filepath.Join(careerOpsPath, "data", "maxim", "dashboard-state.json")
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+	var snapshot dashboardSnapshot
+	if err := json.Unmarshal(bytes, &snapshot); err != nil {
+		return nil
+	}
+	return &snapshot
 }
 
 func jobID(app careermodel.CareerApplication) string {

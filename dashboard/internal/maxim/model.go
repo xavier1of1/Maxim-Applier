@@ -44,8 +44,8 @@ type Model struct {
 }
 
 // NewModel creates a Maxim command-center screen from native Career-Ops data.
-func NewModel(t theme.Theme, apps []careermodel.CareerApplication, width, height int) Model {
-	return Model{service: maximservice.NewCareerOpsService(apps), width: width, height: height, theme: t}
+func NewModel(t theme.Theme, apps []careermodel.CareerApplication, careerOpsPath string, width, height int) Model {
+	return Model{service: maximservice.NewCareerOpsService(apps, careerOpsPath), width: width, height: height, theme: t}
 }
 
 // Resize updates dimensions.

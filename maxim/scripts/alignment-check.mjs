@@ -35,6 +35,7 @@ const requiredScripts = [
   "maxim:message-drafts",
   "maxim:recruiter-inbox",
   "maxim:application",
+  "maxim:dashboard-state",
   "maxim:notify",
   "maxim:analytics",
   "maxim:safety",

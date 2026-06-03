@@ -505,12 +505,45 @@ export class SQLiteMaximStore {
     return this.query("SELECT * FROM message_drafts WHERE status = 'ready_to_send' ORDER BY updated_at DESC");
   }
 
+  listNetworkingQueue() {
+    return this.query(
+      `SELECT
+         nt.id,
+         nt.job_id,
+         nt.contact_id,
+         nt.rank_score,
+         nt.ranking_reason,
+         nt.status,
+         nt.updated_at,
+         c.name AS contact_name,
+         c.company AS contact_company,
+         c.title AS contact_title,
+         c.connection_strength,
+         j.company AS job_company,
+         j.role AS job_role,
+         j.tier AS job_tier
+       FROM networking_targets nt
+       LEFT JOIN contacts c ON c.id = nt.contact_id
+       LEFT JOIN maxim_jobs j ON j.id = nt.job_id
+       ORDER BY nt.rank_score DESC, nt.updated_at DESC`,
+    );
+  }
+
   listRecruiterNeedsResponse() {
     return this.query("SELECT * FROM recruiter_threads WHERE needs_response = 1 ORDER BY last_activity_at DESC");
   }
 
+  listRecruiterThreads() {
+    return this.query("SELECT * FROM recruiter_threads ORDER BY last_activity_at DESC");
+  }
+
   listNotificationFingerprints() {
     return this.query("SELECT fingerprint FROM notifications").map((row) => row.fingerprint);
+  }
+
+  latestMetricSnapshot() {
+    const rows = this.query("SELECT * FROM metric_snapshots ORDER BY created_at DESC LIMIT 1");
+    return rows[0] ?? null;
   }
 
   listHighConviction() {

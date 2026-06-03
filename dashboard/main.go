@@ -115,6 +115,7 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.maxim = maxim.NewModel(
 			m.theme,
 			apps,
+			m.careerOpsPath,
 			m.pipeline.Width(), m.pipeline.Height(),
 		)
 		m.state = viewMaxim

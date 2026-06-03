@@ -36,6 +36,7 @@ The setup prompt referenced v2.0/v1.0 document filenames, but the available sour
   - `maxim:message-drafts`
   - `maxim:recruiter-inbox`
   - `maxim:application`
+  - `maxim:dashboard-state`
   - `maxim:notify`
   - `maxim:analytics`
   - `maxim:safety`
@@ -61,6 +62,7 @@ The setup prompt referenced v2.0/v1.0 document filenames, but the available sour
 - Implemented alignment guard for authority docs, package scripts, SQLite schema, local-only user data, patch boundaries, and platform safety.
 - Added isolated native Go dashboard Maxim mode under `dashboard/internal/maxim`.
 - Added `dashboard/internal/maxim/service` with the `DashboardService` DTO seam required by the roadmap.
+- Added `maxim:dashboard-state` to export a local JSON dashboard snapshot from the SQLite store for the Go dashboard service.
 - Added a small Career-Ops dashboard hook: press `m` from the pipeline to open Maxim mode; press `m`, `q`, or `esc` to return.
 - Installed local Node dependencies with `npm install`.
 - Installed Playwright Chromium with `npx playwright install chromium`.
@@ -93,6 +95,7 @@ npm run maxim:networking -- path\to\job.json path\to\contacts.json
 npm run maxim:message-drafts -- path\to\draft-payload.json
 npm run maxim:recruiter-inbox -- create "Recruiter reply" "Company"
 npm run maxim:application -- create career_ops_evaluation_id
+npm run maxim:dashboard-state
 npm run maxim:tier -- --score 4.6 --location 'Arlington, VA' --salary '$95,000 - $125,000'
 npm run maxim:analytics
 npm run maxim:notify
@@ -126,10 +129,11 @@ go test ./...
 ## Verification Run
 
 - `node update-system.mjs check` -> `up-to-date`, local and remote Career-Ops `1.8.1`.
-- `npm run maxim:test` -> 21 passed.
+- `npm run maxim:test` -> 22 passed.
 - `npm run maxim:doctor` -> passed with no warnings.
 - `npm run maxim:safety` -> passed with no prohibited automation findings.
 - `npm run maxim:alignment` -> passed against `upstream/main`.
+- `npm run maxim:dashboard-state` -> passed; wrote ignored local `data/maxim/dashboard-state.json` for the Go dashboard service.
 - `npm run maxim:sync` -> passed; 0 evaluations and 0 applications because this fresh fork has no real reports/tracker rows yet.
 - `npm run maxim:tier -- --score 4.6 --location 'Arlington, VA' --salary '$95,000 - $125,000' --posted-at '2026-06-01T12:00:00Z'` -> produced `T3` and urgent high-conviction next action.
 - `npm run maxim:analytics` -> passed on empty data with a small-sample warning.
@@ -144,6 +148,7 @@ go test ./...
 - Recruiter/notification store integration tests -> passed; Needs Response clears on respond, and notification planning reads stored jobs, ready drafts, and recruiter reminders.
 - Application tracker integration tests -> passed; records preserve Career-Ops score/tier, duplicate risk is visible, and submission is a manual status only.
 - Alignment integration test -> passed; Maxim fork changes stay inside documented project boundaries.
+- Dashboard snapshot integration test -> passed; exported Today, High Conviction, Networking, Recruiter, and Analytics DTOs from local Maxim store state.
 - `go version` and `gofmt` were unavailable on this machine, so native Go dashboard formatting/tests could not be run locally.
 
 ## Remaining Manual Setup Steps

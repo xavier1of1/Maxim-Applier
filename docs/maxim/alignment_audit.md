@@ -26,7 +26,7 @@ Last updated: 2026-06-03
 | Notifications | Aligned | Dry-run works without secrets; live Discord requires env var; duplicate suppression exists. |
 | Analytics | Partially aligned | Empty/small data works and NoVA/DC KPI exists. Deeper breakdowns depend on real outcome data. |
 | Application tracking | Aligned for v1 | Packet/manual status tracking exists; no automated submission path exists. |
-| Dashboard integration | Aligned for MVP | Native dashboard has a Maxim mode hook, `DashboardService` DTO seam, and useful empty states. Store-backed recruiter/message/application dashboard DTOs remain future enhancement work. |
+| Dashboard integration | Aligned for MVP | Native dashboard has a Maxim mode hook, `DashboardService` DTO seam, useful empty states, and optional store-backed DTOs via `npm run maxim:dashboard-state`. |
 | Go dashboard tests | Blocked locally | Go/gofmt are not installed on this machine. |
 
 ## Runnable Alignment Guard
@@ -62,6 +62,7 @@ npm run verify
 npm run maxim:sync
 npm run maxim:analytics
 npm run maxim:notify
+npm run maxim:dashboard-state
 ```
 
 Dashboard verification remains:
