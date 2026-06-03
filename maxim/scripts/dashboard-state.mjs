@@ -11,6 +11,7 @@ console.log(
         highConvictionJobs: result.snapshot.highConvictionJobs.length,
         networkingQueue: result.snapshot.networkingQueue.length,
         recruiterInbox: result.snapshot.recruiterInbox.length,
+        applications: result.snapshot.applications.length,
       },
     },
     null,

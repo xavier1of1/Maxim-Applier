@@ -19,6 +19,7 @@ type DashboardService interface {
 	LoadHighConviction() ([]JobDTO, error)
 	LoadNetworking() ([]NetworkingDTO, error)
 	LoadRecruiterInbox() ([]RecruiterThreadDTO, error)
+	LoadApplications() ([]ApplicationDTO, error)
 	LoadAnalytics() (AnalyticsDTO, error)
 	RecordDecision(UserDecisionDTO) error
 	Refresh() error
@@ -62,6 +63,24 @@ type RecruiterThreadDTO struct {
 	Detail        string
 }
 
+// ApplicationDTO summarizes packet readiness and manual submission state.
+type ApplicationDTO struct {
+	ID               string  `json:"id"`
+	JobID            string  `json:"jobID"`
+	Company          string  `json:"company"`
+	Role             string  `json:"role"`
+	Status           string  `json:"status"`
+	Score            float64 `json:"score"`
+	Tier             string  `json:"tier"`
+	PacketReady      bool    `json:"packetReady"`
+	PDFPath          string  `json:"pdfPath"`
+	ReportPath       string  `json:"reportPath"`
+	JobURL           string  `json:"jobURL"`
+	DuplicateRisk    string  `json:"duplicateRisk"`
+	DuplicateWarning string  `json:"duplicateWarning"`
+	NextAction       string  `json:"nextAction"`
+}
+
 // AnalyticsDTO summarizes dashboard metrics without exposing storage details.
 type AnalyticsDTO struct {
 	TrackerRowCount        int
@@ -77,6 +96,7 @@ type dashboardSnapshot struct {
 	HighConvictionJobs []JobDTO             `json:"highConvictionJobs"`
 	NetworkingQueue    []NetworkingDTO      `json:"networkingQueue"`
 	RecruiterInbox     []RecruiterThreadDTO `json:"recruiterInbox"`
+	Applications       []ApplicationDTO     `json:"applications"`
 	Analytics          AnalyticsDTO         `json:"analytics"`
 }
 
@@ -183,6 +203,35 @@ func (s *CareerOpsService) LoadRecruiterInbox() ([]RecruiterThreadDTO, error) {
 		return s.snapshot.RecruiterInbox, nil
 	}
 	return []RecruiterThreadDTO{}, nil
+}
+
+// LoadApplications returns packet readiness and manual action state.
+func (s *CareerOpsService) LoadApplications() ([]ApplicationDTO, error) {
+	if s.snapshot != nil {
+		return s.snapshot.Applications, nil
+	}
+	applications := make([]ApplicationDTO, 0, len(s.apps))
+	for _, app := range s.apps {
+		tier := maximTier(app.Score)
+		packetReady := app.ReportPath != "" && app.HasPDF
+		nextAction := "Prepare missing application packet artifacts."
+		if packetReady {
+			nextAction = "Review packet and submit manually."
+		}
+		applications = append(applications, ApplicationDTO{
+			ID:            jobID(app),
+			Company:       app.Company,
+			Role:          app.Role,
+			Status:        data.NormalizeStatus(app.Status),
+			Score:         app.Score,
+			Tier:          tier,
+			PacketReady:   packetReady,
+			ReportPath:    app.ReportPath,
+			DuplicateRisk: "unknown",
+			NextAction:    nextAction,
+		})
+	}
+	return applications, nil
 }
 
 // LoadAnalytics returns the dashboard KPI scaffold from tracker rows.

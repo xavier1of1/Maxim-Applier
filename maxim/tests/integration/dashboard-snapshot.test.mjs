@@ -47,6 +47,22 @@ test("dashboard snapshot exports store-backed command-center DTOs", () => {
   store.upsertRecruiterThread(
     createRecruiterThread({ subject: "Follow up from recruiter", company: "Acme Systems", tags: ["Needs Response"] }),
   );
+  store.upsertApplication({
+    id: "app_t3",
+    jobId: "job_t3",
+    company: "Acme Systems",
+    role: "Software Engineer",
+    status: "packet_needed",
+    score: 4.7,
+    tier: "T3",
+    reportPath: "reports/acme.md",
+    pdfPath: "output/acme.pdf",
+    jobUrl: "https://example.test/jobs/123",
+    rawPayload: {
+      packetReady: true,
+      duplicate: { duplicateRisk: "low", warning: "" },
+    },
+  });
 
   const snapshot = buildDashboardSnapshot({ store, now: new Date("2026-06-03T12:00:00Z") });
   assert.equal(snapshot.highConvictionJobs.length, 1);
@@ -54,6 +70,9 @@ test("dashboard snapshot exports store-backed command-center DTOs", () => {
   assert.equal(snapshot.todayActions.some((action) => action.actionType === "recruiter_response"), true);
   assert.equal(snapshot.networkingQueue.length, 1);
   assert.equal(snapshot.recruiterInbox.length, 1);
+  assert.equal(snapshot.applications.length, 1);
+  assert.equal(snapshot.applications[0].packetReady, true);
+  assert.equal(snapshot.applications[0].duplicateRisk, "low");
 
   const outputPath = path.join(tmp, "dashboard-state.json");
   const written = writeDashboardSnapshot({ store, outputPath, now: new Date("2026-06-03T12:00:00Z") });

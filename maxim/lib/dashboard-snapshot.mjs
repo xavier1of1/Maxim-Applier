@@ -99,6 +99,48 @@ function recruiterDTO(row) {
   };
 }
 
+function parseRawPayload(row) {
+  if (!row.raw_payload_json) {
+    return {};
+  }
+  try {
+    return JSON.parse(row.raw_payload_json);
+  } catch {
+    return {};
+  }
+}
+
+function applicationDTO(row) {
+  const raw = parseRawPayload(row);
+  const duplicate = raw.duplicate ?? {};
+  const packetReady = Boolean(raw.packetReady ?? (row.report_path && row.pdf_path));
+  const missing = [];
+  if (!row.report_path) {
+    missing.push("report");
+  }
+  if (!row.pdf_path) {
+    missing.push("pdf");
+  }
+  return {
+    id: row.id,
+    jobID: row.job_id ?? "",
+    company: row.company ?? "",
+    role: row.role ?? "",
+    status: row.status ?? "",
+    score: row.score ?? 0,
+    tier: row.tier ?? "",
+    packetReady,
+    pdfPath: row.pdf_path ?? "",
+    reportPath: row.report_path ?? "",
+    jobURL: row.job_url ?? "",
+    duplicateRisk: duplicate.duplicateRisk ?? "unknown",
+    duplicateWarning: duplicate.warning ?? "",
+    nextAction: packetReady
+      ? "Review packet and submit manually."
+      : `Prepare missing application packet artifact${missing.length === 1 ? "" : "s"}: ${missing.join(", ") || "unknown"}.`,
+  };
+}
+
 function analyticsDTO(store) {
   const latest = store.latestMetricSnapshot();
   if (latest?.payload_json) {
@@ -127,12 +169,14 @@ export function buildDashboardSnapshot({ store = createStore(), now = new Date()
   const highConvictionJobs = store.listHighConviction().map(jobDTO);
   const networkingQueue = store.listNetworkingQueue().map(networkingDTO);
   const recruiterInbox = store.listRecruiterThreads().map(recruiterDTO);
+  const applications = store.listApplications().map(applicationDTO);
   return {
     generatedAt: now.toISOString(),
     todayActions: [...todayJobs, ...readyDrafts, ...recruiterNeedsResponse],
     highConvictionJobs,
     networkingQueue,
     recruiterInbox,
+    applications,
     analytics: analyticsDTO(store),
   };
 }

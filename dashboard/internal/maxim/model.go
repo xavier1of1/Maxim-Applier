@@ -22,6 +22,7 @@ const (
 	screenHighConviction screenName = "High Conviction"
 	screenNetworking     screenName = "Networking"
 	screenRecruiter      screenName = "Recruiter Inbox"
+	screenApplications   screenName = "Applications"
 	screenAnalytics      screenName = "Analytics"
 	screenSettings       screenName = "Settings"
 )
@@ -31,6 +32,7 @@ var screens = []screenName{
 	screenHighConviction,
 	screenNetworking,
 	screenRecruiter,
+	screenApplications,
 	screenAnalytics,
 	screenSettings,
 }
@@ -88,6 +90,8 @@ func (m Model) View() string {
 		sections = append(sections, m.renderNetworking())
 	case screenRecruiter:
 		sections = append(sections, m.renderRecruiter())
+	case screenApplications:
+		sections = append(sections, m.renderApplications())
 	case screenAnalytics:
 		sections = append(sections, m.renderAnalytics())
 	case screenSettings:
@@ -173,6 +177,33 @@ func (m Model) renderRecruiter() string {
 		"Use node maxim/scripts/recruiter-inbox.mjs create \"Subject\" \"Company\" for manual thread creation payloads.",
 		"Needs Response clears when a reply is recorded or manually marked responded.",
 	})
+}
+
+func (m Model) renderApplications() string {
+	applications, err := m.service.LoadApplications()
+	if err != nil {
+		return m.panel("Applications", "Manual application packet readiness and submitted-state tracking.", []string{"Could not load applications: " + err.Error()})
+	}
+	if len(applications) == 0 {
+		return m.panel("Applications", "Manual application packet readiness and submitted-state tracking.", []string{"No Maxim application records yet. Run npm run maxim:application -- create career_ops_evaluation_id after sync."})
+	}
+	var lines []string
+	for _, application := range applications {
+		packet := "packet-needed"
+		if application.PacketReady {
+			packet = "packet-ready"
+		}
+		duplicate := application.DuplicateRisk
+		if duplicate == "" {
+			duplicate = "unknown"
+		}
+		lines = append(lines, fmt.Sprintf("%s | %s | %.1f/5 | %s | duplicate:%s", application.Tier, application.Company+" - "+application.Role, application.Score, packet, duplicate))
+		lines = append(lines, "  next: "+application.NextAction)
+		if application.DuplicateWarning != "" {
+			lines = append(lines, "  warning: "+application.DuplicateWarning)
+		}
+	}
+	return m.panel("Applications", "Manual application packet readiness and submitted-state tracking.", lines)
 }
 
 func (m Model) renderAnalytics() string {
