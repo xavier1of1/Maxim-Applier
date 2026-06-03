@@ -427,6 +427,76 @@ export class SQLiteMaximStore {
     return { ...draft, id };
   }
 
+  upsertRecruiterThread(thread) {
+    this.init();
+    const timestamp = nowIso();
+    const id = thread.id ?? stableId("recruiter", `${thread.subject}|${thread.company ?? ""}|${thread.source ?? ""}`);
+    const needsResponse = thread.needsResponse ?? thread.needs_response ?? false;
+    const tags = thread.tags ?? [];
+    this.execute(
+      `INSERT INTO recruiter_threads
+      (id, source, subject, company, status, needs_response, tags_json, last_activity_at, notes, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        source=excluded.source,
+        subject=excluded.subject,
+        company=excluded.company,
+        status=excluded.status,
+        needs_response=excluded.needs_response,
+        tags_json=excluded.tags_json,
+        last_activity_at=excluded.last_activity_at,
+        notes=excluded.notes,
+        updated_at=excluded.updated_at`,
+      [
+        id,
+        thread.source ?? "manual",
+        thread.subject,
+        thread.company ?? null,
+        thread.status ?? (needsResponse ? "Needs Response" : "Recruiter DM"),
+        needsResponse ? 1 : 0,
+        json(tags),
+        thread.lastActivityAt ?? thread.last_activity_at ?? timestamp,
+        thread.notes ?? null,
+        thread.createdAt ?? timestamp,
+        timestamp,
+      ],
+    );
+    this.appendAuditEvent({
+      event_type: "recruiter_thread_upserted",
+      entity_type: "recruiter_thread",
+      entity_id: id,
+      reason: "Recruiter inbox thread recorded or updated manually",
+      payload: { status: thread.status, needsResponse },
+    });
+    return { ...thread, id, needsResponse };
+  }
+
+  getRecruiterThread(id) {
+    const rows = this.query("SELECT * FROM recruiter_threads WHERE id = ?", [id]);
+    if (rows.length === 0) {
+      return null;
+    }
+    const row = rows[0];
+    return {
+      ...row,
+      needsResponse: Boolean(row.needs_response),
+      tags: JSON.parse(row.tags_json || "[]"),
+      lastActivityAt: row.last_activity_at,
+    };
+  }
+
+  listReadyMessageDrafts() {
+    return this.query("SELECT * FROM message_drafts WHERE status = 'ready_to_send' ORDER BY updated_at DESC");
+  }
+
+  listRecruiterNeedsResponse() {
+    return this.query("SELECT * FROM recruiter_threads WHERE needs_response = 1 ORDER BY last_activity_at DESC");
+  }
+
+  listNotificationFingerprints() {
+    return this.query("SELECT fingerprint FROM notifications").map((row) => row.fingerprint);
+  }
+
   listHighConviction() {
     return this.query(
       `SELECT j.*, group_concat(f.flag_type || ':' || f.severity, ', ') AS flags

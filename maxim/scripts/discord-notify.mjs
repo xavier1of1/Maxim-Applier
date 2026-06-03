@@ -3,8 +3,15 @@ import { createStore } from "../lib/sqlite-store.mjs";
 
 const dryRun = process.argv.includes("--dry-run") || !process.env.MAXIM_DISCORD_WEBHOOK_URL;
 const store = createStore();
-const existing = store.query("SELECT fingerprint FROM notifications").map((row) => row.fingerprint);
-const planned = suppressDuplicateNotifications(planNotifications(), existing);
+const existing = store.listNotificationFingerprints();
+const planned = suppressDuplicateNotifications(
+  planNotifications({
+    jobs: store.listHighConviction(),
+    messageDrafts: store.listReadyMessageDrafts(),
+    recruiterThreads: store.listRecruiterNeedsResponse(),
+  }),
+  existing,
+);
 
 if (dryRun) {
   console.log(JSON.stringify({ ok: true, dryRun: true, planned }, null, 2));
