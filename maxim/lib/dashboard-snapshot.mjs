@@ -38,17 +38,20 @@ function todayJobAction(row) {
 }
 
 function readyDraftAction(row) {
+  const contact = row.contact_name ?? row.contact_id ?? "";
+  const company = row.job_company ?? "";
+  const role = row.job_role ?? "";
   return {
     actionType: "message_draft",
-    title: `Networking draft ready${row.contact_id ? ` for ${row.contact_id}` : ""}`,
-    detail: "Review and send manually. No LinkedIn automation is used.",
+    title: `Networking draft ready${contact ? ` for ${contact}` : ""}`,
+    detail: `${company && role ? `${company} - ${role}. ` : ""}Review and send manually. No LinkedIn automation is used.`,
     status: row.status,
     job: {
       id: row.job_id ?? "",
-      company: "",
-      role: "",
+      company,
+      role,
       score: 0,
-      tier: "",
+      tier: row.job_tier ?? "",
       nextAction: "manual_send_review",
       flags: ["manual-only"],
     },
@@ -73,6 +76,24 @@ function recruiterAction(row) {
   };
 }
 
+function applicationAction(application) {
+  return {
+    actionType: "application",
+    title: `${application.company} - ${application.role}`,
+    detail: application.nextAction,
+    status: application.status,
+    job: {
+      id: application.jobID,
+      company: application.company,
+      role: application.role,
+      score: application.score,
+      tier: application.tier,
+      nextAction: application.nextAction,
+      flags: application.duplicateRisk === "high" ? ["duplicate-review"] : ["manual-submit"],
+    },
+  };
+}
+
 function networkingDTO(row) {
   const title = row.job_company && row.job_role
     ? `${row.job_company} - ${row.job_role}`
@@ -82,9 +103,18 @@ function networkingDTO(row) {
     : "Unknown contact";
   return {
     jobID: row.job_id ?? "",
+    targetID: row.id,
+    contactID: row.contact_id ?? "",
+    draftID: row.draft_id ?? "",
     title,
     detail: `${contact}: ${row.ranking_reason ?? "Ready for research."}`,
-    status: row.status ?? "ready_to_research",
+    status: row.draft_status ?? row.status ?? "ready_to_research",
+    targetStatus: row.status ?? "ready_to_research",
+    researchNoteID: row.research_note_id ?? "",
+    researchStatus: row.research_note_status ?? "",
+    hasResearch: Boolean(row.research_note_id),
+    draftStatus: row.draft_status ?? "",
+    rankScore: row.rank_score ?? 0,
   };
 }
 
@@ -170,9 +200,14 @@ export function buildDashboardSnapshot({ store = createStore(), now = new Date()
   const networkingQueue = store.listNetworkingQueue().map(networkingDTO);
   const recruiterInbox = store.listRecruiterThreads().map(recruiterDTO);
   const applications = store.listApplications().map(applicationDTO);
+  const applicationActions = applications
+    .filter((application) =>
+      ["ready_for_assisted_apply", "packet_needed", "duplicate_review_required"].includes(application.status),
+    )
+    .map(applicationAction);
   return {
     generatedAt: now.toISOString(),
-    todayActions: [...todayJobs, ...readyDrafts, ...recruiterNeedsResponse],
+    todayActions: [...todayJobs, ...applicationActions, ...readyDrafts, ...recruiterNeedsResponse],
     highConvictionJobs,
     networkingQueue,
     recruiterInbox,

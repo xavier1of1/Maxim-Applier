@@ -67,6 +67,7 @@ test("dashboard snapshot exports store-backed command-center DTOs", () => {
   const snapshot = buildDashboardSnapshot({ store, now: new Date("2026-06-03T12:00:00Z") });
   assert.equal(snapshot.highConvictionJobs.length, 1);
   assert.equal(snapshot.todayActions.some((action) => action.actionType === "job"), true);
+  assert.equal(snapshot.todayActions.some((action) => action.actionType === "application"), true);
   assert.equal(snapshot.todayActions.some((action) => action.actionType === "recruiter_response"), true);
   assert.equal(snapshot.networkingQueue.length, 1);
   assert.equal(snapshot.recruiterInbox.length, 1);

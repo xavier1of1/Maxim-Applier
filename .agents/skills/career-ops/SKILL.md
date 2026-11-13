@@ -52,7 +52,7 @@ Available commands:
   /career-ops pipeline  → Process pending URLs from inbox (data/pipeline.md)
   /career-ops oferta    → Evaluation only A-F (no auto PDF)
   /career-ops ofertas   → Compare and rank multiple offers
-  /career-ops contacto  → LinkedIn power move: find contacts + draft message
+  /career-ops contacto  → LinkedIn power move: Maxim-backed contact finder + manual draft
   /career-ops deep      → Deep research prompt about company
   /career-ops interview-prep → Generate company-specific interview prep doc
   /career-ops pdf       → PDF only, ATS-optimized CV
@@ -80,6 +80,14 @@ After determining the mode, load the necessary files before executing:
 Read `modes/_shared.md` + `modes/{mode}.md`
 
 Applies to: `auto-pipeline`, `oferta`, `ofertas`, `pdf`, `contacto`, `apply`, `pipeline`, `scan`, `batch`
+
+For `contacto` inside the Maxim Apply fork, prefer the local Maxim networking commands in `modes/contacto.md`:
+
+- `npm run maxim:linkedin-find`
+- `npm run maxim:networking`
+- `npm run maxim:message-drafts`
+
+These commands find/rank/research/draft only. They must not log in to LinkedIn or send messages.
 
 ### Standalone modes (only their mode file):
 Read `modes/{mode}.md`

@@ -70,6 +70,7 @@ function runPythonSqlite(payload) {
   const proc = spawnSync("python", ["-c", PY_SQLITE_BRIDGE], {
     input: JSON.stringify(payload),
     encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
   });
   if (proc.status !== 0) {
     throw new Error(`SQLite bridge failed: ${proc.stderr || proc.stdout}`);
@@ -263,10 +264,18 @@ export class SQLiteMaximStore {
        source, pdf_path, report_path, job_url, raw_payload_json, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
+         job_id=excluded.job_id,
+         career_ops_row_key=excluded.career_ops_row_key,
+         company=excluded.company,
+         role=excluded.role,
          status=excluded.status,
          applied_at=excluded.applied_at,
          score=excluded.score,
          tier=excluded.tier,
+         source=excluded.source,
+         pdf_path=excluded.pdf_path,
+         report_path=excluded.report_path,
+         job_url=excluded.job_url,
          raw_payload_json=excluded.raw_payload_json,
          updated_at=excluded.updated_at`,
       [
@@ -299,12 +308,93 @@ export class SQLiteMaximStore {
     return this.query("SELECT * FROM maxim_jobs WHERE evaluation_id = ?", [evaluationId])[0] ?? null;
   }
 
+  getJob(id) {
+    return this.query(
+      `SELECT
+         j.*,
+         e.job_url,
+         e.source,
+         e.location_text,
+         e.salary_text,
+         e.posted_at
+       FROM maxim_jobs j
+       LEFT JOIN career_ops_evaluations e ON e.id = j.evaluation_id
+       WHERE j.id = ?`,
+      [id],
+    )[0] ?? null;
+  }
+
   getApplication(id) {
     return this.query("SELECT * FROM applications WHERE id = ?", [id])[0] ?? null;
   }
 
   listApplications() {
     return this.query("SELECT * FROM applications ORDER BY updated_at DESC");
+  }
+
+  listContacts() {
+    return this.query(
+      `SELECT * FROM contacts
+       ORDER BY
+         CASE WHEN company IS NULL OR company = '' THEN 1 ELSE 0 END,
+         company ASC,
+         COALESCE(connection_strength, 0) DESC,
+         name ASC`,
+    );
+  }
+
+  listApplicationCandidates() {
+    this.init();
+    return this.query(
+      `SELECT
+         e.id AS evaluation_id,
+         e.company,
+         e.role,
+         e.score,
+         e.source,
+         e.pdf_path,
+         e.report_path,
+         e.job_url,
+         j.id AS job_id,
+         j.tier AS maxim_tier,
+         j.next_action
+       FROM career_ops_evaluations e
+       LEFT JOIN maxim_jobs j ON j.evaluation_id = e.id
+       ORDER BY e.updated_at DESC`,
+    );
+  }
+
+  listNetworkingEligibleJobs({ limit = 25 } = {}) {
+    this.init();
+    const parsedLimit = Number(limit);
+    const safeLimit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.floor(parsedLimit) : 25;
+    return this.query(
+      `SELECT
+         j.id,
+         j.evaluation_id,
+         j.company,
+         j.role,
+         j.tier,
+         j.status,
+         j.next_action,
+         j.explanation,
+         j.career_ops_score,
+         j.priority_overlay,
+         e.job_url,
+         e.source,
+         e.location_text,
+         e.salary_text,
+         e.posted_at
+       FROM maxim_jobs j
+       LEFT JOIN career_ops_evaluations e ON e.id = j.evaluation_id
+       WHERE j.tier IN ('T2', 'T3') OR j.priority_overlay = 1
+       ORDER BY
+         CASE WHEN j.tier = 'T3' THEN 0 WHEN j.priority_overlay = 1 THEN 1 ELSE 2 END,
+         j.career_ops_score DESC,
+         j.updated_at DESC
+       LIMIT ?`,
+      [safeLimit],
+    );
   }
 
   upsertHistoricalImport(importResult) {
@@ -499,6 +589,13 @@ export class SQLiteMaximStore {
     this.init();
     const timestamp = nowIso();
     const id = target.id ?? stableId("target", `${target.jobId}|${target.contactId}`);
+    const existing = this.query("SELECT id, status FROM networking_targets WHERE job_id = ? AND contact_id = ?", [
+      target.jobId,
+      target.contactId,
+    ])[0];
+    const status = target.preserveStatus && existing?.status
+      ? existing.status
+      : target.status ?? "ready_to_research";
     this.execute(
       `INSERT INTO networking_targets
       (id, job_id, contact_id, rank_score, ranking_reason, status, created_at, updated_at)
@@ -514,7 +611,7 @@ export class SQLiteMaximStore {
         target.contactId,
         target.rankScore,
         target.rankingReason,
-        target.status ?? "ready_to_research",
+        status,
         target.createdAt ?? timestamp,
         timestamp,
       ],
@@ -523,7 +620,7 @@ export class SQLiteMaximStore {
       target.jobId,
       target.contactId,
     ]);
-    return { ...target, id: rows[0]?.id ?? id };
+    return { ...target, id: rows[0]?.id ?? id, status };
   }
 
   upsertMessageDraft(draft) {
@@ -532,6 +629,8 @@ export class SQLiteMaximStore {
     const id =
       draft.id ??
       stableId("draft", `${draft.targetId ?? ""}|${draft.jobId ?? ""}|${draft.contactId ?? ""}|${draft.draftText}`);
+    const existing = this.query("SELECT id, status FROM message_drafts WHERE id = ?", [id])[0];
+    const status = draft.preserveStatus && existing?.status ? existing.status : draft.status ?? "ready_to_send";
     this.execute(
       `INSERT INTO message_drafts
       (id, target_id, job_id, contact_id, channel, draft_text, cta, status, validation_json, created_at, updated_at)
@@ -550,7 +649,7 @@ export class SQLiteMaximStore {
         draft.channel ?? "linkedin_manual",
         draft.draftText,
         draft.cta ?? "",
-        draft.status ?? "ready_to_send",
+        status,
         json(draft.validation ?? {}),
         draft.createdAt ?? timestamp,
         timestamp,
@@ -561,9 +660,214 @@ export class SQLiteMaximStore {
       entity_type: "message_draft",
       entity_id: id,
       reason: "Ready-to-send manual networking draft recorded",
-      payload: { channel: draft.channel ?? "linkedin_manual", status: draft.status ?? "ready_to_send" },
+      payload: { channel: draft.channel ?? "linkedin_manual", status },
     });
-    return { ...draft, id };
+    return { ...draft, id, status };
+  }
+
+  listMessageDrafts({ status } = {}) {
+    this.init();
+    const where = status ? "WHERE md.status = ?" : "";
+    const params = status ? [status] : [];
+    return this.query(
+      `SELECT
+         md.*,
+         c.name AS contact_name,
+         c.company AS contact_company,
+         c.title AS contact_title,
+         c.linkedin_url,
+         j.company AS job_company,
+         j.role AS job_role,
+         j.tier AS job_tier,
+         nt.rank_score,
+         nt.ranking_reason
+       FROM message_drafts md
+       LEFT JOIN contacts c ON c.id = md.contact_id
+       LEFT JOIN maxim_jobs j ON j.id = md.job_id
+       LEFT JOIN networking_targets nt ON nt.id = md.target_id
+       ${where}
+       ORDER BY md.updated_at DESC`,
+      params,
+    );
+  }
+
+  updateNetworkingTargetStatus(id, status) {
+    this.init();
+    const existing = this.query("SELECT * FROM networking_targets WHERE id = ?", [id])[0];
+    if (!existing) {
+      return null;
+    }
+    const timestamp = nowIso();
+    this.execute("UPDATE networking_targets SET status = ?, updated_at = ? WHERE id = ?", [
+      status,
+      timestamp,
+      id,
+    ]);
+    this.appendAuditEvent({
+      event_type: "networking_target_status_updated",
+      entity_type: "networking_target",
+      entity_id: id,
+      reason: "Manual networking target status update",
+      payload: { from: existing.status, to: status },
+    });
+    return { ...existing, status, updated_at: timestamp };
+  }
+
+  getNetworkingTargetDetail(id) {
+    this.init();
+    return this.query(
+      `SELECT
+         nt.*,
+         c.name AS contact_name,
+         c.company AS contact_company,
+         c.title AS contact_title,
+         c.linkedin_url,
+         c.email AS contact_email,
+         c.connection_strength,
+         c.vt_alumni,
+         c.recruiter_signal,
+         c.founder_signal,
+         c.role_relevance,
+         c.notes AS contact_notes,
+         j.company AS job_company,
+         j.role AS job_role,
+         j.tier AS job_tier,
+         j.career_ops_score,
+         j.next_action,
+         e.job_url,
+         e.source AS job_source
+       FROM networking_targets nt
+       LEFT JOIN contacts c ON c.id = nt.contact_id
+       LEFT JOIN maxim_jobs j ON j.id = nt.job_id
+       LEFT JOIN career_ops_evaluations e ON e.id = j.evaluation_id
+       WHERE nt.id = ?`,
+      [id],
+    )[0] ?? null;
+  }
+
+  upsertNetworkingResearchNote(note) {
+    this.init();
+    const timestamp = nowIso();
+    const id =
+      note.id ??
+      stableId(
+        "research",
+        `${note.targetId ?? note.target_id ?? ""}|${note.jobId ?? note.job_id ?? ""}|${note.contactId ?? note.contact_id ?? ""}|${note.source ?? "manual"}|${note.researchText ?? note.research_text ?? ""}`,
+      );
+    this.execute(
+      `INSERT INTO networking_research_notes
+      (id, target_id, job_id, contact_id, source, research_text, status, raw_payload_json, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        target_id=excluded.target_id,
+        job_id=excluded.job_id,
+        contact_id=excluded.contact_id,
+        source=excluded.source,
+        research_text=excluded.research_text,
+        status=excluded.status,
+        raw_payload_json=excluded.raw_payload_json,
+        updated_at=excluded.updated_at`,
+      [
+        id,
+        note.targetId ?? note.target_id ?? null,
+        note.jobId ?? note.job_id ?? null,
+        note.contactId ?? note.contact_id ?? null,
+        note.source ?? "manual",
+        note.researchText ?? note.research_text ?? "",
+        note.status ?? "approved_for_draft",
+        json(note.rawPayload ?? note),
+        note.createdAt ?? timestamp,
+        timestamp,
+      ],
+    );
+    this.appendAuditEvent({
+      event_type: "networking_research_note_upserted",
+      entity_type: "networking_research_note",
+      entity_id: id,
+      reason: "Manual networking research note recorded",
+      payload: {
+        targetId: note.targetId ?? note.target_id ?? null,
+        source: note.source ?? "manual",
+        status: note.status ?? "approved_for_draft",
+      },
+    });
+    return {
+      ...note,
+      id,
+      targetId: note.targetId ?? note.target_id ?? null,
+      jobId: note.jobId ?? note.job_id ?? null,
+      contactId: note.contactId ?? note.contact_id ?? null,
+      researchText: note.researchText ?? note.research_text ?? "",
+      status: note.status ?? "approved_for_draft",
+    };
+  }
+
+  listNetworkingResearchNotes({ targetId, status } = {}) {
+    this.init();
+    const clauses = [];
+    const params = [];
+    if (targetId) {
+      clauses.push("rn.target_id = ?");
+      params.push(targetId);
+    }
+    if (status) {
+      clauses.push("rn.status = ?");
+      params.push(status);
+    }
+    const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
+    return this.query(
+      `SELECT
+         rn.*,
+         c.name AS contact_name,
+         j.company AS job_company,
+         j.role AS job_role
+       FROM networking_research_notes rn
+       LEFT JOIN contacts c ON c.id = rn.contact_id
+       LEFT JOIN maxim_jobs j ON j.id = rn.job_id
+       ${where}
+       ORDER BY rn.updated_at DESC`,
+      params,
+    );
+  }
+
+  latestNetworkingResearchNote(targetId) {
+    this.init();
+    return this.query(
+      `SELECT * FROM networking_research_notes
+       WHERE target_id = ? AND status = 'approved_for_draft'
+       ORDER BY updated_at DESC
+       LIMIT 1`,
+      [targetId],
+    )[0] ?? null;
+  }
+
+  updateMessageDraftStatus(id, status) {
+    this.init();
+    const existing = this.query("SELECT * FROM message_drafts WHERE id = ?", [id])[0];
+    if (!existing) {
+      return null;
+    }
+    const timestamp = nowIso();
+    this.execute("UPDATE message_drafts SET status = ?, updated_at = ? WHERE id = ?", [
+      status,
+      timestamp,
+      id,
+    ]);
+    if (existing.target_id) {
+      this.execute("UPDATE networking_targets SET status = ?, updated_at = ? WHERE id = ?", [
+        status,
+        timestamp,
+        existing.target_id,
+      ]);
+    }
+    this.appendAuditEvent({
+      event_type: "message_draft_status_updated",
+      entity_type: "message_draft",
+      entity_id: id,
+      reason: "Manual networking message status update",
+      payload: { from: existing.status, to: status, targetId: existing.target_id ?? null },
+    });
+    return { ...existing, status, updated_at: timestamp };
   }
 
   upsertRecruiterThread(thread) {
@@ -625,7 +929,20 @@ export class SQLiteMaximStore {
   }
 
   listReadyMessageDrafts() {
-    return this.query("SELECT * FROM message_drafts WHERE status = 'ready_to_send' ORDER BY updated_at DESC");
+    return this.query(
+      `SELECT
+         md.*,
+         c.name AS contact_name,
+         c.title AS contact_title,
+         j.company AS job_company,
+         j.role AS job_role,
+         j.tier AS job_tier
+       FROM message_drafts md
+       LEFT JOIN contacts c ON c.id = md.contact_id
+       LEFT JOIN maxim_jobs j ON j.id = md.job_id
+       WHERE md.status = 'ready_to_send'
+       ORDER BY md.updated_at DESC`,
+    );
   }
 
   listNetworkingQueue() {
@@ -646,11 +963,28 @@ export class SQLiteMaximStore {
          c.recruiter_signal,
          c.founder_signal,
          c.role_relevance,
+         rn.id AS research_note_id,
+         rn.status AS research_note_status,
+         rn.research_text AS research_text,
+         md.id AS draft_id,
+         md.status AS draft_status,
          j.company AS job_company,
          j.role AS job_role,
          j.tier AS job_tier
        FROM networking_targets nt
        LEFT JOIN contacts c ON c.id = nt.contact_id
+       LEFT JOIN networking_research_notes rn ON rn.id = (
+         SELECT id FROM networking_research_notes
+         WHERE target_id = nt.id AND status = 'approved_for_draft'
+         ORDER BY updated_at DESC
+         LIMIT 1
+       )
+       LEFT JOIN message_drafts md ON md.id = (
+         SELECT id FROM message_drafts
+         WHERE target_id = nt.id
+         ORDER BY updated_at DESC
+         LIMIT 1
+       )
        LEFT JOIN maxim_jobs j ON j.id = nt.job_id
        ORDER BY nt.rank_score DESC, nt.updated_at DESC`,
     );

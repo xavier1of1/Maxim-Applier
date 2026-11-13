@@ -120,6 +120,19 @@ CREATE TABLE IF NOT EXISTS networking_targets (
   UNIQUE(job_id, contact_id)
 );
 
+CREATE TABLE IF NOT EXISTS networking_research_notes (
+  id TEXT PRIMARY KEY,
+  target_id TEXT,
+  job_id TEXT,
+  contact_id TEXT,
+  source TEXT NOT NULL DEFAULT 'manual',
+  research_text TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'approved_for_draft',
+  raw_payload_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS message_drafts (
   id TEXT PRIMARY KEY,
   target_id TEXT,

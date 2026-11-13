@@ -13,6 +13,8 @@ data/maxim/*.xlsx
 data/maxim/*.xls
 data/maxim/dashboard-state.json
 data/maxim/events/*.jsonl
+data/maxim/auto-apply-runs/*
+!data/maxim/auto-apply-runs/.gitkeep
 data/maxim/imports/raw/*
 data/maxim/imports/normalized/*
 !data/maxim/README.md

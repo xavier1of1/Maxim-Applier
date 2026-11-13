@@ -17,6 +17,7 @@ Maxim adds isolated extensions for:
 - Career-Ops score to Maxim tier mapping,
 - Xavier-specific NoVA/DC policy flags,
 - command-center dashboard mode,
+- account-free LinkedIn/person discovery planning,
 - networking shortlist and ready-to-send drafts,
 - recruiter response tracking,
 - Discord accountability,

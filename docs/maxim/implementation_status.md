@@ -1,6 +1,6 @@
 # Maxim Apply Implementation Status
 
-Last updated: 2026-06-03
+Last updated: 2026-06-10
 
 ## Repository Sync
 
@@ -8,7 +8,8 @@ Last updated: 2026-06-03
 - `origin`: `https://github.com/xavier1of1/Maxim-Applier.git`
 - `upstream`: `https://github.com/santifer/career-ops.git`
 - Working branch: `maxim/v2-career-ops-fork`
-- Upstream version check: `node update-system.mjs check` returned `up-to-date` for Career-Ops `1.8.1`.
+- Upstream version check: `node update-system.mjs check` returned `update-available`; local Career-Ops is `1.8.1`, upstream is `1.9.0`. The update has not been applied during Maxim networking feature work.
+- Repo naming note: implementation work is in the local `maxim-apply` folder. A check on 2026-06-04 found that `https://github.com/xavier1of1/Maxim-Apply.git` does not exist, while the current `origin` remote still points to `xavier1of1/Maxim-Applier.git`.
 
 ## Authority
 
@@ -30,6 +31,17 @@ The prompt referenced v2.0/v1.0 filenames. Those files are compatibility shims i
 - Contact ranking and ready-to-send message drafts with manual-only LinkedIn workflow.
 - Contact persistence now preserves connection strength, VT alumni, recruiter, founder, role-relevance signals, notes, and raw payload JSON.
 - CSV contact import via `maxim:import-contacts`, including Unicode sanitization for malformed local rows.
+- LinkedIn/person discovery planner via `npm run maxim:linkedin-find`, generating manual public search URLs for recruiters, hiring managers, peers, VT alumni, and founders without requiring a LinkedIn account.
+- Pasted public/LinkedIn people-result parser that normalizes candidate contacts, preserves raw snippets, and can store verified candidates with `--store-results`.
+- Career-Ops `contacto` mode now points Claude Code to Maxim-backed `maxim:linkedin-find`, `maxim:networking`, and `maxim:message-drafts` flows while preserving no-login/no-send/no-scrape boundaries.
+- Store-backed networking queue generation via `npm run maxim:networking -- --from-store`, selecting T2/T3 and connection-priority Maxim jobs from the local SQLite store.
+- Store-backed networking drafts via `npm run maxim:networking -- --from-store --drafts`; these create manual-only draft records and never send LinkedIn/email messages.
+- Research-gated networking drafts via `npm run maxim:message-drafts -- research <target_id> --text "..."` followed by `npm run maxim:message-drafts -- from-target <target_id> --require-research`.
+- Local `networking_research_notes` records attach approved person/company research to networking targets before draft generation.
+- Manual networking draft status tracking via `npm run maxim:message-drafts -- status <draft_id> <status>` for `ready_to_send`, `sent_manually`, `replied`, `follow_up_due`, `referral_asked`, `referred`, `declined`, and `no_response`.
+- Networking shortlist reruns preserve already-marked manual statuses instead of resetting sent/replied targets back to ready.
+- Contact ranking was tightened so unrelated contacts do not rank merely because the job title contains a software/engineering term.
+- SQLite bridge buffer was increased so the store-backed workflow can read the full imported local contact list.
 - CSV target-company import via `maxim:import-target-companies`, preserving priority, source preference, connection strength, location focus, role lanes, notes, and raw payload JSON.
 - Recruiter inbox manual create/respond/correct flows; Needs Response clears when responded.
 - Discord notification planner with dry-run default, urgent/batch/reminder planning, and duplicate suppression.
@@ -37,8 +49,35 @@ The prompt referenced v2.0/v1.0 filenames. Those files are compatibility shims i
 - Analytics snapshot with NoVA/DC interview-rate KPI, breakdown scaffolding, score band, tier, source, role lane, salary band, freshness, networking, connection, PDF/resume variant, company type, recruiter involvement, and small-sample warnings.
 - Operational readiness report via `maxim:operational`, separating runnable system health from real-data blockers.
 - Application packet/readiness tracking, assisted-started status, submitted-manually status, duplicate-risk detection, and reapply warning support.
+- Assisted apply workflow queue via `npm run maxim:apply-workflow`, automatically creating T2/T3 application records from synced Career-Ops evaluations while keeping final submission manual.
+- Guided auto-apply planner via `npm run maxim:auto-apply`, generating approved profile answers, packet links, readiness blockers, stop conditions, and progress commands for queued applications.
+- Guided browser form inspector/filler via `npm run maxim:auto-apply-browser`, mapping real application fields, filling known-safe answers, attaching packet PDFs when present, and stopping before the final application action.
+- Career-Ops tracker/application sync now enriches tracker rows with matching evaluation score, tier, report path, PDF path, and job URL when reports exist.
+- Apply workflow queue now promotes existing `Evaluated` tracker rows into assisted apply records when synced T2/T3 evaluation data is ready.
+- Auto-apply profile loading supports ignored `.env` overrides for candidate email, phone, LinkedIn, portfolio, GitHub, relocation preference, and SMS consent.
+- Auto-apply planner discovers a local source resume PDF fallback when no tailored Career-Ops PDF is linked, preserving a warning that the attachment is not tailored.
+- Local job URL overrides are supported through ignored `data/maxim/job_url_overrides.json`; template added under `data/maxim/templates/`.
+- Browser assist supports `--record-started` to mark `assisted_apply_started` and append an audit event after a successful guided fill.
+- Browser assist supports `--write-report` to save redacted inspect/assist run reports under ignored `data/maxim/auto-apply-runs/`.
+- Browser assist has fixture-backed Playwright coverage for form reveal, approved-field fill, resume attachment, redaction, report writing, and the manual-review stop.
+- Browser assist safely handles explicit matching radio/checkbox choices for approved Yes/No answers while keeping self-identification and ambiguous choices in review.
+- Browser field extraction supports native fieldset labels and ARIA `group`/`radiogroup` labels for custom choice controls.
+- Browser field application now prefers stable field IDs, choice `name`/`value` pairs, and unique names before falling back to DOM index targeting.
+- Browser assist follows safe Apply launcher popups/new tabs when the application form opens outside the initial job page.
+- Browser assist extracts and fills embedded iframe forms using frame-aware field metadata.
+- Browser assist supports styled hidden resume file inputs while hidden non-file helper fields remain skipped.
+- Browser assist distinguishes styled hidden upload inputs from fields hidden inside future multi-step sections, so it waits until a step is visible before attaching a resume.
+- Browser assist normalizes clear dropdown aliases such as `United States` / `US` and explanatory Yes/No option labels without selecting ambiguous matches.
+- Browser assist validates native typed inputs such as date/month/number/email/url before filling; incompatible approved answers stay in manual review instead of triggering browser fill errors.
+- Browser assist can advance through bounded multi-step forms by clicking only safe non-final `Next`/`Continue` controls, then stops before submit/finish/apply controls or any required manual-review field.
+- Browser assist maps conservative nearby visual label text for unlabeled ATS fields, improving safe fill coverage without using whole-page text as a label.
+- Browser assist records individual field-application failures instead of aborting the whole run when an ATS control changes shape during filling.
+- `--record-started` now records `assisted_apply_started` only when at least one known-safe field was actually filled on a usable page; blocked/no-fill runs remain reports only.
+- Browser assist CLI output and saved run reports include a review checklist split into required fields, optional fields, failed fields, final controls, stop reasons, and next manual actions.
+- Auto-apply known answers now separate street address, city, state, postal code, country, and education fields; private address fields are optional, locally configurable, and redacted from plan/report output.
 - Website/platform safety scanner for no LinkedIn send automation, no full auto-submit, no CAPTCHA bypass, no anti-bot evasion, no unbounded retry, and no high-frequency polling patterns.
 - Alignment guard for authority docs, package scripts, schema, local-first data, patch boundaries, and safety checks.
+- One-command job intake wrapper via `maxim:evaluate-job`, accepting public job URLs or saved JD files and running evaluation, tracker merge, Maxim sync, analytics, dashboard state, and operational readiness.
 - Integrated Go dashboard Maxim mode with Today, High Conviction, Networking, Recruiter Inbox, Applications, Analytics, and Settings views.
 - Dashboard snapshot bridge via `npm run maxim:dashboard-state`.
 - Dashboard render tests for every Maxim view and useful empty states.
@@ -48,9 +87,11 @@ The prompt referenced v2.0/v1.0 filenames. Those files are compatibility shims i
   - `data/maxim/templates/target_companies.example.csv`
   - `data/maxim/templates/application_outcomes.example.csv`
   - `data/maxim/templates/evidence_claims.example.yml`
+  - `data/maxim/templates/linkedin_people_results.example.txt`
   - `data/maxim/templates/prior_outreach_examples.example.md`
 - Operational docs:
   - `docs/maxim/data_onboarding_guide.md`
+  - `docs/maxim/assisted_apply_workflow.md`
   - `docs/maxim/release_candidate_checklist.md`
   - `docs/maxim/testing/dashboard-smoke-test.md`
   - `docs/maxim/dashboard_validation_report.md`
@@ -62,7 +103,7 @@ The prompt referenced v2.0/v1.0 filenames. Those files are compatibility shims i
 
 ## 2. Partially Completed Work
 
-- Dashboard write actions remain CLI-backed; Maxim dashboard views are read-only for now.
+- Dashboard write actions remain CLI-backed; Maxim dashboard views are read-only for now. Assisted apply state changes use `maxim:application`.
 - Dashboard automated Go tests pass, but the interactive TUI still needs manual visual smoke testing in a terminal.
 - Analytics are structurally implemented and fixture-validated, but real conclusions require real NoVA/DC-compatible application/outcome data.
 - Evidence safety is enforced by docs/templates and claim restrictions, but detailed claims still need user approval before generated materials rely on them.
@@ -72,17 +113,35 @@ The prompt referenced v2.0/v1.0 filenames. Those files are compatibility shims i
 
 - `node update-system.mjs check` -> passed; Career-Ops `1.8.1` is up to date.
 - `npm run doctor` -> passed.
-- `npm run verify` -> passed; 0 tracker rows, 0 errors, 0 warnings.
+- `npm run verify` -> passed; 4 tracker rows, 0 errors, 0 warnings.
 - `npm run maxim:doctor` -> passed with operational readiness warnings for missing real reports, PDFs, and tracker rows.
-- `npm run maxim:test` -> passed; 27 tests.
+- `node --test maxim/tests/unit/application-form-mapper.test.mjs` -> passed; mapper tests include typed native inputs, private address holds, education fields, hidden future-step files, nearby visual labels, choice groups, and styled hidden resume inputs.
+- `node --test maxim/tests/unit/auto-apply-planner.test.mjs` -> passed; 6 tests including browser command generation and private profile env overrides.
+- `node --test maxim/tests/integration/auto-apply-browser-fixture.test.mjs` -> passed; browser guided apply filled approved fixture fields, attached the resume PDF, handled popups/iframes/choices/unlabeled visual labels, advanced a safe multi-step fixture, detected final submit controls, captured per-field failures, wrote a redacted report with a review checklist, and stopped for Xavier review.
+- `npm run maxim:test` -> passed; 62 tests.
 - `npm run maxim:safety` -> passed; no prohibited automation findings.
 - `npm run maxim:alignment` -> passed; 0 issues, 0 warnings.
-- `npm run maxim:dashboard-state` -> passed; exported live dashboard DTO snapshot with 1 application after BLEN sync.
+- `npm run maxim:auto-apply -- prepare --limit 10` -> passed; synced 4 evaluations, promoted 2 eligible T2/T3 applications, skipped 2 T1 roles, and produced enriched plans with URLs/scores/tiers.
+- `npm run maxim:auto-apply -- plan --limit 5` -> passed; returned enriched held plans with exact readiness blockers.
+- `npm run maxim:auto-apply -- plan --ready-only` -> passed; returned 0 ready plans.
+- `npm run maxim:auto-apply -- doctor` -> completed; `ok: false` because real local email and phone are not configured, while fallback resume detection is present and private values are not printed.
+- Dummy-env readiness proof using `MAXIM_CANDIDATE_EMAIL`, `MAXIM_CANDIDATE_PHONE`, `MAXIM_CANDIDATE_LINKEDIN`, `MAXIM_RELOCATION_OPEN`, and `MAXIM_SMS_CONSENT` -> passed; Sitreps and Palantir become `ready_for_guided_apply` at the plan layer.
+- `npm run maxim:auto-apply-browser -- assist app_2a2b0f284735db03` with dummy env values -> passed against real Sitreps Greenhouse form; filled/attached 13 known-safe fields, left veteran/self-ID for review, skipped helper/challenge fields, and stopped before the final application action.
+- `npm run maxim:auto-apply-browser -- inspect app_2a2b0f284735db03 --force --write-report` -> passed against real Sitreps Greenhouse form; wrote a redacted report, mapped 23 fields, identified 8 safe-fill candidates, and held email, phone, LinkedIn, relocation, veteran/self-identification, and SMS consent for review/configuration.
+- Greenhouse phone-field regression check -> passed; phone fieldset helper controls are skipped, Country maps to country, and only the real Phone field remains blocked when phone is missing.
+- Dynamic ATS helper-field fixture -> passed; browser assist still attaches the resume to the intended file input after the page inserts a helper field during filling.
+- Apply launcher popup fixture -> passed; browser assist follows a safe `Apply for this job` launcher into the popup form, fills approved fields, attaches the resume, and stops for review.
+- Embedded iframe fixture -> passed; browser assist maps fields inside an iframe, fills approved answers, attaches the resume, and stops for review.
+- Hidden resume-upload fixture -> passed; browser assist attaches the resume through a styled hidden file input while hidden non-file helper fields remain skipped.
+- Dropdown alias fixture -> passed; browser assist selects `United States of America` for `United States` and explanatory No-sponsorship dropdown labels for approved No answers.
+- `npm run maxim:auto-apply-browser -- inspect app_274568054d96d0b0 --force` -> passed; official Palantir Lever URL is currently a removed/404 posting and is classified as `posting_unavailable_or_removed`.
+- `npm run maxim:dashboard-state` -> passed; exported live dashboard DTO snapshot with 4 applications.
 - `npm run maxim:e2e` -> passed; fixture workflow proved sync, T3 tiering, dashboard visibility, networking draft, recruiter thread, analytics, and notification planning.
 - `npm run maxim:sync` -> passed; 1 BLEN evaluation and 1 application after real Career-Ops artifact generation.
 - `npm run maxim:tier -- --score 4.6 --location "Arlington, VA" --salary "95000-125000" --posted-at "2026-06-01T12:00:00Z"` -> passed; T3, urgent high-conviction action, positive location/salary/freshness explanation.
 - `npm run maxim:analytics` -> passed; denominator 0 with small-sample warning.
-- `npm run maxim:operational` -> passed; `operationalReady: true` after BLEN report, PDF, tracker row, sync, dashboard snapshot, metric snapshot, and notification store validation. Remaining non-hard gap: application outcomes CSV has 0 rows.
+- `npm run maxim:operational` -> passed; `operationalReady: true` with 17/18 checks passing and no hard blockers. Remaining non-hard gap: application outcomes CSV has 0 rows.
+- `npm run maxim:evaluate-job -- jds\blen-senior-software-developer-full-stack-2026-06-03.txt` -> wrapper path exercised; Windows argument handling fixed and unsafe unknown-report tracker writes now blocked.
 - `npm run maxim:notify` -> passed in dry-run mode; planned the 3-week resume/PDF variant review placeholder.
 - `node maxim/scripts/discord-notify.mjs` -> passed live with `.env`; first run sent one safe reminder and second run sent zero due duplicate suppression.
 - `npm run maxim:import-contacts -- data\maxim\contacts.csv --no-store` -> passed; parsed 747 contacts.
@@ -92,6 +151,12 @@ The prompt referenced v2.0/v1.0 filenames. Those files are compatibility shims i
 - `npm run maxim:import-history -- maxim\tests\fixtures\history-sample.csv` -> passed; 2 raw rows, 2 normalized rows, 1 interview signal.
 - `npm run maxim:networking -- maxim\tests\fixtures\networking-job.json maxim\tests\fixtures\networking-contacts.json --no-store` -> passed; ranked fixture contacts without storing or sending anything.
 - `npm run maxim:message-drafts -- maxim\tests\fixtures\message-draft-payload.json --no-store` -> passed; five-part draft validation succeeded and manual-only check passed.
+- `node --test maxim\tests\unit\linkedin-connection-finder.test.mjs` -> passed; search tasks, role-lane inference, pasted result parsing, and combined discovery are covered.
+- `npm run maxim:linkedin-find -- --company "Federal Platform Labs" --role "Software Engineer, Mission Systems" --results maxim\tests\fixtures\linkedin-people-results.txt --no-store` -> passed; generated manual search tasks and parsed 3 candidate contacts without logging in, scraping, storing, or sending.
+- `node --test maxim\tests\unit\contact-ranker.test.mjs maxim\tests\unit\message-builder.test.mjs maxim\tests\integration\networking-store.test.mjs maxim\tests\integration\dashboard-snapshot.test.mjs` -> passed; store-backed networking queue creates manual drafts, preserves sent status on rerun, and dashboard DTOs expose draft status.
+- `npm run maxim:networking -- --from-store --drafts --no-store --limit-jobs 2 --limit-contacts 2` -> passed; dry-run over the local store considered 2 T2/T3 jobs and 816 contacts, produced 4 ranked manual-only draft candidates, and wrote nothing.
+- `npm run maxim:networking -- --from-store --drafts --require-research --no-store --limit-jobs 1 --limit-contacts 1` -> passed; produced a research-required warning instead of creating a draft without an approved note.
+- `npm run maxim:message-drafts -- list --status ready_to_send` -> passed; status CLI works and currently shows 0 persisted ready-to-send drafts because the store-backed validation was dry-run.
 - `npm run maxim:recruiter-inbox -- needs-response` -> passed; empty list.
 - `npm run maxim:application -- list` -> passed; empty list.
 - `go version` -> passed; Go `1.26.4`.
@@ -115,9 +180,15 @@ The prompt referenced v2.0/v1.0 filenames. Those files are compatibility shims i
 - Real Career-Ops reports under `reports/`.
 - Real tailored Career-Ops PDFs under `output/`.
 - Additional real rows in `data/applications.md` beyond the BLEN validation row.
+- Candidate email, phone, and LinkedIn URL in local `config/profile.yml` or `.env` before guided apply plans can produce complete contact answers.
+- Optional private address fields for higher ATS fill coverage: `MAXIM_CANDIDATE_STREET_ADDRESS`, `MAXIM_CANDIDATE_CITY`, `MAXIM_CANDIDATE_STATE`, `MAXIM_CANDIDATE_POSTAL_CODE`, and `MAXIM_CANDIDATE_COUNTRY`.
+- Optional local choices for relocation openness and SMS/text-message consent in `config/profile.yml`.
+- Real contact/preference values in `.env` or `config/profile.yml` before real browser assist should be run without dummy data.
+- Tailored Career-Ops PDFs remain preferred for Sitreps and Palantir, but a local source resume PDF fallback is available and validated.
 - User-reviewed historical tracker import/interpretation.
 - User-reviewed target-company/source preference list; local target-company CSV is imported but strategic interpretation remains unapproved.
 - Prior outreach examples approved as style references.
+- Optional per-contact/person research notes before persisting drafts at scale; current draft builder uses conservative contact/company context when no specific research text is supplied.
 - Application outcomes and interview rounds for meaningful analytics denominators.
 - Real recruiter emails/threads if Gmail-style ingestion is desired later.
 
@@ -147,12 +218,16 @@ Press `m` inside the native Career-Ops pipeline to enter Maxim Apply mode.
 ## 8. Known Limitations
 
 - One real BLEN report/PDF/tracker row exists and syncs; more real evaluated roles are needed for day-to-day use.
+- Current Sitreps and Palantir application records are correctly enriched and queued. With real contact/preference values present, Sitreps can be browser-assisted using the local source resume PDF fallback.
+- Current Palantir URL resolves to an official Lever posting that is removed/404, so it should be refreshed or replaced before applying.
+- Current BLEN and Metron records remain T1 strategic-override holds by score/tier policy.
 - No real approved evidence bank is present yet, so resume/application materials remain evidence-gated.
 - Real contacts are present and imported locally.
 - Target-company data exists locally and is imported; historical source data exists locally, but both require user review before strategic conclusions.
 - Dashboard write actions are future work; use CLI commands for mutations.
 - Analytics should not be used for strategy changes until enough real NoVA/DC-compatible outcomes exist.
 - LinkedIn sending, full auto-submit, CAPTCHA bypass, anti-bot evasion, and fabricated candidate claims remain explicitly out of scope.
+- The new apply workflow and guided auto-apply planner queue, prepare, and track assisted manual submission; they are not final submission executors.
 
 ## 9. Next Recommended Steps
 

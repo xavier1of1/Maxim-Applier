@@ -1,4 +1,9 @@
-import { buildApplicationRecord, markAssistedApplyStarted, markSubmittedManually } from "../lib/application-tracker.mjs";
+import {
+  buildApplicationRecord,
+  markAssistedApplyStarted,
+  markSubmittedManually,
+  queueEligibleApplications,
+} from "../lib/application-tracker.mjs";
 import { createStore } from "../lib/sqlite-store.mjs";
 
 const command = process.argv[2] ?? "help";
@@ -50,6 +55,11 @@ if (command === "create") {
   const stored = store.upsertApplication(record);
   recordAudit("application_record_created", stored, "Manual application packet record created from Career-Ops evaluation");
   console.log(JSON.stringify({ ok: true, application: stored, duplicate: record.duplicate }, null, 2));
+} else if (command === "queue") {
+  const dryRun = process.argv.includes("--dry-run");
+  const includeT1 = process.argv.includes("--include-t1");
+  const result = queueEligibleApplications({ store, dryRun, includeT1 });
+  console.log(JSON.stringify(result, null, 2));
 } else if (command === "started") {
   const applicationId = process.argv[3];
   const current = applicationId ? store.getApplication(applicationId) : null;
@@ -75,7 +85,7 @@ if (command === "create") {
     JSON.stringify(
       {
         ok: false,
-        message: "Commands: create <evaluation-id>, started <application-id>, submitted <application-id>, list",
+        message: "Commands: create <evaluation-id>, queue [--dry-run] [--include-t1], started <application-id>, submitted <application-id>, list",
       },
       null,
       2,

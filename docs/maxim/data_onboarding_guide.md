@@ -24,10 +24,24 @@ Expected result: the evidence warning should disappear once a real approved evid
 
 Result: `maxim:sync` ingests nonzero evaluations and links reports/PDFs.
 
-1. Use native Career-Ops to evaluate real roles and generate reports under `reports/`.
-2. Generate tailored PDFs under `output/` using Career-Ops PDF flow.
-3. Keep `data/applications.md` updated through native Career-Ops tracker scripts.
-4. Run:
+1. Use native Career-Ops or the Maxim wrapper to evaluate real roles and generate reports under `reports/`.
+2. Prefer the wrapper for routine intake:
+
+```powershell
+npm run maxim:evaluate-job -- "https://jobs.example.com/posting/123"
+```
+
+If the URL cannot be read directly, paste the JD into `jds\company-role.txt` and run:
+
+```powershell
+npm run maxim:evaluate-job -- jds\company-role.txt
+```
+
+The wrapper evaluates, merges the tracker, syncs, refreshes analytics/dashboard state, and runs readiness checks.
+3. Generate tailored PDFs under `output/` using Career-Ops PDF flow when needed.
+4. If a report URL points to an aggregator or stale redirect, add a private override in `data/maxim/job_url_overrides.json` using `data/maxim/templates/job_url_overrides.example.json`.
+5. Keep `data/applications.md` updated through native Career-Ops tracker scripts.
+6. Run:
 
 ```powershell
 npm run verify
@@ -38,6 +52,18 @@ npm run maxim:operational
 
 Expected result: `maxim:sync` reports one or more evaluations, and `maxim:dashboard-state` shows nonzero job/application counts when eligible records exist.
 `maxim:operational` should clear the report/PDF/tracker/evaluation/application blockers once the real artifacts are present.
+
+## 2a. Auto-Apply Private Profile Values
+
+Result: `npm run maxim:auto-apply -- doctor` reports required profile values present without printing them.
+
+Set real values in ignored `.env` or `config/profile.yml`:
+
+- `MAXIM_CANDIDATE_EMAIL` / `candidate.email`
+- `MAXIM_CANDIDATE_PHONE` / `candidate.phone`
+- `MAXIM_CANDIDATE_LINKEDIN` / `candidate.linkedin`
+- `MAXIM_RELOCATION_OPEN` / `application_answers.relocation.open_to_relocating`
+- `MAXIM_SMS_CONSENT` / `application_answers.communication.sms_consent`
 
 ## 3. Historical Tracker
 
@@ -73,15 +99,34 @@ npm run maxim:import-target-companies -- data\maxim\target_companies.csv --no-st
 npm run maxim:import-target-companies -- data\maxim\target_companies.csv
 ```
 
-6. Convert contacts to JSON for a job-specific shortlist, or use stored contacts in future dashboard-backed shortlist flows.
-7. Run:
+6. Optionally generate account-free LinkedIn/person search tasks for a specific company/role:
 
 ```powershell
-npm run maxim:networking -- "path\to\job.json" "path\to\contacts.json"
-npm run maxim:message-drafts -- "path\to\draft-payload.json"
+npm run maxim:linkedin-find -- --company "Target Company" --role "Target Role"
 ```
 
-Expected result: no LinkedIn message is sent. Drafts are stored as `ready_to_send` for Xavier to send manually.
+7. If you have pasted public/LinkedIn people-search result snippets, copy the template and parse them:
+
+```powershell
+copy data\maxim\templates\linkedin_people_results.example.txt data\maxim\linkedin_people_results.txt
+npm run maxim:linkedin-find -- --company "Target Company" --role "Target Role" --results data\maxim\linkedin_people_results.txt --store-results
+```
+
+8. Queue stored contacts and parsed results for T2/T3 jobs:
+
+```powershell
+npm run maxim:linkedin-find -- --from-store --limit-jobs 5 --results data\maxim\linkedin_people_results.txt --store-results --queue
+```
+
+9. Run draft/research commands:
+
+```powershell
+npm run maxim:networking -- --from-store --limit-jobs 5 --limit-contacts 3
+npm run maxim:message-drafts -- research <target_id> --text "Approved public/person research note"
+npm run maxim:message-drafts -- from-target <target_id> --require-research
+```
+
+Expected result: no LinkedIn login, scraping, or message sending occurs. People are discovered, parsed, ranked, queued, researched, and drafted for Xavier to verify and send manually.
 
 ### Current Local Contact Data
 

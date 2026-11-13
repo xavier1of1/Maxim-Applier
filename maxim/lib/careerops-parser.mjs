@@ -18,6 +18,16 @@ function firstMatch(text, patterns) {
   return undefined;
 }
 
+function parseScore(value) {
+  const match = String(value ?? "").match(/([0-5](?:\.\d+)?)(?:\s*\/\s*5)?/);
+  return match ? Number(match[1]) : undefined;
+}
+
+function markdownLinkTarget(value) {
+  const match = String(value ?? "").match(/\[[^\]]*\]\(([^)]+)\)/);
+  return match?.[1]?.trim();
+}
+
 export function parseCareerOpsReport(text, { reportPath = undefined } = {}) {
   const evaluationTitle = text.match(/^#\s*Evaluation:\s*(.+?)\s+[—–-]\s+(.+?)\s*$/im);
   const genericTitle = text.match(/^#\s+(.+?)\s+[-|]\s+(.+?)\s*$/im);
@@ -45,6 +55,7 @@ export function parseCareerOpsReport(text, { reportPath = undefined } = {}) {
   const salaryText = firstMatch(text, [/^\s*(?:\*\*)?(?:salary|compensation)(?:\*\*)?\s*[:\-]\s*(.+)$/im]);
   const postedAt = firstMatch(text, [/^\s*(?:\*\*)?(?:posted|date posted)(?:\*\*)?\s*[:\-]\s*(.+)$/im]);
   const source = firstMatch(text, [/^\s*(?:\*\*)?source(?:\*\*)?\s*[:\-]\s*(.+)$/im]) ?? "career_ops_report";
+  const pdfPath = firstMatch(text, [/^\s*(?:\*\*)?PDF(?:\*\*)?\s*[:\-]\s*(.+?\.pdf)\s*$/im]);
   const summary = firstMatch(text, [
     /^\s*(?:\*\*)?summary(?:\*\*)?\s*[:\-]\s*(.+)$/im,
     /^\s*(?:\*\*)?recommendation(?:\*\*)?\s*[:\-]\s*(.+)$/im,
@@ -61,6 +72,7 @@ export function parseCareerOpsReport(text, { reportPath = undefined } = {}) {
     score: scoreRaw ? Number(scoreRaw) : undefined,
     source,
     jobUrl: url,
+    pdfPath,
     locationText,
     salaryText,
     postedAt,
@@ -100,6 +112,8 @@ export function parseApplicationsMd(text) {
         .map((part) => part.trim())
         .filter(Boolean);
       const raw = Object.fromEntries(header.map((key, cellIndex) => [key, cells[cellIndex] ?? ""]));
+      const reportPath = markdownLinkTarget(raw.Report ?? raw.report);
+      const link = raw.URL ?? raw.Link ?? raw.link;
       return {
         id: `app_${hash(JSON.stringify(raw))}`,
         careerOpsRowKey: hash(JSON.stringify(raw)),
@@ -108,8 +122,11 @@ export function parseApplicationsMd(text) {
         status: raw.Status ?? raw.status ?? raw["Application Status"] ?? "synced",
         appliedAt: raw.Date ?? raw["Date Submitted"] ?? raw.Applied,
         source: raw.Source ?? raw.source,
-        jobUrl: raw.URL ?? raw.Link ?? raw.link,
-        rawPayload: { rowNumber: index + 1, raw },
+        jobUrl: markdownLinkTarget(link) ?? link,
+        score: parseScore(raw.Score ?? raw.score),
+        reportPath,
+        pdfReady: /(?:✅|yes|true|ready|linked)/i.test(raw.PDF ?? raw.pdf ?? ""),
+        rawPayload: { rowNumber: index + 1, raw, reportPath },
       };
     });
 }

@@ -376,6 +376,24 @@ function guardStatusFor(code) {
 
 async function main() {
   const args = process.argv.slice(2);
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log('Usage: node scan.mjs [--dry-run] [--verify] [--company NAME]\n' +
+      '  --dry-run       Fetch matching offers without saving changes\n' +
+      '  --verify        Verify offer liveness in a browser\n' +
+      '  --company NAME  Scan only matching companies\n' +
+      '  --help, -h      Show this help without scanning');
+    return;
+  }
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--dry-run' || args[i] === '--verify') continue;
+    if (args[i] === '--company' && args[i + 1] && !args[i + 1].startsWith('-')) {
+      i++;
+      continue;
+    }
+    console.error(`Unknown or invalid argument: ${args[i]}. Run node scan.mjs --help.`);
+    process.exitCode = 2;
+    return;
+  }
   const dryRun = args.includes('--dry-run');
   const verify = args.includes('--verify');
   const companyFlag = args.indexOf('--company');

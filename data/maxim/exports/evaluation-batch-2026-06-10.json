@@ -1,0 +1,164 @@
+﻿[
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/5089044007?gh_jid=5089044007",
+        "exit":  0,
+        "started":  "2026-06-10T11:34:00.5958643-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/5089044007?gh_jid=5089044007\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\page-title-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 15854\n  },\n  \"report\": \"reports\\\\005-anduril-industries-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\005-anduril-industries.tsv\",\n  \"company\": \"Anduril Industries\",\n  \"role\": \"Full Stack Software Engineer\",\n  \"score\": 4.3,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/4767772007?gh_jid=4767772007",
+        "exit":  0,
+        "started":  "2026-06-10T11:34:57.8392234-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/4767772007?gh_jid=4767772007\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\job-application-for-ground-software-engineer-space-at-anduril-industries-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 15286\n  },\n  \"report\": \"reports\\\\006-anduril-industries-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\006-anduril-industries.tsv\",\n  \"company\": \"Anduril Industries\",\n  \"role\": \"Ground Software Engineer, Space\",\n  \"score\": 3.8,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/5160667007?gh_jid=5160667007",
+        "exit":  1,
+        "started":  "2026-06-10T11:35:53.8121274-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/5160667007?gh_jid=5160667007\n\n{\n  \"ok\": false,\n  \"error\": \"C:\\\\Program Files\\\\nodejs\\\\node.exe gemini-eval.mjs --file D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\job-application-for-infrastructure-software-engineer-at-anduril-industries-2026-06-10.txt failed\\n◇ injected env (3) from .env // tip: ⌘ multiple files { path: [\u0027.env.local\u0027, \u0027.env\u0027] }\\n\\n📂  Loading context files...\\n🤖  Calling Gemini (gemini-2.5-flash)... this may take 30-60 seconds.\\n\\n\\n❌  Gemini API error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent: [503 Service Unavailable] This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\\n    You may have hit the free-tier rate limit. Wait 60s and retry.\\n\"\n}"
+    },
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/5156713007?gh_jid=5156713007",
+        "exit":  0,
+        "started":  "2026-06-10T11:36:09.8201973-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/5156713007?gh_jid=5156713007\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\job-application-for-mission-software-engineer-intelligence-systems-at-anduril-in-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 14081\n  },\n  \"report\": \"reports\\\\007-anduril-industries-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\007-anduril-industries.tsv\",\n  \"company\": \"Anduril Industries\",\n  \"role\": \"Mission Software Engineer, Intelligence Systems\",\n  \"score\": 4.6,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/5089067007?gh_jid=5089067007",
+        "exit":  0,
+        "started":  "2026-06-10T11:37:04.1657399-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/5089067007?gh_jid=5089067007\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\job-application-for-optimization-software-engineer-at-anduril-industries-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 17151\n  },\n  \"report\": \"reports\\\\008-anduril-industries-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\008-anduril-industries.tsv\",\n  \"company\": \"Anduril Industries\",\n  \"role\": \"Optimization Software Engineer\",\n  \"score\": 4.1,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/5086962007?gh_jid=5086962007",
+        "exit":  0,
+        "started":  "2026-06-10T11:38:03.4380865-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/5086962007?gh_jid=5086962007\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\job-application-for-security-software-engineer-endpoint-security-at-anduril-indu-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 13663\n  },\n  \"report\": \"reports\\\\009-anduril-industries-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\009-anduril-industries.tsv\",\n  \"company\": \"Anduril Industries\",\n  \"role\": \"Security Software Engineer - Endpoint Security\",\n  \"score\": 4.2,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/5160407007?gh_jid=5160407007",
+        "exit":  0,
+        "started":  "2026-06-10T11:39:01.5093968-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/5160407007?gh_jid=5160407007\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\job-application-for-software-engineer-simulation-infrastructure-at-anduril-indus-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 14853\n  },\n  \"report\": \"reports\\\\010-anduril-industries-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\010-anduril-industries.tsv\",\n  \"company\": \"Anduril Industries\",\n  \"role\": \"Software Engineer, Simulation Infrastructure\",\n  \"score\": 4.3,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://jobs.lever.co/shieldai/7b464b08-12bf-4d07-826d-8fabb3f33954",
+        "exit":  0,
+        "started":  "2026-06-10T11:40:01.7572451-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://jobs.lever.co/shieldai/7b464b08-12bf-4d07-826d-8fabb3f33954\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\shield-ai-engineer-ii-c-systems-integration-r4021-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 4904\n  },\n  \"report\": \"reports\\\\011-shield-ai-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\011-shield-ai.tsv\",\n  \"company\": \"Shield AI\",\n  \"role\": \"Engineer II, C++ Systems Integration (R4021)\",\n  \"score\": 3.6,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://jobs.lever.co/shieldai/dfe3c9f3-900f-4f97-afac-7acf1cb7e592",
+        "exit":  0,
+        "started":  "2026-06-10T11:41:01.6956489-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://jobs.lever.co/shieldai/dfe3c9f3-900f-4f97-afac-7acf1cb7e592\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\shield-ai-engineer-ii-systems-test-r5038-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 5805\n  },\n  \"report\": \"reports\\\\012-shield-ai-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\012-shield-ai.tsv\",\n  \"company\": \"Shield AI\",\n  \"role\": \"Engineer II, Systems Test (R5038)\",\n  \"score\": 4.2,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://jobs.ashbyhq.com/ramp/deca582c-a1d0-4705-9975-60aed81ba89f",
+        "exit":  1,
+        "started":  "2026-06-10T11:42:03.4225387-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://jobs.ashbyhq.com/ramp/deca582c-a1d0-4705-9975-60aed81ba89f\n\n{\n  \"ok\": false,\n  \"error\": \"Fetched page did not contain enough readable job-description text. Paste the JD into jds\\\\*.txt and rerun.\"\n}"
+    },
+    {
+        "url":  "https://jobs.ashbyhq.com/baseten/84c1801c-1a65-49fb-aaaa-beeafd530e7e",
+        "exit":  1,
+        "started":  "2026-06-10T11:42:04.5103632-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://jobs.ashbyhq.com/baseten/84c1801c-1a65-49fb-aaaa-beeafd530e7e\n\n{\n  \"ok\": false,\n  \"error\": \"Fetched page did not contain enough readable job-description text. Paste the JD into jds\\\\*.txt and rerun.\"\n}"
+    },
+    {
+        "url":  "https://jobs.ashbyhq.com/webai/9cb245f4-2c27-4262-9067-ae3aae26a404",
+        "exit":  1,
+        "started":  "2026-06-10T11:42:05.5503959-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://jobs.ashbyhq.com/webai/9cb245f4-2c27-4262-9067-ae3aae26a404\n\n{\n  \"ok\": false,\n  \"error\": \"Fetched page did not contain enough readable job-description text. Paste the JD into jds\\\\*.txt and rerun.\"\n}"
+    },
+    {
+        "url":  "https://job-boards.greenhouse.io/vannevarlabs/jobs/5089923007",
+        "exit":  0,
+        "started":  "2026-06-10T11:42:06.5488625-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://job-boards.greenhouse.io/vannevarlabs/jobs/5089923007\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\job-application-for-software-engineer-backend-collection-fingerprinting-at-vanne-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 12679\n  },\n  \"report\": \"reports\\\\013-vannevar-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\013-vannevar.tsv\",\n  \"company\": \"Vannevar\",\n  \"role\": \"Software Engineer, Backend (Collection Fingerprinting)\",\n  \"score\": 4.2,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://careers.boozallen.com/jobs/JobDetail/Springfield-AWS-Database-Software-Engineer-R0238413/123467",
+        "exit":  0,
+        "started":  "2026-06-10T11:43:07.3745370-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://careers.boozallen.com/jobs/JobDetail/Springfield-AWS-Database-Software-Engineer-R0238413/123467\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\aws-database-software-engineer-123467-booz-allen-hamilton-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 20955\n  },\n  \"report\": \"reports\\\\014-booz-allen-hamilton-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\014-booz-allen-hamilton.tsv\",\n  \"company\": \"Booz Allen Hamilton\",\n  \"role\": \"AWS Database Software Engineer\",\n  \"score\": 2.1,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/5160667007?gh_jid=5160667007",
+        "exit":  0,
+        "started":  "2026-06-10T11:44:43.4006124-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/5160667007?gh_jid=5160667007\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\job-application-for-infrastructure-software-engineer-at-anduril-industries-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 14737\n  },\n  \"report\": \"reports\\\\015-anduril-industries-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\015-anduril-industries.tsv\",\n  \"company\": \"Anduril Industries\",\n  \"role\": \"Infrastructure Software Engineer\",\n  \"score\": 3.7,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/5127000007?gh_jid=5127000007",
+        "exit":  0,
+        "started":  "2026-06-10T11:45:50.5551260-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/5127000007?gh_jid=5127000007\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\job-application-for-multinational-digital-infrastructure-full-stack-sw-eng-us-at-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 18274\n  },\n  \"report\": \"reports\\\\016-anduril-industries-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\016-anduril-industries.tsv\",\n  \"company\": \"Anduril Industries\",\n  \"role\": \"Multinational Digital Infrastructure - Full Stack SW Eng. (US)\",\n  \"score\": 4.3,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/5068451007?gh_jid=5068451007",
+        "exit":  1,
+        "started":  "2026-06-10T11:47:33.2864762-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/5068451007?gh_jid=5068451007\n\n{\n  \"ok\": false,\n  \"error\": \"C:\\\\Program Files\\\\nodejs\\\\node.exe gemini-eval.mjs --file D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\job-application-for-software-engineer-intelligence-systems-at-anduril-industries-2026-06-10.txt failed\\n◇ injected env (3) from .env // tip: ⌘ enable debugging { debug: true }\\n\\n📂  Loading context files...\\n🤖  Calling Gemini (gemini-2.5-flash)... this may take 30-60 seconds.\\n\\n\\n❌  Gemini API error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent: [503 Service Unavailable] This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\\n    You may have hit the free-tier rate limit. Wait 60s and retry.\\n\"\n}"
+    },
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/4961005007?gh_jid=4961005007",
+        "exit":  0,
+        "started":  "2026-06-10T11:47:37.3177360-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/4961005007?gh_jid=4961005007\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\job-application-for-software-engineer-network-intelligence-systems-at-anduril-in-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 15770\n  },\n  \"report\": \"reports\\\\017-anduril-industries-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\017-anduril-industries.tsv\",\n  \"company\": \"Anduril Industries\",\n  \"role\": \"Software Engineer (Network), Intelligence Systems\",\n  \"score\": 2.5,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/5139129007?gh_jid=5139129007",
+        "exit":  0,
+        "started":  "2026-06-10T11:48:50.5170040-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/5139129007?gh_jid=5139129007\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\job-application-for-mission-integration-engineer-intelligence-systems-at-anduril-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 14139\n  },\n  \"report\": \"reports\\\\018-anduril-industries-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\018-anduril-industries.tsv\",\n  \"company\": \"Anduril Industries\",\n  \"role\": \"Mission Integration Engineer, Intelligence Systems\",\n  \"score\": 3.4,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/4928202007?gh_jid=4928202007",
+        "exit":  1,
+        "started":  "2026-06-10T11:49:58.1500965-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/4928202007?gh_jid=4928202007\n\n{\n  \"ok\": false,\n  \"error\": \"Generated report was not parseable enough to merge safely (019-unknown-2026-06-10.md). No tracker row was written. Try rerunning, or paste a cleaner JD with title/company/salary/location.\"\n}"
+    },
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/5151916007?gh_jid=5151916007",
+        "exit":  1,
+        "started":  "2026-06-10T11:50:55.5861674-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/5151916007?gh_jid=5151916007\n\n{\n  \"ok\": false,\n  \"error\": \"C:\\\\Program Files\\\\nodejs\\\\node.exe gemini-eval.mjs --file D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\job-application-for-devops-engineer-at-anduril-industries-2026-06-10.txt failed\\n◇ injected env (3) from .env // tip: ⌘ override existing { override: true }\\n\\n📂  Loading context files...\\n🤖  Calling Gemini (gemini-2.5-flash)... this may take 30-60 seconds.\\n\\n\\n❌  Gemini API error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent: [503 Service Unavailable] This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\\n    You may have hit the free-tier rate limit. Wait 60s and retry.\\n\"\n}"
+    },
+    {
+        "url":  "https://jobs.lever.co/pingwind/c75277f4-3030-4c48-a155-fc45726a52ee",
+        "exit":  0,
+        "started":  "2026-06-10T11:51:40.8425801-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://jobs.lever.co/pingwind/c75277f4-3030-4c48-a155-fc45726a52ee\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\pingwind-bi-dashboard-software-engineer-i-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 3555\n  },\n  \"report\": \"reports\\\\019-pingwind-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\019-pingwind.tsv\",\n  \"company\": \"PingWind\",\n  \"role\": \"BI/Dashboard Software Engineer I\",\n  \"score\": 2.8,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://jobs.lever.co/pingwind/c3c9c17e-0628-484e-9c61-45096e7fab41",
+        "exit":  0,
+        "started":  "2026-06-10T11:52:49.9775873-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://jobs.lever.co/pingwind/c3c9c17e-0628-484e-9c61-45096e7fab41\n\n{\n  \"ok\": true,\n  \"input\": {\n    \"jdPath\": \"D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\pingwind-ai-ml-engineer-2026-06-10.txt\",\n    \"source\": \"url\",\n    \"fetchedCharacters\": 4180\n  },\n  \"report\": \"reports\\\\020-pingwind-2026-06-10.md\",\n  \"trackerAddition\": \"batch\\\\tracker-additions\\\\020-pingwind.tsv\",\n  \"company\": \"PingWind\",\n  \"role\": \"AI/ML Engineer\",\n  \"score\": 2,\n  \"commands\": {\n    \"geminiEval\": 0,\n    \"merge\": 0,\n    \"sync\": 0,\n    \"applyWorkflow\": 0,\n    \"analytics\": 0,\n    \"dashboardState\": 0,\n    \"operational\": 0\n  },\n  \"note\": \"No application was submitted and no outreach was sent.\"\n}"
+    },
+    {
+        "url":  "https://jobs.lever.co/pingwind/5b8498ec-822f-4970-8bbb-df7f24a646c3",
+        "exit":  1,
+        "started":  "2026-06-10T11:53:54.6999146-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://jobs.lever.co/pingwind/5b8498ec-822f-4970-8bbb-df7f24a646c3\n\n{\n  \"ok\": false,\n  \"error\": \"C:\\\\Program Files\\\\nodejs\\\\node.exe gemini-eval.mjs --file D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\pingwind-ai-solution-engineer-ops-2026-06-10.txt failed\\n◇ injected env (3) from .env // tip: ⌘ custom filepath { path: \u0027/custom/path/.env\u0027 }\\n\\n📂  Loading context files...\\n🤖  Calling Gemini (gemini-2.5-flash)... this may take 30-60 seconds.\\n\\n\\n❌  Gemini API error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent: [503 Service Unavailable] This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\\n    You may have hit the free-tier rate limit. Wait 60s and retry.\\n\"\n}"
+    },
+    {
+        "url":  "https://jobs.lever.co/aledade/9ddd6537-1b00-4072-b195-a5ec003f2963",
+        "exit":  1,
+        "started":  "2026-06-10T11:54:12.0128336-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://jobs.lever.co/aledade/9ddd6537-1b00-4072-b195-a5ec003f2963\n\n{\n  \"ok\": false,\n  \"error\": \"C:\\\\Program Files\\\\nodejs\\\\node.exe gemini-eval.mjs --file D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\aledade-software-engineer-ii-backend-2026-06-10.txt failed\\n◇ injected env (3) from .env // tip: ◈ encrypted .env [www.dotenvx.com]\\n\\n📂  Loading context files...\\n🤖  Calling Gemini (gemini-2.5-flash)... this may take 30-60 seconds.\\n\\n\\n❌  Gemini API error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 47.852753403s. [{\\\"@type\\\":\\\"type.googleapis.com/google.rpc.Help\\\",\\\"links\\\":[{\\\"description\\\":\\\"Learn more about Gemini API quotas\\\",\\\"url\\\":\\\"https://ai.google.dev/gemini-api/docs/rate-limits\\\"}]},{\\\"@type\\\":\\\"type.googleapis.com/google.rpc.QuotaFailure\\\",\\\"violations\\\":[{\\\"quotaMetric\\\":\\\"generativelanguage.googleapis.com/generate_content_free_tier_requests\\\",\\\"quotaId\\\":\\\"GenerateRequestsPerDayPerProjectPerModel-FreeTier\\\",\\\"quotaDimensions\\\":{\\\"location\\\":\\\"global\\\",\\\"model\\\":\\\"gemini-2.5-flash\\\"},\\\"quotaValue\\\":\\\"20\\\"}]},{\\\"@type\\\":\\\"type.googleapis.com/google.rpc.RetryInfo\\\",\\\"retryDelay\\\":\\\"47s\\\"}]\\n    You may have hit the free-tier rate limit. Wait 60s and retry.\\n\"\n}"
+    },
+    {
+        "url":  "https://jobs.lever.co/aledade/39ea4348-1d97-4bf7-9905-b524c255dae2",
+        "exit":  1,
+        "started":  "2026-06-10T11:54:13.5561654-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://jobs.lever.co/aledade/39ea4348-1d97-4bf7-9905-b524c255dae2\n\n{\n  \"ok\": false,\n  \"error\": \"C:\\\\Program Files\\\\nodejs\\\\node.exe gemini-eval.mjs --file D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\aledade-senior-software-engineer-i-forward-deployed-ai-2026-06-10.txt failed\\n◇ injected env (3) from .env // tip: ⌘ suppress logs { quiet: true }\\n\\n📂  Loading context files...\\n🤖  Calling Gemini (gemini-2.5-flash)... this may take 30-60 seconds.\\n\\n\\n❌  Gemini API error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent: [429 Too Many Requests] You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash\\nPlease retry in 46.354222977s. [{\\\"@type\\\":\\\"type.googleapis.com/google.rpc.Help\\\",\\\"links\\\":[{\\\"description\\\":\\\"Learn more about Gemini API quotas\\\",\\\"url\\\":\\\"https://ai.google.dev/gemini-api/docs/rate-limits\\\"}]},{\\\"@type\\\":\\\"type.googleapis.com/google.rpc.QuotaFailure\\\",\\\"violations\\\":[{\\\"quotaMetric\\\":\\\"generativelanguage.googleapis.com/generate_content_free_tier_requests\\\",\\\"quotaId\\\":\\\"GenerateRequestsPerDayPerProjectPerModel-FreeTier\\\",\\\"quotaDimensions\\\":{\\\"model\\\":\\\"gemini-2.5-flash\\\",\\\"location\\\":\\\"global\\\"},\\\"quotaValue\\\":\\\"20\\\"}]},{\\\"@type\\\":\\\"type.googleapis.com/google.rpc.RetryInfo\\\",\\\"retryDelay\\\":\\\"46s\\\"}]\\n    You may have hit the free-tier rate limit. Wait 60s and retry.\\n\"\n}"
+    },
+    {
+        "url":  "https://boards.greenhouse.io/andurilindustries/jobs/5068451007?gh_jid=5068451007",
+        "exit":  1,
+        "started":  "2026-06-10T11:54:15.0320506-04:00",
+        "output":  "\n\u003e career-ops@1.8.1 maxim:evaluate-job\n\u003e node maxim/scripts/evaluate-job.mjs https://boards.greenhouse.io/andurilindustries/jobs/5068451007?gh_jid=5068451007\n\n{\n  \"ok\": false,\n  \"error\": \"C:\\\\Program Files\\\\nodejs\\\\node.exe gemini-eval.mjs --file D:\\\\VSC Programs\\\\maxim-apply\\\\jds\\\\job-application-for-software-engineer-intelligence-systems-at-anduril-industries-2026-06-10.txt failed\\n◇ injected env (3) from .env // tip: ◈ encrypted .env [www.dotenvx.com]\\n\\n📂  Loading context files...\\n🤖  Calling Gemini (gemini-2.5-flash)... this may take 30-60 seconds.\\n\\n\\n❌  Gemini API error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent: [503 Service Unavailable] This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\\n    You may have hit the free-tier rate limit. Wait 60s and retry.\\n\"\n}"
+    }
+]

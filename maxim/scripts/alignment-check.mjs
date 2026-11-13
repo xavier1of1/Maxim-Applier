@@ -99,7 +99,9 @@ function isAllowedPatch(relativePath) {
     relativePath === "AGENTS.md" ||
     relativePath === "MAXIM_APPLY.md" ||
     relativePath === "package.json" ||
+    relativePath === "gemini-eval.mjs" ||
     relativePath === "dashboard/main.go" ||
+    relativePath === "dashboard/internal/model/career.go" ||
     relativePath === "dashboard/internal/ui/screens/pipeline.go" ||
     relativePath.startsWith("dashboard/internal/maxim/") ||
     relativePath.startsWith("docs/V2 Redesign/") ||

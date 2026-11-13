@@ -11,7 +11,7 @@ export function buildNetworkingDraft({ contact, job, research = "" }) {
   const company = job.company ?? contact.company ?? "your team";
   const role = job.role ?? job.title ?? "the role";
   const text = [
-    `Person research: ${research || `I noticed your work with ${company}.`}`,
+    `Person research: ${research || `I found your profile while researching ${company} and wanted to ask for your perspective.`}`,
     `Role reference: I saw the ${role} opening at ${company}.`,
     "Xavier background: I am a computer science engineer from Virginia Tech with experience in full-stack software engineering, systems engineering, automation, and entrepreneurship.",
     `Fit rationale: The role appears aligned with software-building, automation, and systems work I have been doing, and your perspective on ${company} would help me understand where I could contribute.`,

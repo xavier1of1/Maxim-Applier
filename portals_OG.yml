@@ -1,0 +1,167 @@
+# Maxim Apply portal scanner configuration
+# User-layer file. Keep Xavier-specific scanning here, not in templates.
+
+location_filter:
+  always_allow:
+    - "Northern Virginia"
+    - "Washington, DC"
+    - "Washington DC"
+    - "Arlington"
+    - "Alexandria"
+    - "Fairfax"
+    - "Reston"
+    - "Herndon"
+    - "Chantilly"
+    - "Tysons"
+    - "McLean"
+    - "Ashburn"
+    - "Manassas"
+    - "Gainesville"
+  allow:
+    - "Northern Virginia"
+    - "Washington, DC"
+    - "Washington DC"
+    - "DC"
+    - "Arlington"
+    - "Alexandria"
+    - "Fairfax"
+    - "Reston"
+    - "Herndon"
+    - "Chantilly"
+    - "Tysons"
+    - "McLean"
+    - "Ashburn"
+    - "Manassas"
+    - "Gainesville"
+    - "Remote"
+    - "United States"
+  block:
+    - "Maryland"
+    - "Bethesda"
+    - "Rockville"
+    - "Baltimore"
+
+title_filter:
+  positive:
+    - "Software Engineer"
+    - "Full Stack"
+    - "Full-Stack"
+    - "Backend"
+    - "Platform Engineer"
+    - "Forward Deployed"
+    - "Deployed Engineer"
+    - "Implementation Engineer"
+    - "Integration Engineer"
+    - "Automation"
+    - "Internal Tools"
+    - "Systems Engineer"
+    - "Solutions Engineer"
+    - "Technical Delivery"
+    - "AI Engineer"
+    - "Applied AI"
+    - "Federal"
+    - "GovCon"
+    - "Mission"
+  negative:
+    - "Help Desk"
+    - "Desktop Support"
+    - "IT Support"
+    - "Active Directory Administrator"
+    - "Exchange Administrator"
+    - "Unpaid"
+    - "Intern"
+    - "Senior DevOps"
+    - "Principal"
+    - "Staff"
+  seniority_boost:
+    - "Engineer I"
+    - "Engineer II"
+    - "Associate"
+    - "Mid"
+    - "Founding"
+
+search_queries:
+  - name: LinkedIn assisted - NoVA software
+    query: 'site:linkedin.com/jobs "Software Engineer" "Northern Virginia" OR "Washington DC"'
+    enabled: true
+  - name: Greenhouse - DC software and automation
+    query: 'site:job-boards.greenhouse.io "Software Engineer" OR "Automation Engineer" "Washington DC" OR "Arlington"'
+    enabled: true
+  - name: Ashby - FDE and implementation
+    query: 'site:jobs.ashbyhq.com "Forward Deployed" OR "Implementation Engineer" OR "Solutions Engineer" "Washington" OR "Arlington"'
+    enabled: true
+  - name: GovCon software NoVA
+    query: '"Software Engineer" "Northern Virginia" GovCon OR federal technology OR mission systems'
+    enabled: true
+  - name: YC/startup NoVA DC
+    query: 'site:workatastartup.com OR site:ycombinator.com/jobs "Software Engineer" OR "Founding Engineer" "Washington" OR "Remote"'
+    enabled: true
+
+tracked_companies:
+  - name: Anduril
+    careers_url: https://job-boards.greenhouse.io/andurilindustries
+    api: https://boards-api.greenhouse.io/v1/boards/andurilindustries/jobs
+    notes: "Defense technology. Review NoVA/DC-compatible roles and clearance language carefully."
+    enabled: true
+  - name: Palantir
+    careers_url: https://www.palantir.com/careers/
+    scan_method: websearch
+    scan_query: 'site:palantir.com/careers "Forward Deployed" OR "Software Engineer" "Washington"'
+    notes: "Forward deployed and federal technology roles."
+    enabled: true
+  - name: Shield AI
+    careers_url: https://jobs.lever.co/shieldai
+    notes: "Defense autonomy. Check location and clearance requirements."
+    enabled: true
+  - name: Rebellion Defense
+    careers_url: https://www.rebelliondefense.com/careers
+    scan_method: websearch
+    scan_query: 'site:rebelliondefense.com/careers "Software Engineer" OR "Engineer"'
+    notes: "Defense software company with DC relevance."
+    enabled: true
+  - name: Vannevar Labs
+    careers_url: https://jobs.ashbyhq.com/vannevarlabs
+    notes: "Defense technology. Check DC/remote openings."
+    enabled: true
+  - name: Coalfire Federal
+    careers_url: https://www.coalfire.com/careers
+    scan_method: websearch
+    scan_query: 'site:coalfire.com/careers "Software" OR "Automation" OR "Engineer"'
+    notes: "Federal/cyber consulting."
+    enabled: true
+  - name: Capital One
+    careers_url: https://www.capitalonecareers.com
+    scan_method: websearch
+    scan_query: 'site:capitalonecareers.com "Software Engineer" "McLean" OR "Richmond"'
+    notes: "McLean software roles may fit NoVA policy."
+    enabled: true
+  - name: Appian
+    careers_url: https://appian.com/careers
+    scan_method: websearch
+    scan_query: 'site:appian.com/careers "Software Engineer" OR "Solutions Engineer" "McLean"'
+    notes: "NoVA software/platform company."
+    enabled: true
+  - name: Alarm.com
+    careers_url: https://alarm.com/about/careers
+    scan_method: websearch
+    scan_query: 'site:alarm.com/about/careers "Software Engineer" OR "Automation" "Tysons"'
+    notes: "Tysons software roles."
+    enabled: true
+  - name: Excella
+    careers_url: https://www.excella.com/careers
+    scan_method: websearch
+    scan_query: 'site:excella.com/careers "Software Engineer" OR "Full Stack" OR "Automation"'
+    notes: "Arlington/DC digital services and software consulting."
+    enabled: true
+  - name: Raft
+    careers_url: https://teamraft.com/careers/
+    scan_method: websearch
+    scan_query: 'site:teamraft.com/careers "Software Engineer" OR "Platform" OR "DevSecOps"'
+    notes: "GovTech software company. Check active clearance requirements."
+    enabled: true
+  - name: Ad Hoc
+    careers_url: https://adhocteam.us/join/
+    scan_method: websearch
+    scan_query: 'site:adhocteam.us/join "Software Engineer" OR "Engineer"'
+    notes: "Federal digital services."
+    enabled: true

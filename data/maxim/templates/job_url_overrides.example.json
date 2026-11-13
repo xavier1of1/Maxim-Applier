@@ -1,0 +1,13 @@
+{
+  "overrides": [
+    {
+      "match": {
+        "sourceUrl": "https://aggregator.example/jobs/source-id",
+        "company": "Example Company",
+        "role": "Example Role"
+      },
+      "jobUrl": "https://official-ats.example/company/jobs/official-id",
+      "reason": "Aggregator page required login; official ATS posting verified manually."
+    }
+  ]
+}

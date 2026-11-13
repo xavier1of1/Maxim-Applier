@@ -10,6 +10,21 @@ function signal(value) {
   return Boolean(value);
 }
 
+const ROLE_LANE_TERMS = [
+  "software",
+  "engineer",
+  "automation",
+  "federal",
+  "govcon",
+  "cyber",
+  "fde",
+  "backend",
+  "full-stack",
+  "full stack",
+  "ai",
+  "systems",
+];
+
 export function rankContactsForJob(job, contacts = []) {
   const company = `${job.company ?? ""}`.toLowerCase();
   const roleText = `${job.role ?? ""} ${job.title ?? ""}`.toLowerCase();
@@ -26,6 +41,7 @@ export function rankContactsForJob(job, contacts = []) {
         signal(contact.founderSignal ?? contact.founder_signal) ||
         includesAny(contact.title, ["founder", "co-founder"]);
       const roleRelevance = contact.roleRelevance ?? contact.role_relevance;
+      const contactRoleText = `${contact.title ?? ""} ${contact.notes ?? ""} ${roleRelevance ?? ""}`.toLowerCase();
       if (`${contact.company ?? ""}`.toLowerCase() === company && company) {
         score += 40;
         reasons.push("Same company.");
@@ -46,9 +62,13 @@ export function rankContactsForJob(job, contacts = []) {
         score += 10;
         reasons.push("Founder/startup signal.");
       }
-      if (includesAny(`${contact.title} ${contact.notes} ${roleRelevance}`, ["software", "engineer", "automation", "federal", "cyber", "fde"]) || includesAny(roleText, ["software", "engineer", "automation", "federal", "cyber", "fde"])) {
+      if (includesAny(contactRoleText, ROLE_LANE_TERMS) && includesAny(roleText, ROLE_LANE_TERMS)) {
         score += 8;
         reasons.push("Role-lane relevance.");
+      }
+      if (includesAny(contactRoleText, ["manager", "lead", "principal", "staff", "director", "head of", "vp"])) {
+        score += 6;
+        reasons.push("Seniority or hiring-adjacent signal.");
       }
       return {
         contact,

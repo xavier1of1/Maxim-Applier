@@ -1,0 +1,14 @@
+# Copy public/search-result people snippets here, one person per blank-line-separated block.
+# Do not include private messages, cookies, tokens, or scraped hidden data.
+# Maxim parses this as candidate contact data only; Xavier still verifies and sends manually.
+
+Example Recruiter
+Technical Recruiter at Example Company
+1st
+https://www.linkedin.com/in/example-recruiter/
+
+Example Engineering Manager
+Engineering Manager at Example Company
+Virginia Tech alumni
+https://www.linkedin.com/in/example-engineering-manager/
+

@@ -1,5 +1,41 @@
 # Mode: contacto -- LinkedIn Power Move
 
+## Maxim Apply Integration
+
+When this Career-Ops fork is being used as Maxim Apply, use the local Maxim networking layer before ad hoc research:
+
+```powershell
+npm run maxim:linkedin-find -- --company "<company>" --role "<role>"
+npm run maxim:linkedin-find -- --from-store --limit-jobs 5
+```
+
+If the user has pasted public/LinkedIn people-search snippets into a local text file, parse them without logging in or sending messages:
+
+```powershell
+npm run maxim:linkedin-find -- --company "<company>" --role "<role>" --results data\maxim\linkedin_people_results.txt --store-results
+```
+
+To create job-specific networking targets from discovered/local contacts:
+
+```powershell
+npm run maxim:linkedin-find -- --from-store --limit-jobs 5 --results data\maxim\linkedin_people_results.txt --store-results --queue
+```
+
+Then use the Maxim research-gated draft flow:
+
+```powershell
+npm run maxim:message-drafts -- research <target_id> --text "Approved public/person research note"
+npm run maxim:message-drafts -- from-target <target_id> --require-research
+```
+
+Hard boundaries:
+
+- Do not log in to LinkedIn on the user's behalf.
+- Do not send LinkedIn messages.
+- Do not scrape hidden/authenticated LinkedIn data.
+- Do not bypass CAPTCHA, rate limits, or access controls.
+- Treat all discovered people as candidates requiring manual verification.
+
 1. **Identify targets** via WebSearch:
    - Hiring manager of the team
    - Assigned recruiter
