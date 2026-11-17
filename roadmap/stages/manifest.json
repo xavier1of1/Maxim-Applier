@@ -7,7 +7,7 @@
       "id": "S0",
       "title": "Ownership, safety, and architecture baseline",
       "file": "stage-00-ownership-and-baseline.md",
-      "status": "Pending",
+      "status": "Verified",
       "requires": [],
       "conditional": [],
       "produces": [
@@ -22,6 +22,56 @@
         "OWN-04",
         "OWN-05",
         "OWN-06"
+      ],
+      "evidence": [
+        {
+          "caseId": "OWN-01",
+          "result": "passed",
+          "command": "source/path inspection and bounded baseline checks recorded in s0-baseline.md",
+          "environment": "Windows; Node 20.15.1; Go 1.26.4",
+          "verifiedAt": "2026-11-16",
+          "record": "roadmap/reviews/s0-baseline.md"
+        },
+        {
+          "caseId": "OWN-02",
+          "result": "passed",
+          "command": "node --test maxim/tests/integration/baseline-restore.test.mjs; protected snapshot and restore",
+          "environment": "Windows; Node 20.15.1; Go 1.26.4",
+          "verifiedAt": "2026-11-16",
+          "record": "roadmap/reviews/s0-baseline.md"
+        },
+        {
+          "caseId": "OWN-03",
+          "result": "passed",
+          "command": "npm view next version engines --json; dependency peer inspection",
+          "environment": "Windows; Node 20.15.1; Go 1.26.4",
+          "verifiedAt": "2026-11-16",
+          "record": "roadmap/reviews/s0-baseline.md"
+        },
+        {
+          "caseId": "OWN-04",
+          "result": "passed",
+          "command": "source/path inspection and bounded baseline checks recorded in s0-baseline.md",
+          "environment": "Windows; Node 20.15.1; Go 1.26.4",
+          "verifiedAt": "2026-11-16",
+          "record": "roadmap/reviews/s0-baseline.md"
+        },
+        {
+          "caseId": "OWN-05",
+          "result": "passed",
+          "command": "source/path inspection and bounded baseline checks recorded in s0-baseline.md",
+          "environment": "Windows; Node 20.15.1; Go 1.26.4",
+          "verifiedAt": "2026-11-16",
+          "record": "roadmap/reviews/s0-baseline.md"
+        },
+        {
+          "caseId": "OWN-06",
+          "result": "passed",
+          "command": "source/path inspection and bounded baseline checks recorded in s0-baseline.md",
+          "environment": "Windows; Node 20.15.1; Go 1.26.4",
+          "verifiedAt": "2026-11-16",
+          "record": "roadmap/reviews/s0-baseline.md"
+        }
       ]
     },
     {

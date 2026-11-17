@@ -1,6 +1,6 @@
 # S0: Ownership, safety, and architecture baseline
 
-**Status:** Pending implementation. Detailed plan drafted; no acceptance criterion is claimed passed.
+**Status:** Verified for the bounded S0 foundation scope. See [executed evidence](../reviews/s0-baseline.md); no stack or cutover is claimed.
 **Updated:** 2026-11-16.
 **Roadmap:** [Stage index](README.md) | [High-level roadmap](../high-level-roadmap.md) | [Shared contracts](contracts.md)
 **Requires:** No prior implementation stage; accepted direction and protected audit access.
@@ -50,12 +50,12 @@ A full `test-all.mjs` run invokes normalize/dedup/merge and must not run against
 
 ## Acceptance
 
-- [ ] **OWN-01:** A source/writer map includes CV/profile, native tracker, SQLite/events, artifacts, Go reads/writes, evaluator and rejected runner; unlocated web source is labeled after a bounded search.
-- [ ] **OWN-02:** A restore to a new isolated fixture target preserves raw-field/hash/ID/artifact relationships; the restore tool refuses production/ancestor paths and protected backups exist before real cutover.
-- [ ] **OWN-03:** S1 runtime/layout/model adapter/local session/storage decisions and license policy are recorded with version-resolution steps, not undocumented assumptions.
-- [ ] **OWN-04:** Each native writer/consumer and retired runner reference has an owner, patch/gate, regression test and rollback/retirement condition.
-- [ ] **OWN-05:** Privacy checks cover tracked/ignored/history/build/export risk without publishing findings or secret values; remediation requiring rotation/history changes is a separate approved action.
-- [ ] **OWN-06:** Baseline results are reproducible and failures are explicitly assigned; no checked future product criteria, live-site support or complete discovery claim follows from fixtures.
+- [x] **OWN-01:** A source/writer map includes CV/profile, native tracker, SQLite/events, artifacts, Go reads/writes, evaluator and rejected runner; unlocated web source is labeled after a bounded search.
+- [x] **OWN-02:** A restore to a new isolated fixture target preserves raw-field/hash/ID/artifact relationships; the restore tool refuses production/ancestor paths and protected backups exist before real cutover.
+- [x] **OWN-03:** S1 runtime/layout/model adapter/local session/storage decisions and license policy are recorded with version-resolution steps, not undocumented assumptions.
+- [x] **OWN-04:** Each native writer/consumer and retired runner reference has an owner, patch/gate, regression test and rollback/retirement condition.
+- [x] **OWN-05:** Privacy checks cover tracked/ignored/history/build/export risk without publishing findings or secret values; remediation requiring rotation/history changes is a separate approved action.
+- [x] **OWN-06:** Baseline results are reproducible and failures are explicitly assigned; no checked future product criteria, live-site support or complete discovery claim follows from fixtures.
 
 ## Integration Test
 
@@ -86,7 +86,7 @@ No personal API key is required to complete documentation/audit/fixture work. Re
 
 ## What Shipped
 
-Nothing in this stage is accepted as implemented by its plan. The accompanying validation report records this session's inspected code and tests, not a completed backup, privacy history audit or architecture deployment.
+Implemented guarded backup/restore library and CLI, six passing recovery tests, an ACL-protected 137-file real snapshot/restore, architecture ADR 0005, source/writer/patch inventory and bounded privacy/baseline audit. Evidence is in s0-baseline.md. Existing application defects are assigned, not fixed; historical privacy review is bounded, not certified clean.
 
 ## Deferred To Later Stages
 

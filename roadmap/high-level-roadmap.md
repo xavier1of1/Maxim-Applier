@@ -2,7 +2,7 @@
 
 **Status:** Revision 0.3 refined target plan with detailed stage specifications. Implementation and unresolved design choices remain unapproved until their gates pass.
 **Updated:** 2026-11-16. **Demo target:** 2026-11-19, scope not yet frozen.
-**Implementation standing:** All stages Pending. No database migration, browser replacement, or new dashboard is shipped by this documentation pass.
+**Implementation standing:** S0 verified for bounded baseline scope; S1-S11 Pending. No database migration, browser replacement, or new dashboard is shipped by this documentation pass.
 **Companions:** [Index](README.md), [manifesto](MANIFESTO.md), [component assessment](external-components-assessment.md), [setup](operational-setup.md), [development workflow](development-workflow.md).
 
 ## 1. Outcome And Planning Discipline
@@ -68,7 +68,7 @@ Create small decision records for chosen stack, persistence/retention, source re
 
 | ID | Name | Thin user-visible proof | Dependencies | Status |
 | --- | --- | --- | --- | --- |
-| S0 | [Ownership, safety, and architecture baseline](stages/stage-00-ownership-and-baseline.md) | Trace one recoverable record/artifact and approve the minimal stack/cutover boundaries | Accepted direction; bounded audit | Pending |
+| S0 | [Ownership, safety, and architecture baseline](stages/stage-00-ownership-and-baseline.md) | Trace one recoverable record/artifact and approve the minimal stack/cutover boundaries | Accepted direction; bounded audit | Verified |
 | S1 | [Real workspace and contextual agent](stages/stage-01-workspace-and-agent.md) | Add a job/application in UI; ask agent about same ID; restart and read it | S0 | Pending |
 | S2 | [Reviewed candidate onboarding](stages/stage-02-reviewed-onboarding.md) | Upload, review/correct, confirm, restart, retrieve sourced facts | S1 | Pending |
 | S3 | [Reusable answers and bounded context](stages/stage-03-answer-memory.md) | Answer once, recall in scope, correct/revoke, suppress old reuse | S2 | Pending |
@@ -149,11 +149,11 @@ See [shared contracts](stages/contracts.md) and the [stage registry](stages/mani
 - Approve retirement inventory and regression baseline. Disable dangerous/stale recommendations only through scoped changes; preserve useful data and native PDF/liveness dependencies.
 
 **Acceptance**
-- [ ] Owner/path/read-write map and patch inventory exist; unknown source locations are honestly labeled.
-- [ ] A backup/restore proof covers records plus linked artifacts and rollback boundaries.
-- [ ] Existing test failures are reproduced or clearly labeled historical; exact practical baseline commands are selected.
-- [ ] Stack and privacy decisions needed by S1 are recorded; all optional components have nonblocking dispositions.
-- [ ] Dossier copying is blocked pending a license decision; no secrets/personal content enter research artifacts or Git.
+- [x] Owner/path/read-write map and patch inventory exist; unknown source locations are honestly labeled.
+- [x] A backup/restore proof covers records plus linked artifacts and rollback boundaries.
+- [x] Existing test failures are reproduced or clearly labeled historical; exact practical baseline commands are selected.
+- [x] Stack and privacy decisions needed by S1 are recorded; all optional components have nonblocking dispositions.
+- [x] Dossier copying is blocked pending a license decision; no secrets/personal content enter research artifacts or Git.
 
 **Handoff:** S1 receives actual paths, selected stack, minimal commands/contracts, safety rules, and known regressions.
 

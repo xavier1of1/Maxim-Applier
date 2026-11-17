@@ -1,6 +1,6 @@
 # Detailed Roadmap Stages
 
-**Status:** Revision 0.3. All implementation stages Pending.
+**Status:** Revision 0.3. S0 verified for bounded baseline scope; S1-S11 Pending.
 **Updated:** 2026-11-16.
 **Purpose:** Vantage-style implementation plans for the revised Maxim Apply journey. These files describe work to perform, not work already shipped.
 
@@ -20,7 +20,7 @@ The format follows inspected Vantage files under `E:\10x\10x-vantage\roadmaps`: 
 
 | Stage | User outcome | Mandatory prerequisites | Acceptance cases | Implementation status |
 | --- | --- | --- | --- | --- |
-| [S0](stage-00-ownership-and-baseline.md) | Ownership, safety, and architecture baseline | None | 6 | Pending |
+| [S0](stage-00-ownership-and-baseline.md) | Ownership, safety, and architecture baseline | None | 6 | Verified |
 | [S1](stage-01-workspace-and-agent.md) | Real workspace and contextual agent | S0 | 8 | Pending |
 | [S2](stage-02-reviewed-onboarding.md) | Reviewed candidate onboarding | S1 | 8 | Pending |
 | [S3](stage-03-answer-memory.md) | Reusable answers and bounded context | S2 | 8 | Pending |

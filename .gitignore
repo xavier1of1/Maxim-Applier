@@ -12,6 +12,9 @@ data/maxim/*.json
 data/maxim/*.xlsx
 data/maxim/*.xls
 data/maxim/dashboard-state.json
+data/maxim/exports/*
+!data/maxim/exports/.gitkeep
+interview-prep/*
 data/maxim/events/*.jsonl
 data/maxim/auto-apply-runs/*
 !data/maxim/auto-apply-runs/.gitkeep

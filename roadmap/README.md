@@ -1,6 +1,6 @@
 # Maxim Apply Roadmap Index
 
-**Status:** Revision 0.3. Refined roadmap with detailed stage specifications; implementation remains Pending.
+**Status:** Revision 0.3. Refined roadmap with detailed stage specifications; S0 is verified for bounded baseline scope; later stages remain Pending.
 **Updated:** 2026-11-16.
 **Demo target:** 2026-11-19. No claim that this entire roadmap fits before that date.
 
@@ -23,7 +23,7 @@ The refinement adds detailed stage plans, a code/design drift report and executa
 | Document | Read it for | Standing |
 | --- | --- | --- |
 | [System manifesto](MANIFESTO.md) | Product journey, authority, memory, architecture, boundaries | Revised target proposal with accepted decisions marked |
-| [High-level roadmap](high-level-roadmap.md) | Refined early UI stages, dependencies and optional lanes | All implementation stages Pending |
+| [High-level roadmap](high-level-roadmap.md) | Refined early UI stages, dependencies and optional lanes | S0 verified; S1-S11 Pending |
 | [Detailed stage plans](stages/README.md) | Twelve Vantage-style implementation plans with 92 acceptance cases | Drafted, not implemented |
 | [Shared stage contracts](stages/contracts.md) | Runtime binding, commands, identity, storage, worker and consumer contracts | Proposed implementation detail with S0 gates |
 | [Refinement and validation](reviews/roadmap-refinement.md) | Changes, executed tests, remaining runtime gaps | Actual evidence scope recorded |
@@ -67,7 +67,7 @@ Blank comments in the original workflow remain unanswered. No candidate claims o
 
 | ID | Outcome visible to the user | Dependency | Status |
 | --- | --- | --- | --- |
-| S0 | [A reliable ownership/privacy baseline and approved minimal architecture](stages/stage-00-ownership-and-baseline.md) | Accepted direction; bounded audit | Pending |
+| S0 | [A reliable ownership/privacy baseline and approved minimal architecture](stages/stage-00-ownership-and-baseline.md) | Accepted direction; bounded audit | Verified |
 | S1 | [A real baseline dashboard and agent over persistent jobs/applications](stages/stage-01-workspace-and-agent.md) | S0 | Pending |
 | S2 | [Upload, review, correct, and retain personal knowledge](stages/stage-02-reviewed-onboarding.md) | S1 | Pending |
 | S3 | [Answer once; recall safely through UI and agent](stages/stage-03-answer-memory.md) | S2 | Pending |
