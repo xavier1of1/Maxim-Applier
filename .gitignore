@@ -70,3 +70,6 @@ maxim/app/tsconfig.tsbuildinfo
 maxim/app/test-results/
 maxim/app/playwright-report/
 maxim/app/.env.local
+maxim/runtime/target/
+maxim/app/.cache/
+data/maxim/authority.json

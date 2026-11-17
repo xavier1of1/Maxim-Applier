@@ -4,6 +4,24 @@ This document defines which files belong to the **system** (auto-updatable) and 
 
 ## User Layer (NEVER auto-updated)
 
+### Explicit Candidate Cutover Exception
+
+System updates still never overwrite private data. A user-reviewed S2 candidate
+cutover is a separate opt-in migration, not an upstream update. While
+`data/maxim/authority.json` says `candidate: canonical`, PostgreSQL reviewed facts
+are authoritative and the four CV/profile/evidence files below are generated,
+hash-bound, consent-filtered read projections. Frozen ownership disables native
+evaluation/writes; canonical reads require a current online workspace revision.
+Native instructions and `gemini-eval.mjs` enforce the conditional gate.
+Absence of a marker means legacy behavior; an unreadable marker never implies legacy.
+
+Review sources and each fact before activation. No existing personal file was
+implicitly imported/approved by installing this implementation. Rollback returns
+file write ownership with the latest approved, permitted projection, preserving all
+acknowledged facts and original bytes in protected cutover storage. See
+[Reviewed onboarding](docs/maxim/reviewed-onboarding.md). Tracker ownership remains
+legacy until its separate S5 cutover.
+
 These files contain your personal data, customizations, and work product. Updates will NEVER modify them.
 
 | File | Purpose |

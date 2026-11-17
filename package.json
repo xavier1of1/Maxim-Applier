@@ -18,6 +18,7 @@
     "patterns": "node analyze-patterns.mjs",
     "gemini:eval": "node gemini-eval.mjs",
     "maxim:doctor": "node maxim/scripts/doctor-maxim.mjs",
+    "maxim:authority": "node maxim/scripts/authority-check.mjs",
     "maxim:evaluate-job": "node maxim/scripts/evaluate-job.mjs",
     "maxim:sync": "node maxim/scripts/maxim-sync.mjs",
     "maxim:tier": "node maxim/scripts/maxim-tier.mjs",

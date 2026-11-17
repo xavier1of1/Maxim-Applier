@@ -24,6 +24,10 @@ export async function harness() {
    let raw='';for await(const part of req){raw+=part;if(Buffer.byteLength(raw)>32000)throw Error('oversize');}
    const body=JSON.parse(raw);captured.push({body,authorization:req.headers.authorization});
    const q=[...body.messages].reverse().find(m=>m.role==='user')?.content||'';
+   if(body.response_format){
+    res.writeHead(200,{'Content-Type':'application/json'});
+    res.end(JSON.stringify({choices:[{message:{content:JSON.stringify({facts:[{field_key:'experience.fixture',value:'Built customer software using Rust and TypeScript.',quote:'Built customer software using Rust and TypeScript.'}]})}}]}));return;
+   }
    if(q.includes('[case:failure]')){res.writeHead(429);res.end('fixture_provider_body_secret');return;}
    res.writeHead(200,{'Content-Type':'text/event-stream'});
    const send=data=>res.write('data: '+JSON.stringify(data)+'\n\n');
@@ -41,10 +45,13 @@ export async function harness() {
     const data=JSON.parse(last.content);
     if(q.includes('[case:note]')&&last.tool_call_id==='call_job'&&!data.error){tool('propose_job_note',{jobId:data.id,expectedRevision:data.revision,note:'Follow up with the hiring team.'},'call_note');return;}
     if(data.error){text('No authorized action is available for that request.');return;}
-    if(data.proposalId){text('A note change is ready for your review. It has not been saved.');return;}
+    if(data.proposalId){text(last.tool_call_id==='call_fact'?'A candidate fact is ready in Candidate review. It is not approved.':'A note change is ready for your review. It has not been saved.');return;}
+    if(q.includes('[case:candidate]')){text(JSON.stringify(data));return;}
     text(data.jobs?'Saved roles: '+data.jobs.map(j=>j.company+' - '+j.title).join('; '):'Saved role '+(data.company||'')+' at revision '+(data.revision||'unknown')+'.');return;
    }
    if(q.includes('[case:self-confirm]')){tool('confirm_proposal',{proposalId:id||crypto.randomUUID()},'call_forbidden');return;}
+   if(q.includes('[case:fact]')){tool('propose_candidate_fact',{fieldKey:'candidate.location',value:'Arlington, VA',quote:'I live in Arlington, VA.'},'call_fact');return;}
+   if(q.includes('[case:candidate]')){tool('read_candidate_context',{},'call_candidate');return;}
    if(q.includes('[case:note]')||q.includes('[case:cross]')){tool('get_job',{jobId:id},'call_job');return;}
    tool('read_workspace',{},'call_read');
   }catch{if(!res.headersSent)res.writeHead(500);res.end();}
@@ -56,6 +63,7 @@ export async function harness() {
  const runtime=path.join(root,'runtime.json');fs.writeFileSync(runtime,JSON.stringify(c));
  assertTestConfig(c);
  let server,logFd;
+ const workers=new Map();
  const cleanEnv=()=>Object.fromEntries(Object.entries(process.env).filter(([k])=>['PATH','Path','SystemRoot','SYSTEMROOT','WINDIR','TEMP','TMP','LOCALAPPDATA','USERPROFILE','COMSPEC','PATHEXT','NUMBER_OF_PROCESSORS'].includes(k)));
  const sql=async(text,params=[],name=database)=>{
   if(!/^maxim_test_[a-z0-9_]+$/.test(name))throw Error('Unsafe SQL target');
@@ -63,6 +71,25 @@ export async function harness() {
   const client=new pg.Client({connectionString:u.toString()});await client.connect();
   try{return await client.query(text,params);}finally{await client.end();}
  };
+ async function startWorker(){
+  const node=path.join(appDir,'node_modules/node/bin',process.platform==='win32'?'node.exe':'node');
+  const fd=fs.openSync(path.join(root,'worker.log'),'a');
+  const child=spawn(node,['--import','tsx','src/worker/main.ts','--runtime-file',runtime],
+   {cwd:appDir,env:{...cleanEnv(),MAXIM_RUNTIME_FILE:runtime},stdio:['ignore',fd,fd],windowsHide:true});
+  workers.set(child,fd);
+  await delay(1000);
+  if(child.exitCode!==null)throw Error('Fixture worker exited. Inspect worker.log.');
+  return child;
+ }
+ async function stopWorker(child){
+  if(!workers.has(child))return;
+  if(child.exitCode===null){
+   if(process.platform==='win32')execFileSync('taskkill',['/PID',String(child.pid),'/T','/F'],{stdio:'ignore',windowsHide:true});
+   else child.kill('SIGTERM');
+   await new Promise(resolve=>{if(child.exitCode!==null)resolve();else{child.once('exit',resolve);setTimeout(resolve,3000).unref();}});
+  }
+  fs.closeSync(workers.get(child));workers.delete(child);
+ }
  async function startServer(){
   const node=path.join(appDir,'node_modules/node/bin',process.platform==='win32'?'node.exe':'node');
   logFd=fs.openSync(path.join(root,'server.log'),'a');
@@ -105,9 +132,10 @@ export async function harness() {
   return response;
  };
  const a=await login(c.bootstrapKey),b=await login(other.key);
- return {root,c,runtime,container,database,captured,a,b,other,sql,login,request,startServer,stopServer,
+ return {root,c,runtime,container,database,captured,a,b,other,sql,login,request,startServer,stopServer,startWorker,stopWorker,
   snapshotDatabase:target=>snapshotDatabase(c,target),restoreDatabase:(dump,name)=>restoreDatabase(c,dump,name),
   async close(){
+   for(const child of [...workers.keys()])await stopWorker(child);
    await stopServer();for(const t of timers)clearTimeout(t);
    modelServer.closeAllConnections();await new Promise(resolve=>modelServer.close(resolve));
    execFileSync('docker',['rm','-f',container],{stdio:'ignore',windowsHide:true});

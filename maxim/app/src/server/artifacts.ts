@@ -39,7 +39,7 @@ export async function uploadArtifact(ctx:Context,form:FormData) {
 }
 export async function downloadArtifact(ctx:Context,id:string) {
  uuid.parse(id);
- const r=await database().query('SELECT * FROM artifacts WHERE id=$1 AND workspace_id=$2',[id,ctx.workspaceId]);
+ const r=await database().query('SELECT * FROM artifacts WHERE id=$1 AND workspace_id=$2 AND deleted_at IS NULL',[id,ctx.workspaceId]);
  const a=r.rows[0];if(!a)throw notFound();
  uuid.parse(a.storage_key);
  const root=await fs.realpath(artifactRoot()),target=path.join(root,a.storage_key);

@@ -3,7 +3,7 @@ const config: NextConfig = {
   turbopack: { root: process.cwd() },
   outputFileTracingRoot: process.cwd(),
   outputFileTracingExcludes: { '/*': ['./tests/**/*', './scripts/**/*', './.env*'] },
-  poweredByHeader: false, serverExternalPackages: ['pg'],
+  poweredByHeader: false, serverExternalPackages: ['pg','pdfjs-dist','mammoth','yauzl'],
   async headers() {
     return [{ source: '/:path*', headers: [
       { key: 'X-Content-Type-Options', value: 'nosniff' },

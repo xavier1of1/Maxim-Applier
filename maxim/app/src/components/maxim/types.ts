@@ -1,6 +1,6 @@
-export type View = 'jobs' | 'applications' | 'activity' | 'settings';
+export type View = 'jobs' | 'applications' | 'activity' | 'settings' | 'candidate';
 export type RecordFilter = 'active' | 'archived';
-export type Navigation = Partial<Record<'view' | 'job' | 'conversation' | 'filter', string | null>>;
+export type Navigation = Partial<Record<'view' | 'job' | 'conversation' | 'filter' | 'source', string | null>>;
 
 export interface WorkspaceIdentity {
   id: string;

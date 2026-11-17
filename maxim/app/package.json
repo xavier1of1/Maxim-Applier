@@ -8,7 +8,10 @@
   },
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1 --port 3010",
-    "build": "next build",
+    "build": "npm run build:rust && next build",
+    "build:rust": "cargo build --locked --manifest-path ../runtime/Cargo.toml",
+    "test:rust": "cargo test --locked --manifest-path ../runtime/Cargo.toml",
+    "worker": "node --import tsx src/worker/main.ts",
     "start": "next start --hostname 127.0.0.1 --port 3010",
     "typecheck": "tsc --noEmit",
     "setup": "node scripts/workspace.mjs setup",
@@ -17,9 +20,10 @@
     "backup": "node scripts/workspace.mjs backup",
     "restore": "node scripts/workspace.mjs restore",
     "key": "node scripts/workspace.mjs key",
-    "test:integration": "node --test --test-concurrency=1 tests/integration/workspace.test.mjs",
+    "test:integration": "node tests/run-integration.mjs",
+    "test:unit": "node --import tsx --test tests/unit/*.test.mjs",
     "test:e2e": "playwright test",
-    "test": "npm run typecheck && npm run build && npm run test:integration && npm run test:e2e"
+    "test": "npm run typecheck && npm run test:rust && npm run test:unit && npm run build && npm run test:integration && npm run test:e2e"
   },
   "dependencies": {
     "@astryxdesign/core": "0.7.16",
@@ -28,6 +32,10 @@
     "lucide-react": "1.73.0",
     "next": "16.4.6",
     "pg": "8.23.1",
+    "pdfjs-dist": "6.5.438",
+    "mammoth": "1.13.0",
+    "yauzl": "3.4.0",
+    "js-yaml": "5.5.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "zod": "4.6.7"
@@ -36,6 +44,10 @@
     "@playwright/test": "1.65.1",
     "@types/node": "26.6.6",
     "@types/pg": "8.23.1",
+    "@types/yauzl": "2.10.3",
+    "jszip": "3.10.1",
+    "pdfkit": "0.20.2",
+    "@types/js-yaml": "4.0.9",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "node": "24.22.3",

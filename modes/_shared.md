@@ -10,6 +10,14 @@
 
 ## Sources of Truth
 
+**Maxim candidate ownership gate:** Before reading the candidate sources below,
+run `node maxim/scripts/authority-check.mjs candidate read`. Before changing one,
+run `node maxim/scripts/authority-check.mjs candidate write`. Canonical files are
+reviewed workspace projections; route corrections through Candidate review.
+Frozen/stale/offline canonical context is not an evaluation input. Do not infer
+missing values from templates or revert to older files. Legacy ownership retains
+the original rules below. This changes authority, not Career-Ops scoring.
+
 | File | Path | When |
 |------|------|------|
 | cv.md | `cv.md` (project root) | ALWAYS |

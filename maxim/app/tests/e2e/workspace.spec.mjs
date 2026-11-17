@@ -137,7 +137,8 @@ test('mobile intake and navigation fit the viewport without hidden overlapping c
  await expect(agent.locator('.message-assistant').filter({hasText:'Saved roles:'})).toBeVisible();
  await layout(page);await page.screenshot({path:info.outputPath('mobile-agent.png'),fullPage:true});
  await agent.getByRole('button',{name:'Close agent'}).click();
- await page.locator('.mobile-navigation').getByRole('button',{name:'Settings',exact:true}).click();
+ await page.locator('.mobile-navigation').getByRole('button',{name:'More',exact:true}).click();
+ await page.getByRole('dialog',{name:'Navigation',exact:true}).getByRole('button',{name:'Settings',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Model connection'})).toBeVisible();await layout(page);
 });
 test('no model key disables agent but leaves real manual intake available',async({page})=>{

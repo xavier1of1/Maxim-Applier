@@ -1,9 +1,23 @@
 # Maxim Apply Implementation Status
 
 Implementation baseline last updated: 2026-06-10
-Planning/development handoff updated: 2026-11-16
+Planning/development handoff updated: 2026-11-17
 
 ## November 2026 Planning Handoff
+
+### S2 Reviewed Onboarding Delivered
+
+Reviewed source intake, local isolated PDF/DOCX/MD/TXT extraction, fenced durable
+workers, source-linked typed proposals, explicit fact/conflict review, correction,
+disclosure, retention/erasure, conditional native candidate cutover and journal-backed
+recovery are implemented. Rust owns deterministic type/sensitivity/tier validation,
+not Career-Ops fit assessment. No personal profile was imported/approved/activated.
+See [onboarding guide](reviewed-onboarding.md), [ADR 0007](decisions/0007-reviewed-candidate-rust-boundary.md)
+and [S2 evidence](../../roadmap/reviews/s2-onboarding.md).
+Full app suite: 8 Rust, 6 parser, 32 integration TAP cases, 8 Chromium workflows passed.
+Go dashboard, native evaluator help and static platform safety passed.
+S3-S5 are in progress under [execution record](s2-s5-execution.md); tracker authority
+remains legacy until its own reviewed migration.
 
 ### S1 Workspace Delivered
 
@@ -15,9 +29,9 @@ See [workspace guide](workspace.md), [ADR 0006](decisions/0006-workspace-impleme
 and [acceptance evidence](../../roadmap/reviews/s1-workspace.md).
 Use `npm run maxim:workspace`; preferred URL http://127.0.0.1:3010/maxim.
 The launcher prints the actual port; reveal the local key with `npm run maxim:workspace:key`.
-S1 acceptance is fixture-backed, not live-model access. Legacy candidate/tracker authority
-is unchanged. The historical planning/implementation notes below describe their original
-time of execution; they do not override this current S1 handoff.
+S1 acceptance is fixture-backed, not live-model access. Its original legacy authority
+handoff is now extended by the opt-in S2 candidate cutover. The historical notes below describe their original
+time of execution; they do not override the current S2 handoff.
 
 ### S0 Executed
 

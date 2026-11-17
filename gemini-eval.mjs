@@ -31,6 +31,7 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import {assertNativeCandidateCurrent} from './maxim/lib/authority-gate.mjs';
 
 // ---------------------------------------------------------------------------
 // Bootstrap: load .env before anything else
@@ -176,6 +177,7 @@ if (!readdirSync) {
 // ---------------------------------------------------------------------------
 console.log('\n📂  Loading context files...');
 
+await assertNativeCandidateCurrent(ROOT);
 const sharedContext  = readFile(PATHS.shared,      'modes/_shared.md');
 const ofertaLogic    = readFile(PATHS.oferta,      'modes/oferta.md');
 const cvContent      = readFile(PATHS.cv,          'cv.md');

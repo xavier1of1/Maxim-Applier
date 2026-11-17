@@ -99,6 +99,9 @@ export function AgentPanel({agent, data, conversationId, jobId, disabled, naviga
         <p>{proposal.note || 'Empty note'}</p>
         <Button label="Review proposal" size="sm" variant="secondary" endContent={<Glyph icon={ArrowRight} />} onClick={() => onReview(proposal)} />
       </div>)}
+      {!agent.isRunning&&messages.some(m=>m.role==='tool'&&m.content.name==='propose_candidate_fact')&&
+       <Button label="Review candidate facts" size="sm" variant="secondary" endContent={<Glyph icon={ArrowRight}/>}
+        onClick={()=>{navigate({view:'candidate'});onClose?.();}}/>}
     </div>
     {!nearBottom && <button type="button" className="latest-messages" onClick={() => {
       setNearBottom(true); transcript.current?.scrollTo({top: transcript.current.scrollHeight, behavior: 'smooth'});

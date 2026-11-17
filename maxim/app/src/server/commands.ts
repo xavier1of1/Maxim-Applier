@@ -23,7 +23,7 @@ function canonical(value: unknown): string {
  if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
  return '{' + Object.entries(value as Record<string,unknown>).sort(([a],[b]) => a.localeCompare(b)).map(([k,v]) => JSON.stringify(k) + ':' + canonical(v)).join(',') + '}';
 }
-export async function event(tx: PoolClient, ctx: Context, entityId: string, type: string, payload: unknown, revision?: number) {
+export async function event(tx: PoolClient, ctx: Pick<Context,'workspaceId'>, entityId: string, type: string, payload: unknown, revision?: number) {
  const id = crypto.randomUUID();
  await tx.query('INSERT INTO events(id,workspace_id,entity_id,event_type,revision,payload) VALUES($1,$2,$3,$4,$5,$6)',
   [id,ctx.workspaceId,entityId,type,revision ?? null,JSON.stringify(payload)]);

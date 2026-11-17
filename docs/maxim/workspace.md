@@ -4,7 +4,7 @@ Updated: 2026-11-17. This is the new local workspace, not the rejected legacy Ma
 
 ## Start And Sign In
 
-Prerequisites: Windows, npm, Docker Desktop's Linux engine running, network for initial packages/images. The app installs pinned Node 24 locally; it does not replace host Node.
+Prerequisites: Windows, npm, Docker Desktop's Linux engine running, Rust 1.76+ with the MSVC build toolchain, network for initial packages/images/crates. The app installs pinned Node 24 locally; it does not replace host Node or upgrade Rust globally.
 
 ~~~powershell
 cd "D:\VSC Programs\maxim-apply"
@@ -31,9 +31,15 @@ npm run maxim:workspace
 npm run maxim:workspace:stop
 ~~~
 
-Stop verifies the recorded web process command line before stopping it, stops only this Compose database and retains data. Do not use docker compose down -v.
+Start owns both web and durable worker processes. Stop verifies their recorded command lines before stopping them, stops only this Compose database and retains data. Do not use docker compose down -v.
 
 ## User Workflow
+
+Candidate is the reviewed onboarding workspace: upload authorized PDF/DOCX/MD/TXT sources,
+review exact proposals, confirm/correct individual facts, choose disclosure and explicitly
+activate candidate authority only after reviewing native projections. See
+[Reviewed onboarding](reviewed-onboarding.md) for the full workflow, limits and recovery.
+This is independent of the reference uploads attached to individual jobs below.
 
 1. Jobs -> New role: save the actual company/title/JD, optional location and HTTPS posting URL. A UUID/revision is persisted without a model key.
 2. Create intent: persist an intention to apply, not a submitted application. Repeating cannot duplicate the intent for that role.
@@ -51,9 +57,9 @@ Empty data is genuinely empty. Failed refreshes label last-loaded data and disab
 
 Settings -> Model connection accepts an OpenAI model ID and API key. Choose a model your own project can access that supports Chat Completions, streaming and strict tools. Billing/access is your account's responsibility. Blank replacement-key input preserves the stored key.
 
-Secrets remain in the protected runtime file, not public settings, bundles, Git or model messages. Chat sends recent messages, selected IDs and authorized tool data to the provider. Uploaded file bytes are neither parsed nor sent. Do not put prohibited proprietary material in chat, notes or JDs.
+Secrets remain in the protected runtime file, not public settings, bundles, Git or model messages. Chat sends bounded recent messages, selected IDs and authorized tool data to the provider. Job-reference bytes are not interpreted. Candidate sources are parsed locally; minimized model interpretation and future candidate context require explicit source permission. Private/sensitive fields remain withheld from general model context. Do not put prohibited proprietary material in chat, sources, notes or JDs.
 
-Tools: read_workspace, get_job, propose_job_note. No shell, SQL, arbitrary file access, submit, send or confirm tool exists. Conversation prose is not candidate truth. Missing evaluations remain unknown; no competing score is generated.
+Tools: read_workspace, get_job, propose_job_note, read_candidate_context, propose_candidate_fact. No shell, SQL, arbitrary file access, submit, send, fact approval or confirm tool exists. Conversation prose is not candidate truth; exact declaration proposals require Candidate review. Missing evaluations remain unknown; no competing score is generated.
 
 Limits: 32,000 UTF-8 serialized request bytes including history/tools/results; 1,024 output tokens per call; four model rounds; three tool calls per round; 60-second run deadline. Oversize requests fail explicitly. This is a conservative byte budget, not exact Microsoft Tokenizer accounting or universal model-window compatibility. Saved usage totals actual reported tokens across calls and reports usage coverage.
 
@@ -67,10 +73,11 @@ Manual records work without a key. The isolated fixture model proves plumbing, n
 | DB listener | 127.0.0.1:55432 preferred, free port chosen/stored on conflict |
 | Runtime credentials/settings | %LOCALAPPDATA%\MaximApply\private\workspace\runtime.json |
 | Immutable uploaded bytes | Protected workspace artifacts directory, opaque UUID keys |
-| Server PID/ownership/log | Protected workspace server.json and server.log |
+| Web/worker PID/ownership/logs | Protected workspace server.json/server.log and worker.json/worker.log |
 | Backups/recoveries | Protected workspace backups and recoveries directories |
 | Source/lock | maxim/app, maxim/db/postgres, compose.yml, app package-lock.json |
-| Legacy candidate/tracker/SQLite | Existing Career-Ops authority, unchanged until explicit cutover |
+| Candidate | Legacy until explicit S2 activation; then reviewed PostgreSQL facts and native read projections |
+| Tracker/SQLite | Existing Career-Ops authority until separate S5 cutover |
 
 Setup removes inherited private-directory ACL access and grants the current user and SYSTEM. This is not encryption or protection against administrators, malware or the same Windows account. Docker volume security follows Docker Desktop.
 
@@ -87,9 +94,9 @@ npm run maxim:workspace:backup
 npm run maxim:workspace:restore -- workspace-REPLACE_WITH_PRINTED_ID
 ~~~
 
-Backup prints its ID and copies a PostgreSQL snapshot, every referenced immutable file and hashes. Uploads coordinate with its lock. Only complete backups receive a final manifest. Runtime credentials are excluded, but dumps still contain private conversations and authentication hashes.
+Backup prints its ID and copies a PostgreSQL snapshot, every live referenced immutable file and known candidate cutover journals with hashes. Uploads/purge/cutover coordinate with its lock. Only complete backups receive a version-2 final manifest; restore also supports S1 version 1. Runtime credentials are excluded, but dumps still contain private conversations and authentication hashes.
 
-Restore verifies manifest, hashes, paths and restored artifact metadata. It creates a new maxim_restore_<timestamp> database and separate recoveries files. It never overwrites or silently promotes the live database. Tests read restored IDs/revisions and reference bytes.
+Restore verifies manifest, hashes, paths and restored artifact metadata. It creates a new maxim_restore_<timestamp> database and separate recoveries artifact/cutover files. It never overwrites or silently promotes the live database. Tests read restored IDs/revisions, reference bytes and candidate cutover journals.
 
 Use only trusted local backups. Preserve the protected runtime configuration separately. Off-device restoration needs credentials and an explicitly reviewed activation procedure. This is verified isolated recovery, not automatic live replacement, encryption, off-device redundancy or retention/expiry management. Do not delete the active volume after a restore proof.
 

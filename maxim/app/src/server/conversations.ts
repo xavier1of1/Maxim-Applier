@@ -6,6 +6,7 @@ import { command, event, jobFor, uuid } from './commands';
 import { getJob, snapshot } from './reads';
 import { completion, modelReady, policy, type ModelMessage, type ToolCall } from './models';
 import { DomainError, invariant, notFound } from './errors';
+import {candidateContext,proposeConversationFact,assertDisclosureText} from './candidate-context';
 
 const controllers=new Map<string,AbortController>();
 const toolSchemas = {
@@ -45,8 +46,14 @@ async function invoke(ctx:Context,cid:string,rid:string,call:ToolCall) {
  }
  if(call.function.name==='get_job') {
   const p=toolSchemas.get_job.parse(args),j=await getJob(ctx,p.jobId);
+  assertDisclosureText(j.description+' '+j.note);
   return {id:j.id,company:j.company,title:j.title,location:j.location,description:j.description.slice(0,3000),note:j.note.slice(0,2000),revision:j.revision,evaluation:'not_available',source:'manually_entered',asOf:new Date().toISOString()};
  }
+ if(call.function.name==='read_candidate_context'){
+  toolSchemas.read_workspace.parse(args);
+  return candidateContext(ctx,rid);
+ }
+ if(call.function.name==='propose_candidate_fact')return proposeConversationFact(ctx,rid,args);
  if(call.function.name==='propose_job_note') {
   const p=toolSchemas.propose_job_note.parse(args);
   return transaction(async tx=>{
@@ -82,6 +89,7 @@ export async function cancelConversation(ctx:Context,cid:string) {
 export async function chatResponse(ctx:Context,cid:string,raw:unknown,requestSignal:AbortSignal) {
  uuid.parse(cid);
  const p=z.object({commandId:uuid,text:z.string().trim().min(1).max(4000)}).strict().parse(raw);
+ assertDisclosureText(p.text);
  modelReady();
  const hash=digest(JSON.stringify({cid,text:p.text}));
  const initial=await transaction(async tx=>{
@@ -116,7 +124,7 @@ export async function chatResponse(ctx:Context,cid:string,raw:unknown,requestSig
    try {
     if(initial.replay){emit('done',{runId:p.commandId,conversationId:cid,replayed:true});return;}
     emit('status',{state:'running',runId:p.commandId});
-    const saved=(await database().query('SELECT m.role,m.content,m.run_id FROM messages m JOIN runs r ON r.id=m.run_id AND r.workspace_id=m.workspace_id WHERE m.conversation_id=$1 AND m.workspace_id=$2 AND r.status=$3 AND m.role IN ($4,$5) ORDER BY m.sequence DESC LIMIT 12',[cid,ctx.workspaceId,'completed','user','assistant'])).rows.reverse();
+    const saved=(await database().query("SELECT m.role,m.content,m.run_id FROM messages m JOIN runs r ON r.id=m.run_id AND r.workspace_id=m.workspace_id WHERE m.conversation_id=$1 AND m.workspace_id=$2 AND r.status=$3 AND m.role IN ($4,$5) AND NOT EXISTS(SELECT 1 FROM fact_dependencies d WHERE d.workspace_id=m.workspace_id AND d.entity_id=r.id AND d.status='invalidated') AND NOT EXISTS(SELECT 1 FROM candidate_sources s WHERE s.workspace_id=m.workspace_id AND s.origin_run=r.id AND (s.model_consent=false OR s.deleted_at IS NOT NULL)) ORDER BY m.sequence DESC LIMIT 12",[cid,ctx.workspaceId,'completed','user','assistant'])).rows.reverse();
     const history:ModelMessage[]=saved.filter(m=>m.content.text && !m.content.toolCalls).map(m=>({role:m.role,content:m.content.text}));
     let selected='';
     if(initial.jobId){const j=await getJob(ctx,initial.jobId);selected=JSON.stringify({id:j.id,company:j.company,title:j.title,revision:j.revision,source:'selected_saved_role'});}
@@ -146,7 +154,7 @@ export async function chatResponse(ctx:Context,cid:string,raw:unknown,requestSig
       invariant(Buffer.byteLength(content)<=12000,'tool_result_limit','The selected data exceeds this conversation budget.',413);
       messages.push({role:'tool',tool_call_id:call.id,content});
       await addMessage(ctx,cid,p.commandId,'tool',{name:call.function.name,text:content,toolCallId:call.id});
-      emit('tool',{name:call.function.name,summary:call.function.name==='propose_job_note'?'Note proposal requires your review.':'Read authorized workspace records.'});
+      emit('tool',{name:call.function.name,summary:call.function.name==='propose_job_note'?'Note proposal requires your review.':call.function.name==='propose_candidate_fact'?'Candidate proposal requires review; no fact has been approved.':'Read authorized workspace records.'});
      }
     }
     invariant(done,'tool_limit','The assistant reached its tool limit. Narrow the request and try again.',409);

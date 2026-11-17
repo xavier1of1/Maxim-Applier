@@ -10,6 +10,19 @@ The portfolio that goes with this system is also open source: [cv-santiago](http
 
 ## Data Contract (CRITICAL)
 
+### Conditional Candidate Authority
+
+Before onboarding, personalization or evaluation, run
+`node maxim/scripts/authority-check.mjs candidate read`. Before writing any
+candidate file, also run `node maxim/scripts/authority-check.mjs candidate write`.
+These checks fail closed on a frozen, stale, changed or offline canonical projection.
+If canonical, use the authenticated Candidate workspace for import/review/correction;
+`cv.md`, `config/profile.yml`, `modes/_profile.md` and `article-digest.md`
+are generated read projections, not editable truth. Never bypass this gate by copying
+or directly editing them. Legacy ownership retains the onboarding behavior below.
+Only an explicit reviewed cutover activates PostgreSQL candidate authority.
+See `docs/maxim/reviewed-onboarding.md` for operation, disclosure and rollback.
+
 There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
 **User Layer (NEVER auto-updated, personalization goes HERE):**

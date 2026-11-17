@@ -1,7 +1,7 @@
 # S2: Reviewed candidate onboarding
 
-**Status:** Pending implementation. Detailed plan drafted; no acceptance criterion is claimed passed.
-**Updated:** 2026-11-16.
+**Status:** Verified for the reviewed-onboarding scope. Case evidence is recorded below.
+**Updated:** 2026-11-17.
 **Roadmap:** [Stage index](README.md) | [High-level roadmap](../high-level-roadmap.md) | [Shared contracts](contracts.md)
 **Requires:** [S1](stage-01-workspace-and-agent.md)
 
@@ -47,18 +47,21 @@ Do not infer current approved claims by scanning filenames or treating every leg
 
 ## Acceptance
 
-- [ ] **ONB-01:** Each supported format has representative source/extraction fixtures; scanned, corrupt, encrypted, oversized and archive-abuse cases return explicit safe outcomes.
-- [ ] **ONB-02:** Source/hash/proposal/fact identities and revisions survive duplicate upload and restart without silent overwrite.
-- [ ] **ONB-03:** Worker restart/retry/cancel/two-worker/lost-lease cases finalize at most one current extraction for the expected source revision.
-- [ ] **ONB-04:** Only explicit reviewed confirmation creates current facts; conflict/rejection/partial onboarding behave consistently through UI and agent.
-- [ ] **ONB-05:** Denied model disclosure and restricted employer sources never enter captured model requests; local/manual onboarding still functions.
-- [ ] **ONB-06:** Corrected facts invalidate dependent current contexts/drafts and rejected or withdrawn proposals are excluded.
-- [ ] **ONB-07:** Candidate import, native read projections and all supported writer gates prove one authority; rollback restores the prior owner with no lost acknowledged edits.
-- [ ] **ONB-08:** Private downloads, second candidate access, path traversal, source deletion/retention and backup restore pass their policy tests.
+- [x] **ONB-01:** Each supported format has representative source/extraction fixtures; scanned, corrupt, encrypted, oversized and archive-abuse cases return explicit safe outcomes.
+- [x] **ONB-02:** Source/hash/proposal/fact identities and revisions survive duplicate upload and restart without silent overwrite.
+- [x] **ONB-03:** Worker restart/retry/cancel/two-worker/lost-lease cases finalize at most one current extraction for the expected source revision.
+- [x] **ONB-04:** Only explicit reviewed confirmation creates current facts; conflict/rejection/partial onboarding behave consistently through UI and agent.
+- [x] **ONB-05:** Denied model disclosure and restricted employer sources never enter captured model requests; local/manual onboarding still functions.
+- [x] **ONB-06:** Corrected facts invalidate dependent current contexts/drafts and rejected or withdrawn proposals are excluded.
+- [x] **ONB-07:** Candidate import, native read projections and all supported writer gates prove one authority; rollback restores the prior owner with no lost acknowledged edits.
+- [x] **ONB-08:** Private downloads, second candidate access, path traversal, source deletion/retention and backup restore pass their policy tests.
 
 ## Integration Test
 
-**Proposed:** `node --test maxim/app/tests/integration/onboarding.test.mjs` and `maxim/app/tests/e2e/onboarding.spec.mjs`. Requires S1's real isolated app/DB/model harness, not an in-memory fake repository.
+**Implemented:** `npm --prefix maxim/app test` runs Rust/parser/type/build checks plus
+[onboarding integration](../../maxim/app/tests/integration/onboarding.test.mjs) and
+[responsive UI acceptance](../../maxim/app/tests/e2e/onboarding.spec.mjs), alongside S1 regressions.
+It uses real disposable PostgreSQL, production HTTP and actual worker processes.
 
 Run the actual worker claim path with fixture parser/model adapters, then at least one real local parser fixture per supported format. Crash after parsing before publication; revoke consent/change revision while queued; lose a lease; restart and correct a previously approved fact.
 
@@ -90,7 +93,18 @@ External access: none for local parsers; only selected consented model calls req
 
 ## What Shipped
 
-Pending. This plan does not import or approve Xavier's private files.
+Source intake/private bytes, bounded local PDF/DOCX/MD/TXT parsing, fenced durable
+workers, typed source-linked proposals, explicit review/conflict/correction, agent
+read/propose tools, disclosure/retention/erasure, native candidate projections and
+reviewed cutover/rollback/recovery are implemented. Rust validates types/sensitivity
+and retained tier bands; Career-Ops still owns scoring. Native writer instructions and
+Gemini evaluation honor the conditional authority gate. Existing personal files were
+not imported, approved or activated.
+
+See [S2 evidence](../reviews/s2-onboarding.md), [onboarding operation](../../docs/maxim/reviewed-onboarding.md)
+and [ADR 0007](../../docs/maxim/decisions/0007-reviewed-candidate-rust-boundary.md).
+Full app suite passed: 8 Rust, 6 parser, 32 integration TAP cases and 8 Chromium workflows.
+The proposed layout above resolves to flat server modules plus src/worker in this repository.
 
 ## Deferred To Later Stages
 

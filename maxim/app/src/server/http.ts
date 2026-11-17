@@ -6,6 +6,11 @@ import { executeCommand,resolveProposal,uuid } from './commands';
 import { snapshot,getJob,getConversation } from './reads';
 import { createConversation,cancelConversation,chatResponse } from './conversations';
 import { uploadArtifact,downloadArtifact } from './artifacts';
+import {uploadSource,candidateView,sourceView} from './sources';
+import {candidateCommand} from './candidates';
+import {authorityView,projectionPreview,cutoverCommand} from './projections';
+import {importLegacyCandidate} from './candidate-import';
+import {candidateContext} from './candidate-context';
 import { DomainError,invariant } from './errors';
 
 const json=(value:unknown,status=200,headers:Record<string,string>={})=>Response.json(value,{status,headers:{'Cache-Control':'no-store',...headers}});
@@ -32,7 +37,7 @@ export async function handle(req:Request) {
   const route=new URL(req.url).pathname.replace(/^\/api\/?/,'').split('/').filter(Boolean);
   const name=route.join('/'),post=req.method==='POST',get=req.method==='GET';
   if(get && name==='health') {
-   const version=await database().query('SELECT version FROM schema_migrations WHERE version=2');
+   const version=await database().query('SELECT version FROM schema_migrations WHERE version=3');
    invariant(version.rowCount,'schema_unavailable','Workspace schema is not initialized.',503);
    return json({ok:true,application:'maxim-apply',installation:digest(config().workspaceId).slice(0,16),database:'available',recordFreshness:'not_assessed'});
   }
@@ -55,6 +60,19 @@ export async function handle(req:Request) {
    return json({ok:true},200,{'Set-Cookie':'maxim_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'});
   }
   if(get&&name==='workspace')return json(await snapshot(ctx));
+  if(get&&name==='candidate')return json(await candidateView(ctx));
+  if(get&&name==='candidate/context')return json(await candidateContext(ctx));
+  if(get&&name==='candidate/authority')return json(await authorityView(ctx));
+  if(get&&name==='candidate/projection')return json(await projectionPreview(ctx));
+  if(post&&name==='candidate/cutover')return json({result:await cutoverCommand(ctx,await body(req))});
+  if(post&&name==='candidate/commands')return json({result:await candidateCommand(ctx,await body(req))});
+  if(post&&name==='candidate/import-legacy')return json(await importLegacyCandidate(ctx,await body(req)));
+  if(post&&name==='sources'){
+   const data=await bytes(req,10*1024*1024+65536);
+   const request=new Request(req.url,{method:'POST',headers:{'Content-Type':req.headers.get('content-type')||''},body:data});
+   return json({source:await uploadSource(ctx,await request.formData())});
+  }
+  if(get&&route[0]==='sources'&&route.length===2)return json({source:await sourceView(ctx,route[1])});
   if(post&&name==='commands')return json({result:await executeCommand(ctx,await body(req))});
   if(get&&route[0]==='jobs'&&route.length===2)return json({job:await getJob(ctx,route[1])});
   if(post&&name==='conversations')return json({conversation:await createConversation(ctx,await body(req))});

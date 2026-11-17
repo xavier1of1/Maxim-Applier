@@ -12,6 +12,7 @@ import {ApiError, WorkspaceApi, errorMessage, isAbort, readJson, request} from '
 import {AgentPanel, ProposalReview} from './agent';
 import {CreateRoleDialog, JobsView} from './jobs';
 import {SettingsView} from './settings';
+import {CandidateView} from './candidate';
 import {ApplicationsView, ActivityView} from './views';
 import {useAgent} from './use-agent';
 import {Banner, Brand, EmptyState, Glyph, Pill, PrivacyStamp, ToolButton, WorkspaceLoading, formatDate, useMediaQuery, useOnline} from './shared';
@@ -19,6 +20,7 @@ import type {Navigation, Proposal, Session, View, WorkspaceData} from './types';
 
 const navigation = [
   {view: 'jobs' as const, label: 'Jobs', icon: BriefcaseBusiness},
+  {view: 'candidate' as const, label: 'Candidate', icon: ShieldCheck},
   {view: 'applications' as const, label: 'Applications', icon: Send},
   {view: 'activity' as const, label: 'Activity', icon: History},
   {view: 'settings' as const, label: 'Settings', icon: Settings2},
@@ -171,7 +173,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
   const currentNav = navigation.find(item => item.view === view)!;
   const counts: Partial<Record<View, number>> = {jobs: activeJobs, applications: activeIntents, activity: data?.events.length};
   const identity = data?.workspace ?? session.workspace;
-  const navItems = <>{navigation.map(item => <button type="button" key={item.view}
+  const navItems = (mobile=false) => <>{navigation.filter(item=>!mobile||['jobs','candidate','applications','discovery'].includes(item.view)).map(item => <button type="button" key={item.view}
     className={'nav-item' + (view === item.view ? ' current' : '')} aria-current={view === item.view ? 'page' : undefined}
     onClick={() => navigate({view: item.view, filter: null})}>
     <item.icon size={18} aria-hidden="true" /><span>{item.label}</span>
@@ -179,7 +181,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
   </button>)}</>;
   const sidebar = <div className="sidebar-inner"><Brand /><div className="workspace-identity"><LayoutGrid size={16} aria-hidden="true" />
     <span><strong>{identity.name}</strong><small>New workspace</small></span><LockKeyhole size={12} aria-hidden="true" /></div>
-    <div className="sidebar-section-label">WORKSPACE</div><nav aria-label="Workspace navigation">{navItems}</nav>
+    <div className="sidebar-section-label">WORKSPACE</div><nav aria-label="Workspace navigation">{navItems()}</nav>
     <div className="sidebar-bottom"><div className="sidebar-privacy"><ShieldCheck size={17} aria-hidden="true" /><span>Private by default<small>{identity.is_owner ? 'Workspace owner' : 'Workspace member'}</small></span></div>
       <div className="sidebar-connection"><span className={'status-dot' + (!online || error ? ' status-dot-amber' : '')} />
         {!online ? 'Offline' : error ? 'Service unavailable' : data ? 'Workspace connected' : 'Connecting'}</div></div></div>;
@@ -202,7 +204,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
         <div className="page-heading-actions"><span className="last-sync">{data ? 'Updated ' + formatDate(data.asOf, true) : 'Connecting...'}</span>
           {view === 'jobs' && <Button label="New role" variant="primary" icon={<Glyph icon={Plus} />} onClick={() => setCreateOpen(true)} isDisabled={!data || disabled} />}</div>
       </div>
-      {data && view !== 'settings' && <div className="workspace-stats" aria-label="Workspace totals">
+      {data && view !== 'settings' && view !== 'candidate' && <div className="workspace-stats" aria-label="Workspace totals">
         <div><span className="stat-icon stat-green"><BriefcaseBusiness size={16} aria-hidden="true" /></span><span>Active roles<strong className="tabular">{activeJobs}</strong></span></div>
         <div><span className="stat-icon stat-amber"><Send size={16} aria-hidden="true" /></span><span>Application intents<strong className="tabular">{activeIntents}</strong></span></div>
         <div><span className="stat-icon stat-coral"><FileCheck2 size={16} aria-hidden="true" /></span><span>Pending reviews<strong className="tabular">{data.proposals.length}</strong></span></div>
@@ -215,13 +217,13 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
           : view === 'jobs' ? <JobsView data={data} api={api} disabled={disabled} refresh={refresh} navigate={navigate}
             selectedId={jobId} filter={filter} onCreate={() => setCreateOpen(true)} onDirtyChange={setNoteDirty}
             onAgent={() => { setAgentOpen(true); if (conversationId && agent.detail && agent.detail.conversation.job_id !== jobId && !agent.isRunning) void agent.newConversation(); }} />
+          : view === 'candidate' ? <CandidateView api={api} disabled={disabled} refresh={refresh} navigate={navigate} sourceId={searchParams.get('source')} asOf={data.asOf} isOwner={data.workspace.is_owner}/>
           : view === 'applications' ? <ApplicationsView data={data} api={api} disabled={disabled} refresh={refresh} navigate={navigate} filter={filter} />
           : view === 'activity' ? <ActivityView data={data} navigate={navigate} />
           : <SettingsView data={data} api={api} disabled={disabled} refresh={refresh} onLogout={async () => { await api.post('/api/auth/logout', {}); onSignedOut(); }} />}
       </div>
-      <nav className="mobile-navigation" aria-label="Mobile workspace navigation">{navItems}
-        <button type="button" className="nav-item" onClick={() => setAgentOpen(true)}><Bot size={18} aria-hidden="true" /><span>Agent</span>
-          {agent.isRunning && <span className="mobile-run-dot" />}</button></nav>
+      <nav className="mobile-navigation" aria-label="Mobile workspace navigation">{navItems(true)}
+        <button type="button" className="nav-item" onClick={() => setMenuOpen(true)}><Menu size={18} aria-hidden="true" /><span>More</span></button></nav>
     </main>
     {data && wide && <AgentPanel agent={agent} data={data} conversationId={conversationId} jobId={jobId} disabled={disabled}
       navigate={navigate} onReview={value => setProposal(value)} />}

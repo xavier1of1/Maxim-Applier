@@ -70,7 +70,7 @@ Create small decision records for chosen stack, persistence/retention, source re
 | --- | --- | --- | --- | --- |
 | S0 | [Ownership, safety, and architecture baseline](stages/stage-00-ownership-and-baseline.md) | Trace one recoverable record/artifact and approve the minimal stack/cutover boundaries | Accepted direction; bounded audit | Verified |
 | S1 | [Real workspace and contextual agent](stages/stage-01-workspace-and-agent.md) | Add a job/application in UI; ask agent about same ID; restart and read it | S0 | Verified |
-| S2 | [Reviewed candidate onboarding](stages/stage-02-reviewed-onboarding.md) | Upload, review/correct, confirm, restart, retrieve sourced facts | S1 | Pending |
+| S2 | [Reviewed candidate onboarding](stages/stage-02-reviewed-onboarding.md) | Upload, review/correct, confirm, restart, retrieve sourced facts | S1 | Verified |
 | S3 | [Reusable answers and bounded context](stages/stage-03-answer-memory.md) | Answer once, recall in scope, correct/revoke, suppress old reuse | S2 | Pending |
 | S4 | [Coverage-aware discovery](stages/stage-04-discovery.md) | Ingest a new role; expose unsupported/failed source separately | S2 | Pending |
 | S5 | [Career-Ops evaluation, packet, and tracker cutover](stages/stage-05-evaluation-and-tracker-cutover.md) | Evaluate/prepare one role; prove one lifecycle after migration | S3; S4 only for automated-discovery jobs | Pending |
@@ -200,6 +200,9 @@ See [shared contracts](stages/contracts.md) and the [stage registry](stages/mani
 
 **Detailed specification:** [S2 plan](stages/stage-02-reviewed-onboarding.md).
 
+**Verified implementation:** [Case evidence](reviews/s2-onboarding.md), 2026-11-17.
+This is opt-in reviewed candidate authority, not automatic import/approval of private files.
+
 **Objective:** Intake once through the early workspace and make the retained Career-Ops context derivable from reviewed facts.
 
 **Thin E2E proof:** Upload a synthetic supported resume, review source-linked extraction, correct a conflict, confirm, restart, and ask UI/agent for the approved value and source.
@@ -214,12 +217,12 @@ See [shared contracts](stages/contracts.md) and the [stage registry](stages/mani
 - Define source retention/deletion and revocation propagation; never put raw uploads into Git or a model's general memory.
 
 **Acceptance**
-- [ ] Each supported format has representative success/error fixtures; unreadable/scanned/unsafe inputs produce actionable states, not invented facts.
-- [ ] Only reviewed confirmations change canonical facts, with revisions and local events committed together.
-- [ ] Duplicate uploads/conflicting dates/contact values do not silently overwrite or duplicate accepted facts.
-- [ ] Privacy/consent denial leaves local/manual onboarding usable and prevents model disclosure.
-- [ ] Approved facts survive restart and feed a compatible Career-Ops context; rejected proposals are not consumed.
-- [ ] Candidate cutover/rollback is proved without an active second editable profile authority.
+- [x] Each supported format has representative success/error fixtures; unreadable/scanned/unsafe inputs produce actionable states, not invented facts.
+- [x] Only reviewed confirmations change canonical facts, with revisions and local events committed together.
+- [x] Duplicate uploads/conflicting dates/contact values do not silently overwrite or duplicate accepted facts.
+- [x] Privacy/consent denial leaves local/manual onboarding usable and prevents model disclosure.
+- [x] Approved facts survive restart and feed a compatible Career-Ops context; rejected proposals are not consumed.
+- [x] Candidate cutover/rollback is proved without an active second editable profile authority.
 
 **Handoff:** S3 receives approved typed facts, source/revision IDs, preferences, consent and sensitivity rules.
 

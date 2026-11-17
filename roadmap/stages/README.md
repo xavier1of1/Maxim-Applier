@@ -1,7 +1,7 @@
 # Detailed Roadmap Stages
 
-**Status:** Revision 0.4. S0 and S1 verified for their bounded scopes; S2-S11 Pending.
-**Updated:** 2026-11-16.
+**Status:** Revision 0.5. S0-S2 verified for their bounded scopes; S3-S11 Pending.
+**Updated:** 2026-11-17.
 **Purpose:** Vantage-style implementation plans for the revised Maxim Apply journey. These files describe work to perform, not work already shipped.
 
 ## 1. Start Here
@@ -22,7 +22,7 @@ The format follows inspected Vantage files under `E:\10x\10x-vantage\roadmaps`: 
 | --- | --- | --- | --- | --- |
 | [S0](stage-00-ownership-and-baseline.md) | Ownership, safety, and architecture baseline | None | 6 | Verified |
 | [S1](stage-01-workspace-and-agent.md) | Real workspace and contextual agent | S0 | 8 | Verified |
-| [S2](stage-02-reviewed-onboarding.md) | Reviewed candidate onboarding | S1 | 8 | Pending |
+| [S2](stage-02-reviewed-onboarding.md) | Reviewed candidate onboarding | S1 | 8 | Verified |
 | [S3](stage-03-answer-memory.md) | Reusable answers and bounded context | S2 | 8 | Pending |
 | [S4](stage-04-discovery.md) | Coverage-aware discovery | S2 | 8 | Pending |
 | [S5](stage-05-evaluation-and-tracker-cutover.md) | Career-Ops evaluation, packet, and tracker cutover | S3 | 8 | Pending |

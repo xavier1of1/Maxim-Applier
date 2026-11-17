@@ -80,8 +80,8 @@ export class WorkspaceApi {
     });
   }
 
-  async upload<T>(body: FormData): Promise<T> {
-    return readJson<T>(await this.perform('/api/artifacts', {
+  async upload<T>(body: FormData, endpoint = '/api/artifacts'): Promise<T> {
+    return readJson<T>(await this.perform(endpoint, {
       method: 'POST', headers: {'x-csrf-token': this.csrf}, body,
     }));
   }
