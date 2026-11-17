@@ -1,6 +1,10 @@
 # Maxim Apply Operational Inputs Needed
 
-This file tracks what Xavier needs to provide before Maxim Apply can become fully operational.
+This file preserves the earlier implementation checklist. Its COMPLETE labels are historical, not newly verified credentials or acceptance for the November redesign.
+
+**2026-11-16 planning update:** Use [Operational Setup And Inputs](../../roadmap/operational-setup.md) for the revised numbered input list, step-by-step preparation, account/API/dependency matrix, and current-versus-proposed settings. Reuse the existing Discord named maxim applier. Only EGM was installed by this planning pass; optional product dependencies, Gmail authorization, browser sessions and broad-search accounts remain stage-gated.
+
+See [the current planning index](../../roadmap/README.md) for accepted direction and remaining decisions. Do not paste secrets or candidate-private data into either checklist.
 
 ## Accounts and Secrets
 

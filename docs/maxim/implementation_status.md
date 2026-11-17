@@ -1,6 +1,30 @@
 # Maxim Apply Implementation Status
 
-Last updated: 2026-06-10
+Implementation baseline last updated: 2026-06-10
+Planning/development handoff updated: 2026-11-16
+
+## November 2026 Planning Handoff
+
+### Latest Refinement And Detailed Stages
+
+- [Twelve detailed stage plans](../../roadmap/stages/README.md) now define 92 acceptance cases, implementation slices, actual versus proposed test paths, files, handoffs, cutovers, rollback and deferrals in the inspected Vantage style. All implementation stages remain Pending.
+- [Shared contracts](../../roadmap/stages/contracts.md) bind identity/auth, PostgreSQL/private artifacts, Windows host/browser composition, durable work, retained Career-Ops semantics and manual final action. Manual job evaluation no longer depends on automated discovery; S2 introduces the consumed worker.
+- [Drift/refinement evidence](../../roadmap/reviews/roadmap-refinement.md) records actual code gaps and executed checks. Fresh unit result is 53/55 pass; fallback attachment approval and source-audit help fail. Isolated Discord retry also fails. Dashboard Go tests and static safety check pass.
+- Read-only roadmap validation passes for 22 documents, 211 local links/anchors, 12 stages and 92 cases; all 16 validator tests pass. Original commented workflow remains unchanged.
+- EGM drift reporting was used, not a formal independent review/convergence loop. New code is limited to roadmap validation/tests; application behavior, private records, runtime dependencies and stack state are unchanged.
+
+### Earlier Planning Pass
+
+The implementation claims below are historical evidence, not a fresh acceptance run. Xavier has rejected the current Maxim application runner as the future foundation and accepted early dashboard/agent, reviewed onboarding, and PostgreSQL/private artifacts/Compose target direction.
+
+- Current planning entry point: [roadmap index](../../roadmap/README.md), [manifesto](../../roadmap/MANIFESTO.md), [high-level stages](../../roadmap/high-level-roadmap.md).
+- Research and dependency gates: [external component assessment](../../roadmap/external-components-assessment.md). Ten suggestions assessed; Dossier source copying is AGPL-gated. No candidate runtime packages or Dossier code were added in this planning pass.
+- Complete EGM Codex plugin 0.1.1 installed/enabled; manifest, seven skills, agents and standards verified. [Development workflow](../../roadmap/development-workflow.md) preserves its human approval gates. No formal independent EGM review/convergence is claimed.
+- [Operational setup checklist](../../roadmap/operational-setup.md) distinguishes current keys, future proposed settings and accounts required only by selected stages. Reuse the existing Discord named maxim applier.
+- Existing SQLite/files/native contracts remain current until explicit entity-level migration/cutover evidence. No database migration, application-code retirement, new dashboard, new stack or live integrations were executed here.
+- Original commented workflow preserved without edits. New documents retain section comment blocks and miscellaneous additions.
+- Validation for this handoff is document/install verification only; product test results below were not rerun and must not be reported as current.
+- Planning validation passed: six maintained planning documents; 37 local links/anchors; 71 numbered sections with comment blocks; consistent S0-S11 registers/details; ASCII/fence checks; original commented-workflow SHA-256 unchanged. EGM manifest/version, seven skills, reviewer and standard files verified. Tracked documentation whitespace check passed. No application, provider, browser-site or formal EGM review test is implied.
 
 ## Repository Sync
 

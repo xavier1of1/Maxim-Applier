@@ -4,6 +4,8 @@
 ### Version 2.1 - Systems Architecture Second Pass
 Prepared for Xavier Kubancik | 2026
 
+> **November 16, 2026 planning handoff:** This document preserves the earlier fork baseline. Latest accepted direction and remaining proposals are separated in the [root roadmap index](../../roadmap/README.md), [manifesto](../../roadmap/MANIFESTO.md), and [revised stages](../../roadmap/high-level-roadmap.md). Accepted target changes include early dashboard/agent, reviewed onboarding, and PostgreSQL/private artifacts/Compose. Existing ownership contracts remain current until their approved cutovers are implemented and verified. Candidate libraries are evaluated in the [component assessment](../../roadmap/external-components-assessment.md); a suggestion is not source-reuse or installation approval. Earlier phase numbering is not the root roadmap stage numbering.
+
 Mission: Maximize the probability of receiving a high-fit Northern Virginia or Washington, DC job offer within 1 to 4 months by implementing Maxim Apply as a focused Career-Ops fork. Career-Ops remains the proven job-search engine. Maxim Apply becomes the Xavier-specific extension layer for orchestration, dashboard control, networking shortlist generation, recruiter tracking, analytics, Discord accountability, and future execution decisions.
 
 This version supersedes v2.0 only where it clarifies architecture, module boundaries, source-of-truth rules, risk isolation, and implementation consequences. The core v2.0 redesign remains approved: Maxim Apply is a limited fork of Career-Ops, not a greenfield rebuild and not a separate CRM product.

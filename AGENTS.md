@@ -24,7 +24,7 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
 ## Maxim Apply Fork Addendum
 
-This repository is Xavier Kubancik's private Maxim Apply fork of Career-Ops.
+This repository is Xavier Kubancik's controlled Maxim Apply fork of Career-Ops. Repository visibility does not change the private-data boundary.
 
 - Preserve Career-Ops as the engine for evaluation, 1.0-5.0 scoring, PDF generation, scanning, apply assistant, tracker artifacts, and the native dashboard.
 - Keep Maxim-specific logic isolated in `maxim/`, `data/maxim/`, `docs/maxim/`, and `dashboard/internal/maxim/`.
@@ -34,6 +34,16 @@ This repository is Xavier Kubancik's private Maxim Apply fork of Career-Ops.
 - Do not add anti-bot evasion, CAPTCHA bypassing, hidden platform automation, or fabricated candidate claims.
 - Do not claim active clearance. Xavier is a U.S. citizen and willing/eligible to obtain clearance, but does not have active clearance.
 - Preserve raw imported data exactly and keep Maxim local-first.
+
+### November 2026 Planning And Development
+
+- For new Maxim design work, read `roadmap/README.md`, `roadmap/MANIFESTO.md`, and the relevant stage in `roadmap/high-level-roadmap.md`. They distinguish latest accepted direction from proposals and measured evidence.
+- Detailed scope and handoffs now live in `roadmap/stages/README.md` and its stage files. After roadmap edits run `node roadmap/validate-roadmap.mjs` and `node --test roadmap/validate-roadmap.test.mjs`; these prove planning consistency, not product acceptance. Keep proposed tests distinct from implemented commands and require case evidence before status promotion.
+- Accepted target changes include an early single web dashboard/agent workspace and PostgreSQL/private artifacts/Compose. They do not enact migration: existing user-file, SQLite, tracker, and native-command contracts remain in force until their approved entity-level cutover is implemented and verified.
+- Preserve Career-Ops scoring, PDF/report generation, useful scanning/liveness and supported native behavior through explicit adapters. Do not reinstate the rejected Maxim application runner as the replacement foundation or silently introduce another writable tracker.
+- Follow `roadmap/development-workflow.md`. The full Elephant/Goldfish Codex plugin is installed; read the relevant installed skill before using it and obey its context, configuration, fresh-review and human-resolution gates. Never claim installation or a same-context self-check is a formal independent review.
+- Consult `roadmap/external-components-assessment.md` before adding suggested dependencies. Dossier source reuse is AGPL-gated; no code transplant or relicensing is approved by a link. Optional browser stealth/CAPTCHA plugins and LinkedIn publishing/message tools are outside scope.
+- Keep original comments in `roadmap/current-system-workflow.md` intact unless the user asks to edit them. No candidate data, credentials, private traces or sessions belong in Git or reviewer fixtures.
 
 ## Update Check
 

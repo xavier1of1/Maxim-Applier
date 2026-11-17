@@ -2,6 +2,16 @@
 
 Maxim Apply is Xavier Kubancik's controlled Career-Ops fork.
 
+## November 2026 Planning
+
+The [detailed stage index](roadmap/stages/README.md) contains twelve implementation plans with 92 acceptance cases. Read the [refinement and validation record](roadmap/reviews/roadmap-refinement.md) for actual test results and unresolved runtime defects; planning delivery does not mark these stages implemented.
+
+Start with the [roadmap index](roadmap/README.md), [target manifesto](roadmap/MANIFESTO.md), and [high-level stages](roadmap/high-level-roadmap.md). They distinguish current behavior from accepted target changes: an early single dashboard/agent workspace, reviewed onboarding, and PostgreSQL/private artifacts/Compose with explicit migration gates. Career-Ops scoring, PDF/report generation and useful discovery remain the engine.
+
+The [component assessment](roadmap/external-components-assessment.md) evaluates proposed reuse, including Dossier's AGPL licensing gate. The [setup checklist](roadmap/operational-setup.md) tracks accounts and private inputs; the [development workflow](roadmap/development-workflow.md) records the installed EGM plugin and required human review gates. These plans are not a claim that the new stack or browser replacement is implemented.
+
+## Existing Fork Capabilities
+
 Career-Ops remains the engine for:
 
 - job evaluation,

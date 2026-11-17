@@ -3,6 +3,8 @@
 ## Version 1.1 - Systems Architecture Second Pass
 Prepared for Xavier Kubancik | 2026
 
+> **November 16, 2026 planning handoff:** This document preserves the earlier fork baseline. Latest accepted direction and remaining proposals are separated in the [root roadmap index](../../roadmap/README.md), [manifesto](../../roadmap/MANIFESTO.md), and [revised stages](../../roadmap/high-level-roadmap.md). Accepted target changes include early dashboard/agent, reviewed onboarding, and PostgreSQL/private artifacts/Compose. Existing ownership contracts remain current until their approved cutovers are implemented and verified. Candidate libraries are evaluated in the [component assessment](../../roadmap/external-components-assessment.md); a suggestion is not source-reuse or installation approval. Earlier phase numbering is not the root roadmap stage numbering.
+
 Mission: implement Maxim Apply as a controlled Career-Ops fork that preserves Career-Ops as the job-search engine and adds Xavier-specific orchestration, integrated dashboard controls, networking shortlist workflows, recruiter tracking, Discord accountability, historical analytics, append-only auditability, and interview-rate optimization.
 
 This roadmap supersedes v1.0 where it clarifies primitive ownership, module boundaries, patch zones, storage interfaces, dashboard seams, event logging, and risk mitigation. It remains aligned with the approved Maxim Apply v2.1 project description.

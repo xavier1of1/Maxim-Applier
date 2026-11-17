@@ -1,0 +1,407 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-11-16",
+  "standing": "Planning registry, not runtime configuration or implementation acceptance.",
+  "stages": [
+    {
+      "id": "S0",
+      "title": "Ownership, safety, and architecture baseline",
+      "file": "stage-00-ownership-and-baseline.md",
+      "status": "Pending",
+      "requires": [],
+      "conditional": [],
+      "produces": [
+        "baseline",
+        "architecture"
+      ],
+      "consumes": [],
+      "acceptance": [
+        "OWN-01",
+        "OWN-02",
+        "OWN-03",
+        "OWN-04",
+        "OWN-05",
+        "OWN-06"
+      ]
+    },
+    {
+      "id": "S1",
+      "title": "Real workspace and contextual agent",
+      "file": "stage-01-workspace-and-agent.md",
+      "status": "Pending",
+      "requires": [
+        "S0"
+      ],
+      "conditional": [],
+      "produces": [
+        "workspace",
+        "job-registry",
+        "application-intent",
+        "conversation-tools",
+        "authorization",
+        "atomic-events",
+        "artifact-boundary"
+      ],
+      "consumes": [
+        "architecture"
+      ],
+      "acceptance": [
+        "WSP-01",
+        "WSP-02",
+        "WSP-03",
+        "WSP-04",
+        "WSP-05",
+        "WSP-06",
+        "WSP-07",
+        "WSP-08"
+      ]
+    },
+    {
+      "id": "S2",
+      "title": "Reviewed candidate onboarding",
+      "file": "stage-02-reviewed-onboarding.md",
+      "status": "Pending",
+      "requires": [
+        "S1"
+      ],
+      "conditional": [],
+      "produces": [
+        "candidate-context",
+        "durable-work",
+        "candidate-cutover"
+      ],
+      "consumes": [
+        "workspace",
+        "authorization",
+        "artifact-boundary",
+        "atomic-events"
+      ],
+      "acceptance": [
+        "ONB-01",
+        "ONB-02",
+        "ONB-03",
+        "ONB-04",
+        "ONB-05",
+        "ONB-06",
+        "ONB-07",
+        "ONB-08"
+      ]
+    },
+    {
+      "id": "S3",
+      "title": "Reusable answers and bounded context",
+      "file": "stage-03-answer-memory.md",
+      "status": "Pending",
+      "requires": [
+        "S2"
+      ],
+      "conditional": [],
+      "produces": [
+        "answer-recall",
+        "context-budget"
+      ],
+      "consumes": [
+        "candidate-context",
+        "conversation-tools",
+        "authorization"
+      ],
+      "acceptance": [
+        "MEM-01",
+        "MEM-02",
+        "MEM-03",
+        "MEM-04",
+        "MEM-05",
+        "MEM-06",
+        "MEM-07",
+        "MEM-08"
+      ]
+    },
+    {
+      "id": "S4",
+      "title": "Coverage-aware discovery",
+      "file": "stage-04-discovery.md",
+      "status": "Pending",
+      "requires": [
+        "S2"
+      ],
+      "conditional": [],
+      "produces": [
+        "discovery-runs",
+        "job-observations"
+      ],
+      "consumes": [
+        "job-registry",
+        "candidate-context",
+        "durable-work"
+      ],
+      "acceptance": [
+        "DSC-01",
+        "DSC-02",
+        "DSC-03",
+        "DSC-04",
+        "DSC-05",
+        "DSC-06",
+        "DSC-07",
+        "DSC-08"
+      ]
+    },
+    {
+      "id": "S5",
+      "title": "Career-Ops evaluation, packet, and tracker cutover",
+      "file": "stage-05-evaluation-and-tracker-cutover.md",
+      "status": "Pending",
+      "requires": [
+        "S3"
+      ],
+      "conditional": [
+        {
+          "stage": "S4",
+          "when": "The evaluated role was obtained through automated discovery; manually entered jobs do not require it."
+        }
+      ],
+      "produces": [
+        "careerops-evaluation",
+        "approved-packet",
+        "canonical-applications",
+        "tracker-cutover"
+      ],
+      "consumes": [
+        "job-registry",
+        "application-intent",
+        "candidate-context",
+        "answer-recall",
+        "durable-work",
+        "atomic-events"
+      ],
+      "acceptance": [
+        "APP-01",
+        "APP-02",
+        "APP-03",
+        "APP-04",
+        "APP-05",
+        "APP-06",
+        "APP-07",
+        "APP-08"
+      ]
+    },
+    {
+      "id": "S6",
+      "title": "Supported browser application assistance",
+      "file": "stage-06-browser-assistance.md",
+      "status": "Pending",
+      "requires": [
+        "S5"
+      ],
+      "conditional": [],
+      "produces": [
+        "browser-review",
+        "manual-submission-evidence"
+      ],
+      "consumes": [
+        "canonical-applications",
+        "approved-packet",
+        "answer-recall",
+        "authorization",
+        "durable-work"
+      ],
+      "acceptance": [
+        "BRW-01",
+        "BRW-02",
+        "BRW-03",
+        "BRW-04",
+        "BRW-05",
+        "BRW-06",
+        "BRW-07",
+        "BRW-08"
+      ]
+    },
+    {
+      "id": "S7",
+      "title": "Gmail evidence and response tasks",
+      "file": "stage-07-gmail-evidence.md",
+      "status": "Pending",
+      "requires": [
+        "S5"
+      ],
+      "conditional": [],
+      "produces": [
+        "mail-evidence",
+        "response-tasks"
+      ],
+      "consumes": [
+        "canonical-applications",
+        "authorization",
+        "durable-work",
+        "atomic-events"
+      ],
+      "acceptance": [
+        "MAIL-01",
+        "MAIL-02",
+        "MAIL-03",
+        "MAIL-04",
+        "MAIL-05",
+        "MAIL-06",
+        "MAIL-07",
+        "MAIL-08"
+      ]
+    },
+    {
+      "id": "S8",
+      "title": "Durable existing-Discord delivery",
+      "file": "stage-08-discord-delivery.md",
+      "status": "Pending",
+      "requires": [
+        "S5"
+      ],
+      "conditional": [
+        {
+          "stage": "S4",
+          "when": "Fresh-job alerts claim automated discovery coverage."
+        },
+        {
+          "stage": "S7",
+          "when": "Notifications are driven by Gmail observations."
+        },
+        {
+          "stage": "S9",
+          "when": "Notifications include networking drafts, shortlist queues or manually tracked recruiter reminders."
+        }
+      ],
+      "produces": [
+        "notification-delivery",
+        "persisted-schedules"
+      ],
+      "consumes": [
+        "careerops-evaluation",
+        "canonical-applications",
+        "durable-work",
+        "atomic-events"
+      ],
+      "acceptance": [
+        "NTF-01",
+        "NTF-02",
+        "NTF-03",
+        "NTF-04",
+        "NTF-05",
+        "NTF-06",
+        "NTF-07",
+        "NTF-08"
+      ]
+    },
+    {
+      "id": "S9",
+      "title": "Networking and outcome insight",
+      "file": "stage-09-networking-and-analytics.md",
+      "status": "Pending",
+      "requires": [
+        "S5"
+      ],
+      "conditional": [
+        {
+          "stage": "S7",
+          "when": "Recruiter tasks include live Gmail-derived evidence."
+        }
+      ],
+      "produces": [
+        "networking-queue",
+        "outcome-metrics"
+      ],
+      "consumes": [
+        "canonical-applications",
+        "careerops-evaluation",
+        "candidate-context",
+        "answer-recall"
+      ],
+      "acceptance": [
+        "NET-01",
+        "NET-02",
+        "NET-03",
+        "NET-04",
+        "NET-05",
+        "NET-06",
+        "NET-07",
+        "NET-08"
+      ]
+    },
+    {
+      "id": "S10",
+      "title": "Evidence-grounded interview preparation",
+      "file": "stage-10-interview-preparation.md",
+      "status": "Pending",
+      "requires": [
+        "S5"
+      ],
+      "conditional": [],
+      "produces": [
+        "interview-practice"
+      ],
+      "consumes": [
+        "canonical-applications",
+        "candidate-context",
+        "context-budget"
+      ],
+      "acceptance": [
+        "INT-01",
+        "INT-02",
+        "INT-03",
+        "INT-04",
+        "INT-05",
+        "INT-06"
+      ]
+    },
+    {
+      "id": "S11",
+      "title": "Product and demonstration acceptance",
+      "file": "stage-11-product-acceptance.md",
+      "status": "Pending",
+      "requires": [
+        "S6"
+      ],
+      "conditional": [
+        {
+          "stage": "S4",
+          "when": "The selected demonstration or delivery profile claims this capability."
+        },
+        {
+          "stage": "S7",
+          "when": "The selected demonstration or delivery profile claims this capability."
+        },
+        {
+          "stage": "S8",
+          "when": "The selected demonstration or delivery profile claims this capability."
+        },
+        {
+          "stage": "S9",
+          "when": "The selected demonstration or delivery profile claims this capability."
+        },
+        {
+          "stage": "S10",
+          "when": "The selected demonstration or delivery profile claims this capability."
+        }
+      ],
+      "produces": [
+        "accepted-delivery-profile"
+      ],
+      "consumes": [
+        "workspace",
+        "candidate-context",
+        "answer-recall",
+        "careerops-evaluation",
+        "approved-packet",
+        "canonical-applications",
+        "browser-review",
+        "manual-submission-evidence"
+      ],
+      "acceptance": [
+        "DEM-01",
+        "DEM-02",
+        "DEM-03",
+        "DEM-04",
+        "DEM-05",
+        "DEM-06",
+        "DEM-07",
+        "DEM-08"
+      ]
+    }
+  ]
+}
