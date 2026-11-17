@@ -10,6 +10,8 @@ const requiredSections = ['Objective', 'Thin Vertical Slice', 'Acceptance', 'Int
   'Files Changed', 'Dependencies And Handoff', 'What Shipped', 'Deferred To Later Stages',
   'Comments And Miscellaneous'];
 const originalHash = '4fa45f8457e3a2f1b93d22e6bf80b84bd39f88bf524b924f58eb9e350b1e76bb';
+export const preservedWorkflowHash = text => crypto.createHash('sha256')
+  .update(text.replace(/\r\n/g, '\n')).digest('hex');
 
 function isInside(root, target) {
   const relative = path.relative(root, target);
@@ -241,8 +243,8 @@ export function validateRoadmap({ root = defaultRoot, manifest: suppliedManifest
   }
   let originalWorkflowUnchanged = false;
   try {
-    originalWorkflowUnchanged = crypto.createHash('sha256')
-      .update(fs.readFileSync(path.join(root, 'roadmap', 'current-system-workflow.md'))).digest('hex') === originalHash;
+    originalWorkflowUnchanged = preservedWorkflowHash(
+      fs.readFileSync(path.join(root, 'roadmap', 'current-system-workflow.md'), 'utf8')) === originalHash;
     check(originalWorkflowUnchanged, 'Original user-comment source changed; review explicitly rather than silently accepting a new baseline');
   } catch (error) { errors.push('Cannot verify preserved workflow source'); }
   return { ok: errors.length === 0, ...stats, stages: stages.length, acceptanceCases: caseIds.size,

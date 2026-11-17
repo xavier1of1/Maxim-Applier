@@ -143,8 +143,10 @@ Letter dimensions, margins, text fidelity and nonblank pixels passed.
 - `npm run maxim:safety`: passes with no prohibited patterns.
 - `npm run maxim:privacy`: public text/known configured-secret-copy and ignored
   private-path checks pass; no values are printed.
-- Roadmap graph/link/evidence validation and its 16 tests pass before promotion;
-  rerun after registry/status edits.
+- Roadmap graph/link/evidence validation and its 17 tests pass after promotion.
+  Post-merge Windows checkout exposed CRLF normalization in the original-comment
+  guard; the follow-up accepts only Git line-ending conversion, with tests still
+  rejecting content/trailing-whitespace edits. The original source blob is unchanged.
 
 The upstream runner's Unix grep privacy sections do not constitute Windows
 privacy proof. The separate public-tree checker covers configured-secret copies

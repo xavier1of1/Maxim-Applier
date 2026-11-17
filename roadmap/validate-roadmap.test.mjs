@@ -1,9 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { validateRoadmap } from './validate-roadmap.mjs';
+import { validateRoadmap, preservedWorkflowHash } from './validate-roadmap.mjs';
 
 const registry = JSON.parse(fs.readFileSync(new URL('./stages/manifest.json', import.meta.url), 'utf8'));
+test('Git LF/CRLF conversion preserves the original comments but content/whitespace edits do not',()=>{
+  const text=fs.readFileSync(new URL('./current-system-workflow.md',import.meta.url),'utf8').replace(/\r\n/g,'\n');
+  assert.equal(preservedWorkflowHash(text),preservedWorkflowHash(text.replace(/\n/g,'\r\n')));
+  assert.notEqual(preservedWorkflowHash(text),preservedWorkflowHash(text+' '));
+  assert.notEqual(preservedWorkflowHash(text),preservedWorkflowHash(text.replace('Maxim','Changed')));
+});
 const altered = edit => {
   const manifest = structuredClone(registry);
   edit(manifest.stages);
