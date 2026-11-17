@@ -6,7 +6,16 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import yaml from "js-yaml";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const configPath = process.argv[2] || process.env.CAREER_OPS_PORTALS || path.join(root, "portals.yml");
+const args = process.argv.slice(2);
+if (args.length === 1 && ["--help", "-h"].includes(args[0])) {
+  console.log("Usage: node maxim/scripts/audit-sources.mjs [portals.yml]\nOffline, read-only provider classification. Does not verify live coverage, fetch jobs, execute local parsers, or write tracker files.");
+  process.exit(0);
+}
+if (args.length > 1 || args.some(arg => arg.startsWith("-"))) {
+  console.error("Unknown argument. Use --help or one explicit configuration path.");
+  process.exit(2);
+}
+const configPath = args[0] || process.env.CAREER_OPS_PORTALS || path.join(root, "portals.yml");
 const config = yaml.load(fs.readFileSync(configPath, "utf8"));
 if (!config || !Array.isArray(config.tracked_companies)) throw new Error("tracked_companies must be an array");
 const dir = path.join(root, "providers");

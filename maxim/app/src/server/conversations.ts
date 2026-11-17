@@ -10,6 +10,7 @@ import {candidateContext,proposeConversationFact,assertDisclosureText} from './c
 import {recallAnswers} from './answer-recall';
 import {answerCommand} from './answers';
 import {validRefs,renderFactEvidence} from './answer-validity';
+import {discoveryView,discoveryCommand} from './discovery';
 
 const controllers=new Map<string,AbortController>();
 const toolSchemas = {
@@ -40,6 +41,24 @@ async function invoke(ctx:Context,cid:string,rid:string,call:ToolCall) {
  await live(ctx,cid,rid);
  let args:unknown;
  try { args=JSON.parse(call.function.arguments); } catch { return {error:'invalid_arguments'}; }
+ if(call.function.name==='read_discovery'){
+  toolSchemas.read_workspace.parse(args);const d=await discoveryView(ctx);
+  return {asOf:d.asOf,coverage:d.coverage,partial:{...d.partial,toolSummary:d.sources.length>5||d.runs.length>3||d.attempts.length>3||d.jobs.length>5},sources:d.sources.slice(0,5).map(s=>({id:s.id,name:s.name,provider:s.provider,revision:s.revision,enabled:s.enabled,status:s.stale?'stale':s.status})),runs:d.runs.slice(0,3).map(r=>({id:r.id,revision:r.revision,status:r.status,counts:r.counts,terms:r.terms})),attempts:d.attempts.slice(0,3).map(a=>({runId:a.run_id,sourceId:a.source_id,status:a.status,error:a.error_code})),jobs:d.jobs.slice(0,5).map(j=>({id:j.id,revision:j.revision,title:j.title,company:j.company,state:j.discovery_state,eligibility:j.discovery_policy.eligibility,postedAt:j.posted_at})),detailView:'discovery'};
+ }
+ if(call.function.name==='start_job_search'||call.function.name==='set_discovery_state'){
+  const user=(await database().query("SELECT content FROM messages WHERE workspace_id=$1 AND run_id=$2 AND role='user' ORDER BY sequence DESC LIMIT 1",[ctx.workspaceId,rid])).rows[0];
+  const p=z.object({quote:z.string().min(3).max(4000)}).passthrough().parse(args);
+  invariant(typeof user?.content.text==='string'&&user.content.text.includes(p.quote),'explicit_request_required','Quote the exact current user discovery instruction.');
+  if(call.function.name==='start_job_search'){
+   const q=z.object({quote:z.string(),sourceIds:z.array(uuid).min(1).max(3),terms:z.array(z.string().min(2).max(120)).min(1).max(10)}).strict().parse(args);
+   invariant(/\b(search|find)\b/i.test(q.quote)&&q.terms.every(t=>q.quote.toLowerCase().includes(t.toLowerCase())),'explicit_request_required','Search terms must be present in the current user request.');
+   return discoveryCommand(ctx,{commandId:crypto.randomUUID(),action:'start_search',payload:{sourceIds:q.sourceIds,terms:q.terms}});
+  }
+  const q=z.object({quote:z.string(),jobId:uuid,expectedRevision:z.number().int().positive(),state:z.enum(['saved','dismissed','none'])}).strict().parse(args);
+  const verb=q.state==='saved'?/\bsave\b/i:q.state==='dismissed'?/\bdismiss\b/i:/\b(restore|unsave)\b/i;
+  invariant(verb.test(q.quote)&&q.quote.includes(q.jobId),'explicit_request_required','Quote the action and exact job UUID from the current user request.');
+  return discoveryCommand(ctx,{commandId:crypto.randomUUID(),action:'set_discovery_state',payload:{jobId:q.jobId,expectedRevision:q.expectedRevision,state:q.state}});
+ }
  if(call.function.name==='read_workspace') {
   toolSchemas.read_workspace.parse(args);
   const s=await snapshot(ctx);

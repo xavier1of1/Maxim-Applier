@@ -72,7 +72,7 @@ Create small decision records for chosen stack, persistence/retention, source re
 | S1 | [Real workspace and contextual agent](stages/stage-01-workspace-and-agent.md) | Add a job/application in UI; ask agent about same ID; restart and read it | S0 | Verified |
 | S2 | [Reviewed candidate onboarding](stages/stage-02-reviewed-onboarding.md) | Upload, review/correct, confirm, restart, retrieve sourced facts | S1 | Verified |
 | S3 | [Reusable answers and bounded context](stages/stage-03-answer-memory.md) | Answer once, recall in scope, correct/revoke, suppress old reuse | S2 | Verified |
-| S4 | [Coverage-aware discovery](stages/stage-04-discovery.md) | Ingest a new role; expose unsupported/failed source separately | S2 | Pending |
+| S4 | [Coverage-aware discovery](stages/stage-04-discovery.md) | Ingest a new role; expose unsupported/failed source separately | S2 | Verified |
 | S5 | [Career-Ops evaluation, packet, and tracker cutover](stages/stage-05-evaluation-and-tracker-cutover.md) | Evaluate/prepare one role; prove one lifecycle after migration | S3; S4 only for automated-discovery jobs | Pending |
 | S6 | [Supported browser application assistance](stages/stage-06-browser-assistance.md) | Fill supported controls, ask unknowns, resume, stop at manual review | S5 and approved browser design | Pending |
 | S7 | [Gmail evidence and response tasks](stages/stage-07-gmail-evidence.md) | Link a consented thread; hold ambiguous match; handle revoked access | S5 | Pending |
@@ -282,12 +282,12 @@ This is opt-in reviewed candidate authority, not automatic import/approval of pr
 - Choose budget/cadence appropriate to fresh-role alerts; don't blindly inherit Dossier's daily caps/single-process scheduling.
 
 **Acceptance**
-- [ ] Fixture/new provider role ingests once with stable aliases and correct source dates.
-- [ ] Empty, partial, stale, unsupported, challenge/authentication, quota, HTTP, and schema failures remain distinguishable.
-- [ ] NoVA/DC location rules still apply when a provider ignores radius or broadens a location query.
-- [ ] Direct-provider and aggregator results can coexist without duplicating an actionable opening.
-- [ ] Bounded pacing/retries and provider-specific terms/attribution are recorded; no unofficial prohibited source or evasion is added.
-- [ ] Live acceptance tests, if claimed, record actual provider/query/time/coverage; fixtures alone prove only the adapter contract.
+- [x] Fixture/new provider role ingests once with stable aliases and correct source dates.
+- [x] Empty, partial, stale, unsupported, challenge/authentication, quota, HTTP, and schema failures remain distinguishable.
+- [x] NoVA/DC location rules still apply when a provider ignores radius or broadens a location query.
+- [x] Direct-provider and verified destination-source observations coexist without duplicating an actionable opening; broad aggregators remain optional and unactivated.
+- [x] Bounded pacing/retries and provider-specific terms/attribution are recorded; no unofficial prohibited source or evasion is added.
+- [x] Live acceptance tests, if claimed, record actual provider/query/time/coverage; fixtures alone prove only the adapter contract.
 
 **Handoff:** S5 gets normalized postings, provenance, freshness and coverage state. LinkedIn/Indeed-origin results do not imply apply permission or a first-party connector.
 

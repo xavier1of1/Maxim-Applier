@@ -5,6 +5,17 @@ Planning/development handoff updated: 2026-11-17
 
 ## November 2026 Planning Handoff
 
+### S4 Coverage-Aware Discovery Delivered
+
+The same workspace now has Search, Past searches, Saved, Dismissed and Source Health.
+Retained Greenhouse/Lever/Ashby mapping runs through a bounded public transport and
+durable checkpointed worker, preserving raw observations and stable job aliases.
+Rust handles confirmed policy, not fit scoring. Native pipeline/history files stay unchanged.
+Final suite: 23 Rust, 12 unit, 50 integration TAP cases and 12 Chromium workflows pass.
+One real public-board GET captured 59 postings and 43 engineering matches in a disposable DB.
+See [discovery guide](discovery.md) and [dated case evidence](../../roadmap/reviews/s4-discovery.md).
+No universal discovery/application-site coverage, personal import or application cutover is claimed.
+
 ### S3 Answer Memory Delivered
 
 Exact-context questions, versioned reviewed answers, company-first/explicit cross-company
@@ -29,7 +40,7 @@ See [onboarding guide](reviewed-onboarding.md), [ADR 0007](decisions/0007-review
 and [S2 evidence](../../roadmap/reviews/s2-onboarding.md).
 Full app suite: 8 Rust, 6 parser, 32 integration TAP cases, 8 Chromium workflows passed.
 Go dashboard, native evaluator help and static platform safety passed.
-S4-S5 remain under [execution record](s2-s5-execution.md); tracker authority
+S5 remains under [execution record](s2-s5-execution.md); tracker authority
 remains legacy until its own reviewed migration.
 
 ### S1 Workspace Delivered
@@ -59,7 +70,7 @@ No production cutover, stack launch, candidate overwrite or automatic applicatio
 
 ### Latest Refinement And Detailed Stages
 
-- [Twelve detailed stage plans](../../roadmap/stages/README.md) now define 92 acceptance cases, implementation slices, actual versus proposed test paths, files, handoffs, cutovers, rollback and deferrals in the inspected Vantage style. All implementation stages remain Pending.
+- [Twelve detailed stage plans](../../roadmap/stages/README.md) define 92 acceptance cases, implementation slices, test paths, handoffs, cutovers and rollback. S0-S4 are verified for their stated scopes; S5-S11 remain Pending at this checkpoint.
 - [Shared contracts](../../roadmap/stages/contracts.md) bind identity/auth, PostgreSQL/private artifacts, Windows host/browser composition, durable work, retained Career-Ops semantics and manual final action. Manual job evaluation no longer depends on automated discovery; S2 introduces the consumed worker.
 - [Drift/refinement evidence](../../roadmap/reviews/roadmap-refinement.md) records actual code gaps and executed checks. Fresh unit result is 53/55 pass; fallback attachment approval and source-audit help fail. Isolated Discord retry also fails. Dashboard Go tests and static safety check pass.
 - Read-only roadmap validation passes for 22 documents, 211 local links/anchors, 12 stages and 92 cases; all 16 validator tests pass. Original commented workflow remains unchanged.

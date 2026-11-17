@@ -299,6 +299,15 @@ pre { font:inherit; }
 .knowledge-view {padding:0 28px 30px;min-width:0}
 
 .answer-lookup {display:flex;flex-direction:column;gap:18px;max-width:780px}
+.source-choice {border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;min-width:0}
+.source-choice legend {font-size:12px;margin-bottom:12px}
+.discovery-job,.discovery-source {padding:20px 0;border-bottom:1px solid var(--ui-line);min-width:0;overflow-wrap:anywhere}
+.discovery-job p,.discovery-source p {font-size:12px;line-height:1.8;margin:8px 0}
+.discovery-job summary,.discovery-attempt {font-size:12px}
+.discovery-job details {padding:12px 0}.discovery-job ul {padding-left:20px;font-size:12px;line-height:1.8}
+.discovery-job .fact-title {align-items:flex-start;flex-wrap:wrap}.discovery-job .fact-title>button {text-align:left;line-height:1.7;min-width:0;overflow-wrap:anywhere}
+.discovery-attempt {display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:16px 0;border-bottom:1px solid var(--ui-line)}
+.discovery-attempt p {flex-basis:100%;line-height:1.8}.discovery-lineage {white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.8 ui-monospace,monospace;max-height:300px;overflow:auto;padding:14px 0}
 .answer-form-actions {display:flex;gap:10px;flex-wrap:wrap}
 .answer-advanced,.answer-evidence {font-size:12px;border-block:1px solid var(--ui-line);padding:14px 0}
 .answer-advanced>summary,.answer-evidence>summary {cursor:pointer;color:var(--ui-green)}

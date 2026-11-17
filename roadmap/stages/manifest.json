@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updated": "2026-11-16",
+  "updated": "2026-11-17",
   "standing": "Planning registry, not runtime configuration or implementation acceptance.",
   "stages": [
     {
@@ -368,7 +368,7 @@
       "id": "S4",
       "title": "Coverage-aware discovery",
       "file": "stage-04-discovery.md",
-      "status": "Pending",
+      "status": "Verified",
       "requires": [
         "S2"
       ],
@@ -391,6 +391,72 @@
         "DSC-06",
         "DSC-07",
         "DSC-08"
+      ],
+      "evidence": [
+        {
+          "caseId": "DSC-01",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test; native audit/CLI safety; Go/static safety; explicit live smoke",
+          "environment": "Windows; Node 24.22.3; Rust 1.76; PostgreSQL 18.1; production Next/Astryx; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s4-discovery.md"
+        },
+        {
+          "caseId": "DSC-02",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test; native audit/CLI safety; Go/static safety; explicit live smoke",
+          "environment": "Windows; Node 24.22.3; Rust 1.76; PostgreSQL 18.1; production Next/Astryx; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s4-discovery.md"
+        },
+        {
+          "caseId": "DSC-03",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test; native audit/CLI safety; Go/static safety; explicit live smoke",
+          "environment": "Windows; Node 24.22.3; Rust 1.76; PostgreSQL 18.1; production Next/Astryx; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s4-discovery.md"
+        },
+        {
+          "caseId": "DSC-04",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test; native audit/CLI safety; Go/static safety; explicit live smoke",
+          "environment": "Windows; Node 24.22.3; Rust 1.76; PostgreSQL 18.1; production Next/Astryx; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s4-discovery.md"
+        },
+        {
+          "caseId": "DSC-05",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test; native audit/CLI safety; Go/static safety; explicit live smoke",
+          "environment": "Windows; Node 24.22.3; Rust 1.76; PostgreSQL 18.1; production Next/Astryx; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s4-discovery.md"
+        },
+        {
+          "caseId": "DSC-06",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test; native audit/CLI safety; Go/static safety; explicit live smoke",
+          "environment": "Windows; Node 24.22.3; Rust 1.76; PostgreSQL 18.1; production Next/Astryx; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s4-discovery.md"
+        },
+        {
+          "caseId": "DSC-07",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test; native audit/CLI safety; Go/static safety; explicit live smoke",
+          "environment": "Windows; Node 24.22.3; Rust 1.76; PostgreSQL 18.1; production Next/Astryx; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s4-discovery.md"
+        },
+        {
+          "caseId": "DSC-08",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test; native audit/CLI safety; Go/static safety; explicit live smoke",
+          "environment": "Windows; Node 24.22.3; Rust 1.76; PostgreSQL 18.1; production Next/Astryx; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s4-discovery.md"
+        }
       ]
     },
     {

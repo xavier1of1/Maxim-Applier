@@ -8,6 +8,7 @@ const schema = z.object({
   bootstrapKey: z.string().min(32), workspaceId: z.string().uuid(),
   model: z.object({ model: z.string().max(120), apiKey: z.string(), baseUrl: z.string().url() }),
   testMode: z.boolean().default(false),
+  discoveryFixtureOrigin:z.string().url().optional(),
   contextBudget:z.number().int().min(100).max(8192).default(8192),
 });
 export type RuntimeConfig = z.infer<typeof schema>;
@@ -27,7 +28,9 @@ export function config(): RuntimeConfig {
     if (c.testMode) {
       if (base.hostname !== '127.0.0.1' || base.protocol !== 'http:') throw Error();
       if (!path.basename(c.privateRoot).startsWith('maxim-test-')) throw Error();
+      if(c.discoveryFixtureOrigin){const f=new URL(c.discoveryFixtureOrigin);if(f.origin!==c.discoveryFixtureOrigin||f.protocol!=='http:'||f.hostname!=='127.0.0.1')throw Error();}
     } else if (c.model.baseUrl !== 'https://api.openai.com/v1') throw Error();
+    if(!c.testMode&&c.discoveryFixtureOrigin)throw Error();
     const repo = path.resolve(/* turbopackIgnore: true */ process.cwd(), process.cwd().endsWith(path.join('maxim', 'app')) ? '../..' : '.');
     const relative = path.relative(fs.realpathSync(/* turbopackIgnore: true */ repo), fs.realpathSync(/* turbopackIgnore: true */ c.privateRoot));
     if (!relative.startsWith('..') && !path.isAbsolute(relative)) throw Error();

@@ -6,8 +6,8 @@ Each stage is a separate tested commit; merge to main only after S2-S5 acceptanc
 | Stage | Status |
 | --- | --- |
 | S2 reviewed onboarding | Verified; commit 63556f9 |
-| S3 answer memory | Verified; separate commit being recorded |
-| S4 discovery | Pending |
+| S3 answer memory | Verified; commit 232a0ab |
+| S4 discovery | Verified; separate commit being recorded |
 | S5 evaluator/tracker cutover | Pending |
 
 C: initially had only about 260 MB free; a command setup failed with disk-full.
@@ -35,3 +35,13 @@ New npm downloads use an ignored app-local cache on D:.
 
 Use the detailed stage contracts. Imports never approve personal facts or activate authority.
 Fixtures prove supported paths, not real model quality or universal ATS support.
+
+## S4 Verified
+
+Retained Greenhouse/Lever/Ashby mapping, hardened public GET transport, revisioned
+query/source lineage, raw observations/aliases, checkpointed durable work and
+Search/History/Saved/Dismissed/Source Health UI are implemented. Rust owns policy,
+not fit assessment. See roadmap/reviews/s4-discovery.md for case evidence and the
+dated one-board public smoke (59 postings, 43 engineering matches, one real GET).
+Final full suite: 23 Rust, 12 unit, 50 integration TAP cases and 12 Chromium workflows
+pass. Native audit/CLI safety, Go dashboard and static platform safety pass.

@@ -13,6 +13,7 @@ import {importLegacyCandidate} from './candidate-import';
 import {candidateContext} from './candidate-context';
 import {answerCommand,answerLibrary,exportAnswers} from './answers';
 import {recallAnswers} from './answer-recall';
+import {discoveryCommand,discoveryView} from './discovery';
 import { DomainError,invariant } from './errors';
 
 const json=(value:unknown,status=200,headers:Record<string,string>={})=>Response.json(value,{status,headers:{'Cache-Control':'no-store',...headers}});
@@ -39,7 +40,7 @@ export async function handle(req:Request) {
   const route=new URL(req.url).pathname.replace(/^\/api\/?/,'').split('/').filter(Boolean);
   const name=route.join('/'),post=req.method==='POST',get=req.method==='GET';
   if(get && name==='health') {
-   const version=await database().query('SELECT version FROM schema_migrations WHERE version=4');
+   const version=await database().query('SELECT version FROM schema_migrations WHERE version=5');
    invariant(version.rowCount,'schema_unavailable','Workspace schema is not initialized.',503);
    return json({ok:true,application:'maxim-apply',installation:digest(config().workspaceId).slice(0,16),database:'available',recordFreshness:'not_assessed'});
   }
@@ -62,6 +63,8 @@ export async function handle(req:Request) {
    return json({ok:true},200,{'Set-Cookie':'maxim_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'});
   }
   if(get&&name==='workspace')return json(await snapshot(ctx));
+  if(get&&name==='discovery')return json(await discoveryView(ctx));
+  if(post&&name==='discovery/commands')return json({result:await discoveryCommand(ctx,await body(req))});
   if(get&&name==='candidate')return json(await candidateView(ctx));
   if(get&&name==='answers')return json(await answerLibrary(ctx));
   if(get&&name==='answers/export')return json(await exportAnswers(ctx),200,{'Content-Disposition':'attachment; filename="maxim-answer-memory.json"'});

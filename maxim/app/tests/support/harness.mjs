@@ -18,9 +18,16 @@ export async function harness() {
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'maxim-test-'));
  const suffix=crypto.randomUUID(),container='maxim-test-'+suffix,database='maxim_test_'+suffix.replaceAll('-','');
  const dbPort=await freePort(),port=await freePort(),password=crypto.randomBytes(24).toString('hex');
- const captured=[],timers=new Set();
+ const captured=[],timers=new Set(),providerRequests=[],providerRoutes=new Map();
  const modelServer=http.createServer(async(req,res)=>{
   try{
+   if(req.method==='GET'){
+    providerRequests.push({url:req.url,at:Date.now(),headers:req.headers});
+    const route=providerRoutes.get(req.url)||providerRoutes.get(req.url.split('?')[0]);
+    if(typeof route==='function'){await route(req,res);return;}
+    res.writeHead(route?.status||(route?200:404),{'Content-Type':'application/json',...(route?.headers||{})});
+    res.end(JSON.stringify(route?.body||{error:'fixture_source_not_found'}));return;
+   }
    let raw='';for await(const part of req){raw+=part;if(Buffer.byteLength(raw)>32000)throw Error('oversize');}
    const body=JSON.parse(raw);captured.push({body,authorization:req.headers.authorization});
    const q=[...body.messages].reverse().find(m=>m.role==='user')?.content||'';
@@ -43,6 +50,7 @@ export async function harness() {
    const id=q.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i)?.[0];
    if(last.role==='tool'){
     const data=JSON.parse(last.content);
+    if(q.includes('[case:discovery')){text(JSON.stringify(data));return;}
     if(q.includes('[case:answer-evidence]')&&last.tool_call_id==='call_evidence_read'&&!data.error){
      const facts=data.facts.filter(f=>['projects.summary','candidate.name'].includes(f.field_key)).map(f=>({id:f.id,revision:f.revision})).reverse();
      tool('draft_answer_from_facts',{question:'Describe relevant project evidence.',company:'Evidence',roleLane:'fde',facts},'call_evidence_draft');return;
@@ -56,6 +64,10 @@ export async function harness() {
     text(data.jobs?'Saved roles: '+data.jobs.map(j=>j.company+' - '+j.title).join('; '):'Saved role '+(data.company||'')+' at revision '+(data.revision||'unknown')+'.');return;
    }
    if(q.includes('[case:self-confirm]')){tool('confirm_proposal',{proposalId:id||crypto.randomUUID()},'call_forbidden');return;}
+   if(q.includes('[case:discovery]')){tool('read_discovery',{},'call_discovery');return;}
+   if(q.includes('[case:discovery-start]')){tool('start_job_search',{sourceIds:[id],terms:['Software'],quote:q},'call_discovery_start');return;}
+   if(q.includes('[case:discovery-save]')){tool('set_discovery_state',{jobId:id,expectedRevision:Number(q.match(/rev (\d+)/)?.[1]),state:q.includes('dismiss')?'dismissed':'saved',quote:q},'call_discovery_save');return;}
+   if(q.includes('[case:discovery-unrequested]')){tool('start_job_search',{sourceIds:[id],terms:['Software'],quote:'find Software'},'call_discovery_start');return;}
    if(q.includes('[case:answer-self-confirm]')){tool('approve_answer',{answerId:id||crypto.randomUUID()},'call_forbidden');return;}
    if(q.includes('[case:answer-recall]')){tool('recall_application_answer',{question:'Describe a customer project.',company:'Alpha',roleLane:'fde'},'call_answer_read');return;}
    if(q.includes('[case:answer-private]')){tool('recall_application_answer',{question:'Describe a private plan.',company:'Private',roleLane:'fde'},'call_answer_read');return;}
@@ -70,7 +82,7 @@ export async function harness() {
  await new Promise(resolve=>modelServer.listen(0,'127.0.0.1',resolve));
  const modelPort=modelServer.address().port,url=new URL('postgresql://maxim@127.0.0.1:'+dbPort+'/'+database);url.password=password;
  const c={databaseUrl:url.toString(),origin:'http://127.0.0.1:'+port,privateRoot:root,workspaceId:crypto.randomUUID(),
-  bootstrapKey:crypto.randomBytes(32).toString('hex'),model:{model:'fixture-model',apiKey:'fixture-provider-key',baseUrl:'http://127.0.0.1:'+modelPort+'/v1'},testMode:true,testContainer:container};
+  bootstrapKey:crypto.randomBytes(32).toString('hex'),model:{model:'fixture-model',apiKey:'fixture-provider-key',baseUrl:'http://127.0.0.1:'+modelPort+'/v1'},testMode:true,testContainer:container,discoveryFixtureOrigin:'http://127.0.0.1:'+modelPort};
  const runtime=path.join(root,'runtime.json');fs.writeFileSync(runtime,JSON.stringify(c));
  assertTestConfig(c);
  let server,logFd;
@@ -143,7 +155,7 @@ export async function harness() {
   return response;
  };
  const a=await login(c.bootstrapKey),b=await login(other.key);
- return {root,c,runtime,container,database,captured,a,b,other,sql,login,request,startServer,stopServer,startWorker,stopWorker,
+ return {root,c,runtime,container,database,captured,providerRequests,providerRoutes,a,b,other,sql,login,request,startServer,stopServer,startWorker,stopWorker,
   snapshotDatabase:target=>snapshotDatabase(c,target),restoreDatabase:(dump,name)=>restoreDatabase(c,dump,name),
   async close(){
    for(const child of [...workers.keys()])await stopWorker(child);

@@ -6,6 +6,24 @@ This file preserves the earlier implementation checklist. Its COMPLETE labels ar
 
 See [the current planning index](../../roadmap/README.md) for accepted direction and remaining decisions. Do not paste secrets or candidate-private data into either checklist.
 
+## November Workspace Inputs
+
+- S2: Upload personal PDF/DOCX/MD/TXT sources in Candidate, review facts/disclosure,
+  and explicitly activate candidate authority. Existing private files are not automatically approved.
+- S3: Record/review application answers and exact reuse permissions in Answers.
+- S4: Add selected company board slugs for Greenhouse/Lever/Ashby in Discovery,
+  then enter role terms or approve `preferences.roles`. These public feeds need no
+  API key/account. Manual sources remain visibly unsupported. No paid search subscription is required.
+- A model is optional for manual intake/discovery; agent use needs a supported model
+  and API key in protected workspace Settings, not committed files or chat.
+- Rust 1.76-compatible build tools, pinned local Node 24 and Docker/PostgreSQL are the
+  current workspace dependencies. `npm run maxim:workspace:build` checks the build;
+  `npm run maxim:workspace:test` uses disposable services.
+
+See the current [onboarding](../maxim/reviewed-onboarding.md),
+[answer memory](../maxim/answer-memory.md) and [discovery](../maxim/discovery.md) guides.
+The older checklist below remains historical and does not activate credentials or approve data.
+
 ## Accounts and Secrets
 
 - COMPLETE: Discord webhook URL for accountability notifications (`MAXIM_DISCORD_WEBHOOK_URL`) exists in local `.env`; live notification validation completed without exposing the value.

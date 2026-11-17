@@ -1,7 +1,7 @@
 # S4: Coverage-aware discovery
 
-**Status:** Pending implementation. Detailed plan drafted; no acceptance criterion is claimed passed.
-**Updated:** 2026-11-16.
+**Status:** Verified for the bounded retained-feed scope. See [case evidence](../reviews/s4-discovery.md).
+**Updated:** 2026-11-17.
 **Roadmap:** [Stage index](README.md) | [High-level roadmap](../high-level-roadmap.md) | [Shared contracts](contracts.md)
 **Requires:** [S2](stage-02-reviewed-onboarding.md)
 
@@ -20,7 +20,7 @@ Make job discovery useful and auditable while exposing failures, incomplete cove
 
 ## Current Evidence And Boundary
 
-[scan.mjs](../../scan.mjs) discovers provider modules and writes pipeline/history files. It is not a pure web API. [audit-sources.mjs](../../maxim/scripts/audit-sources.mjs) is an offline classification tool, not live coverage proof; its help test currently fails.
+[scan.mjs](../../scan.mjs) discovers provider modules and writes pipeline/history files. It is not a pure web API. [audit-sources.mjs](../../maxim/scripts/audit-sources.mjs) is an offline classification tool, not live coverage proof; its read-only help path is now fixed and tested.
 
 Retain useful provider logic; don't import a CLI entry point that executes scans or writes the user's tracker on module load. An isolated native invocation must have explicit read/write roots and parsed outputs.
 
@@ -48,20 +48,22 @@ Retain useful provider logic; don't import a CLI entry point that executes scans
 
 ## Acceptance
 
-- [ ] **DSC-01:** Read-only source audit/help runs without candidate files or scanning; invalid/disabled/explicit/unmatched configuration remains distinct.
-- [ ] **DSC-02:** New role and repeated/multiple-source observations create one correct opening with aliases; distinct job IDs/materially distinct openings do not silently merge.
-- [ ] **DSC-03:** Posted/first-seen/check timestamps and query/filter/source lineage persist; missing dates remain unknown.
-- [ ] **DSC-04:** Empty-success, partial-pagination, stale, unsupported, auth/challenge, quota, HTTP and parse failures have distinct visible states and fallback responsibility.
-- [ ] **DSC-05:** Restart/cancel/retry resumes only eligible work with bounded pagination/pacing; no accidental native tracker writes occur.
-- [ ] **DSC-06:** Redirect/private-IP/metadata/DNS-change/oversize response cases are denied; no evasion or unauthorized source is introduced.
-- [ ] **DSC-07:** NoVA/DC and multi-location filtering still applies when a provider broadens radius/country/location; same-named out-of-state cities are not automatically NoVA, and denied/unknown policy is explainable.
-- [ ] **DSC-08:** UI and agent query/history/save/dismiss agree on IDs and status; any claimed live source has dated actual-result evidence separate from fixtures.
+- [x] **DSC-01:** Read-only source audit/help runs without candidate files or scanning; invalid/disabled/explicit/unmatched configuration remains distinct.
+- [x] **DSC-02:** New role and repeated/multiple-source observations create one correct opening with aliases; distinct job IDs/materially distinct openings do not silently merge.
+- [x] **DSC-03:** Posted/first-seen/check timestamps and query/filter/source lineage persist; missing dates remain unknown.
+- [x] **DSC-04:** Empty-success, partial-pagination, stale, unsupported, auth/challenge, quota, HTTP and parse failures have distinct visible states and fallback responsibility.
+- [x] **DSC-05:** Restart/cancel/retry resumes only eligible work with bounded pagination/pacing; no accidental native tracker writes occur.
+- [x] **DSC-06:** Redirect/private-IP/metadata/DNS-change/oversize response cases are denied; no evasion or unauthorized source is introduced.
+- [x] **DSC-07:** NoVA/DC and multi-location filtering still applies when a provider broadens radius/country/location; same-named out-of-state cities are not automatically NoVA, and denied/unknown policy is explainable.
+- [x] **DSC-08:** UI and agent query/history/save/dismiss agree on IDs and status; any claimed live source has dated actual-result evidence separate from fixtures.
 
 ## Integration Test
 
-**Available now:** `node --test maxim/tests/unit/source-readiness.test.mjs maxim/tests/unit/scan-cli-safety.test.mjs`. Source-audit help is a known failing baseline; scanner help/unknown-argument checks must not scan.
+**Executed:** `node --test maxim/tests/unit/source-readiness.test.mjs maxim/tests/unit/scan-cli-safety.test.mjs`: four pass; help/unknown arguments do not scan.
 
-**Proposed:** `node --test maxim/app/tests/integration/discovery.test.mjs` and `maxim/app/tests/e2e/discovery.spec.mjs`.
+**Implemented and executed:** `maxim/app/tests/integration/discovery.test.mjs`,
+`tests/unit/discovery-network.test.mjs` and `tests/e2e/discovery.spec.mjs` through
+`npm --prefix maxim/app test` with pinned Node/tsx/Chromium.
 
 Use real service/DB/worker paths and loopback providers with multiple pages, aliases, 429, schema drift, dates, redirects and an unsupported source. Explicitly assert that native production pipeline/history files remain unchanged. A provider account is required only for its selected live smoke, not offline fixtures.
 
@@ -87,7 +89,12 @@ S5 may already evaluate manually added jobs after S3; it consumes S4 only for ro
 
 ## What Shipped
 
-Pending. The current source list is not certified complete or operational.
+Retained Greenhouse/Lever/Ashby adapters behind hardened read-only transport; canonical
+source/query/run/page/observation/alias storage; checkpointed durable work, bounded
+pacing/retry/cancellation; Rust policy without a competing fit score; shared UI/agent
+Search, Past searches, Saved, Dismissed and Source Health. One actual public Greenhouse
+board was verified separately from fixtures. The full native company list is not certified.
+See [usage](../../docs/maxim/discovery.md) and [ADR 0009](../../docs/maxim/decisions/0009-bounded-retained-discovery.md).
 
 ## Deferred To Later Stages
 

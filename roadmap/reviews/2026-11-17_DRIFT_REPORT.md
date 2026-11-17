@@ -12,7 +12,11 @@ No drift detected within the bounded S3 scope. Real service/worker/model and res
 
 ## stage-04-discovery.md
 
-- Service-backed hardened public discovery, provenance/search history and discovery UI remain unimplemented at this checkpoint. Existing scanner CLI is not claimed as the new service.
+No drift detected within the bounded S4 retained-feed scope. Shared public-feed service,
+query/source/raw observation lineage, hardened transport, checkpointed work, Rust policy
+and responsive UI/agent are implemented and tested. The dated one-board live smoke is
+not blanket source certification. Root planning-index S2/S3 stale Pending labels were
+also reconciled with their existing evidence. See s4-discovery.md.
 
 ## stage-05-evaluation-and-tracker-cutover.md
 

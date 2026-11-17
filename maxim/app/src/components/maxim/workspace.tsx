@@ -14,6 +14,7 @@ import {CreateRoleDialog, JobsView} from './jobs';
 import {SettingsView} from './settings';
 import {CandidateView} from './candidate';
 import {AnswersView} from './answers';
+import {DiscoveryView} from './discovery';
 import {ApplicationsView, ActivityView} from './views';
 import {useAgent} from './use-agent';
 import {Banner, Brand, EmptyState, Glyph, Pill, PrivacyStamp, ToolButton, WorkspaceLoading, formatDate, useMediaQuery, useOnline} from './shared';
@@ -21,6 +22,7 @@ import type {Navigation, Proposal, Session, View, WorkspaceData} from './types';
 
 const navigation = [
   {view: 'jobs' as const, label: 'Jobs', icon: BriefcaseBusiness},
+  {view: 'discovery' as const, label: 'Discovery', icon: LayoutGrid},
   {view: 'candidate' as const, label: 'Candidate', icon: ShieldCheck},
   {view: 'answers' as const, label: 'Answers', icon: BookOpen},
   {view: 'applications' as const, label: 'Applications', icon: Send},
@@ -221,6 +223,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
             onAgent={() => { setAgentOpen(true); if (conversationId && agent.detail && agent.detail.conversation.job_id !== jobId && !agent.isRunning) void agent.newConversation(); }} />
           : view === 'candidate' ? <CandidateView api={api} disabled={disabled} refresh={refresh} navigate={navigate} sourceId={searchParams.get('source')} asOf={data.asOf} isOwner={data.workspace.is_owner}/>
           : view === 'answers' ? <AnswersView api={api} disabled={disabled} refresh={refresh} asOf={data.asOf}/>
+          : view === 'discovery' ? <DiscoveryView api={api} disabled={disabled} refresh={refresh} asOf={data.asOf} navigate={navigate}/>
           : view === 'applications' ? <ApplicationsView data={data} api={api} disabled={disabled} refresh={refresh} navigate={navigate} filter={filter} />
           : view === 'activity' ? <ActivityView data={data} navigate={navigate} />
           : <SettingsView data={data} api={api} disabled={disabled} refresh={refresh} onLogout={async () => { await api.post('/api/auth/logout', {}); onSignedOut(); }} />}

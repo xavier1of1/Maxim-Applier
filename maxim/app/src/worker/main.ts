@@ -6,6 +6,7 @@ import {extractSource,purgeArtifact,expireRawSources} from './extraction';
 import {DomainError} from '../server/errors';
 import {projectionWork} from '../server/projections';
 import {expireAnswers} from '../server/answer-retention';
+import {discoverJobs} from './discovery';
 import {setTimeout as wait} from 'node:timers/promises';
 
 config();
@@ -16,7 +17,8 @@ let stopping=false;
 process.on('SIGINT',()=>{stopping=true;});
 process.on('SIGTERM',()=>{stopping=true;});
 const delay=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
-export async function executeWork(item:WorkItem){
+export async function executeWork(item:WorkItem,signal?:AbortSignal){
+ if(item.kind==='discover_jobs')return discoverJobs(item,signal);
  if(item.kind==='extract_source')return extractSource(item);
  if(item.kind==='purge_artifact')return purgeArtifact(item);
  if(item.kind==='project_candidate')return projectionWork(item);
@@ -26,7 +28,7 @@ async function main(){
  let cycles=0;
  while(!stopping){
   let active:WorkItem|null=null,finished=false;
-  const renewalStop=new AbortController();
+  const renewalStop=new AbortController(),executionStop=new AbortController();
   try{
    await database().query('INSERT INTO worker_heartbeats(worker_id) VALUES($1) ON CONFLICT(worker_id) DO UPDATE SET last_seen=now()',[workerId]);
    active=await claimWork(workerId);
@@ -34,16 +36,16 @@ async function main(){
    const current=active;
    const renewal=(async()=>{for(let attempt=0;attempt<8&&!finished;attempt++){
     await wait(10000,undefined,{signal:renewalStop.signal});if(finished)break;
-    if(!await renewWork(current))break;
+    if(!await renewWork(current)){executionStop.abort();break;}
     await database().query('UPDATE worker_heartbeats SET last_seen=now() WHERE worker_id=$1',[workerId]);
    }})().catch(()=>{});
-   await executeWork(current);finished=true;
+   await executeWork(current,executionStop.signal);finished=true;
    void renewal.catch(()=>{});
   }catch(e){
    finished=true;
    if(active)await failWork(active,e instanceof DomainError?e.code:'worker_unavailable',!(e instanceof DomainError)).catch(()=>{});
    await delay(1000);
-  }finally{finished=true;renewalStop.abort();}
+  }finally{finished=true;renewalStop.abort();executionStop.abort();}
  }
  await database().query('DELETE FROM worker_heartbeats WHERE worker_id=$1',[workerId]).catch(()=>{});
  await database().end();
