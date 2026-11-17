@@ -37,6 +37,9 @@ This repository is Xavier Kubancik's controlled Maxim Apply fork of Career-Ops. 
 
 ### November 2026 Planning And Development
 
+- The new local workspace is implemented under `maxim/app/`; read `docs/maxim/workspace.md` and ADR 0006 before changing it. Use its pinned local Node/dependency lock, real PostgreSQL migrations and isolated acceptance harness. Run `npm run maxim:workspace:test`; do not use production credentials or add sample fallback data.
+- S1 manual jobs/intents/conversations are isolated new-workspace records. They do not replace Career-Ops candidate files, evaluations, tracker or SQLite; cutovers remain S2/S5/S9 responsibilities. No new browser executor or external delivery is active.
+
 - For new Maxim design work, read `roadmap/README.md`, `roadmap/MANIFESTO.md`, and the relevant stage in `roadmap/high-level-roadmap.md`. They distinguish latest accepted direction from proposals and measured evidence.
 - Detailed scope and handoffs now live in `roadmap/stages/README.md` and its stage files. After roadmap edits run `node roadmap/validate-roadmap.mjs` and `node --test roadmap/validate-roadmap.test.mjs`; these prove planning consistency, not product acceptance. Keep proposed tests distinct from implemented commands and require case evidence before status promotion.
 - Accepted target changes include an early single web dashboard/agent workspace and PostgreSQL/private artifacts/Compose. They do not enact migration: existing user-file, SQLite, tracker, and native-command contracts remain in force until their approved entity-level cutover is implemented and verified.

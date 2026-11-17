@@ -78,7 +78,7 @@
       "id": "S1",
       "title": "Real workspace and contextual agent",
       "file": "stage-01-workspace-and-agent.md",
-      "status": "Pending",
+      "status": "Verified",
       "requires": [
         "S0"
       ],
@@ -104,6 +104,72 @@
         "WSP-06",
         "WSP-07",
         "WSP-08"
+      ],
+      "evidence": [
+        {
+          "caseId": "WSP-01",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; local Node 24.22.3; PostgreSQL 18.1; production Next; fixture model; Chromium",
+          "verifiedAt": "2026-11-16",
+          "record": "roadmap/reviews/s1-workspace.md"
+        },
+        {
+          "caseId": "WSP-02",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; local Node 24.22.3; PostgreSQL 18.1; production Next; fixture model; Chromium",
+          "verifiedAt": "2026-11-16",
+          "record": "roadmap/reviews/s1-workspace.md"
+        },
+        {
+          "caseId": "WSP-03",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; local Node 24.22.3; PostgreSQL 18.1; production Next; fixture model; Chromium",
+          "verifiedAt": "2026-11-16",
+          "record": "roadmap/reviews/s1-workspace.md"
+        },
+        {
+          "caseId": "WSP-04",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; local Node 24.22.3; PostgreSQL 18.1; production Next; fixture model; Chromium",
+          "verifiedAt": "2026-11-16",
+          "record": "roadmap/reviews/s1-workspace.md"
+        },
+        {
+          "caseId": "WSP-05",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; local Node 24.22.3; PostgreSQL 18.1; production Next; fixture model; Chromium",
+          "verifiedAt": "2026-11-16",
+          "record": "roadmap/reviews/s1-workspace.md"
+        },
+        {
+          "caseId": "WSP-06",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; local Node 24.22.3; PostgreSQL 18.1; production Next; fixture model; Chromium",
+          "verifiedAt": "2026-11-16",
+          "record": "roadmap/reviews/s1-workspace.md"
+        },
+        {
+          "caseId": "WSP-07",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; local Node 24.22.3; PostgreSQL 18.1; production Next; fixture model; Chromium",
+          "verifiedAt": "2026-11-16",
+          "record": "roadmap/reviews/s1-workspace.md"
+        },
+        {
+          "caseId": "WSP-08",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; local Node 24.22.3; PostgreSQL 18.1; production Next; fixture model; Chromium",
+          "verifiedAt": "2026-11-16",
+          "record": "roadmap/reviews/s1-workspace.md"
+        }
       ]
     },
     {

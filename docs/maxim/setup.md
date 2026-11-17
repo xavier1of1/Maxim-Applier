@@ -1,5 +1,12 @@
 # Maxim Apply Setup Guide
 
+## November 2026 Workspace
+
+Use the [new workspace guide](workspace.md) for the authenticated Astryx dashboard,
+PostgreSQL, agent, private files, startup/stop and recovery. Preferred URL:
+http://127.0.0.1:3010/maxim (the launcher prints the actual port).
+The older instructions below describe the retained legacy system, not the new workspace.
+
 Last updated: 2026-06-04
 
 ## First-Time Setup

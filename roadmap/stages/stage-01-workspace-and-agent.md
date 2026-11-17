@@ -1,7 +1,7 @@
 # S1: Real workspace and contextual agent
 
-**Status:** Pending implementation. Detailed plan drafted; no acceptance criterion is claimed passed.
-**Updated:** 2026-11-16.
+**Status:** Verified. All eight acceptance cases passed; [execution evidence](../reviews/s1-workspace.md).
+**Updated:** 2026-11-17.
 **Roadmap:** [Stage index](README.md) | [High-level roadmap](../high-level-roadmap.md) | [Shared contracts](contracts.md)
 **Requires:** [S0](stage-00-ownership-and-baseline.md)
 
@@ -20,9 +20,9 @@ Deliver a useful real dashboard and contextual agent over a minimal persistent a
 
 ## Current Evidence And Boundary
 
-[Root package](../../package.json) contains MJS/Playwright dependencies and legacy commands; no new web build exists. [Go service](../../dashboard/internal/maxim/service/service.go) remains a native compatibility surface, not the new API or a working command handler.
+[Root package](../../package.json) retains native commands and adds namespaced workspace commands. The actual [app](../../maxim/app/package.json) builds Next.js/React/Astryx. [Go service](../../dashboard/internal/maxim/service/service.go) remains a native compatibility surface, not the new API or a working command handler.
 
-The proposed default is a single Next.js/React 19 app with shared server services. S0 may select located compatible source instead, but must update paths/test bindings rather than silently building two apps.
+The selected binding is one Next.js/React 19 app with scoped shared server services, PostgreSQL and protected private references. See [ADR 0006](../../docs/maxim/decisions/0006-workspace-implementation.md) and [operating guide](../../docs/maxim/workspace.md).
 
 ## Scope And Contracts
 
@@ -50,22 +50,22 @@ S1 does not implement extraction or a generic unused worker. S2 introduces durab
 
 ## Acceptance
 
-- [ ] **WSP-01:** Manual job/intent creation persists real IDs, source/JD text and activity; DB/web restart/recreate preserves them and artifact references.
-- [ ] **WSP-02:** UI and scripted real agent-tool path read the same record/revision; captured model request includes only authorized bounded data.
-- [ ] **WSP-03:** A confirmed note mutation commits entity revision, command result and event atomically; replay is idempotent and changed-payload/stale revision fails.
-- [ ] **WSP-04:** Missing session, wrong workspace, expired confirmation, CSRF/origin mismatch and model self-confirmation cannot read/write protected records.
-- [ ] **WSP-05:** Backend/model failure, empty data and disconnected streaming are explicit; no mock fallback or false successful action is shown.
-- [ ] **WSP-06:** Desktop/mobile and keyboard tests cover navigation, selection, dialogs, tool rendering, readable text and stable layout; unimplemented integrations show truthful disabled/unconfigured state.
-- [ ] **WSP-07:** Keys remain server-side; artifact download/path traversal and test/prod DB-root confusion are denied; protected backup restore is exercised.
-- [ ] **WSP-08:** Real build/type checks and fixture integration/UI tests pass; actual startup URL, commands, ports, data paths and recovery instructions are documented.
+- [x] **WSP-01:** Manual job/intent creation persists real IDs, source/JD text and activity; DB/web restart/recreate preserves them and artifact references.
+- [x] **WSP-02:** UI and scripted real agent-tool path read the same record/revision; captured model request includes only authorized bounded data.
+- [x] **WSP-03:** A confirmed note mutation commits entity revision, command result and event atomically; replay is idempotent and changed-payload/stale revision fails.
+- [x] **WSP-04:** Missing session, wrong workspace, expired confirmation, CSRF/origin mismatch and model self-confirmation cannot read/write protected records.
+- [x] **WSP-05:** Backend/model failure, empty data and disconnected streaming are explicit; no mock fallback or false successful action is shown.
+- [x] **WSP-06:** Desktop/mobile and keyboard tests cover navigation, selection, dialogs, tool rendering, readable text and stable layout; unimplemented integrations show truthful disabled/unconfigured state.
+- [x] **WSP-07:** Keys remain server-side; artifact download/path traversal and test/prod DB-root confusion are denied; protected backup restore is exercised.
+- [x] **WSP-08:** Real build/type checks and fixture integration/UI tests pass; actual startup URL, commands, ports, data paths and recovery instructions are documented.
 
 ## Integration Test
 
-**Proposed file/command, not available today:** `node --test maxim/app/tests/integration/workspace.test.mjs`.
+**Implemented command:** `npm --prefix maxim/app test` runs typecheck/build/integration/browser checks. The [integration suite](../../maxim/app/tests/integration/workspace.test.mjs) boots the actual production server.
 
 The test harness boots the actual HTTP/service path against disposable PostgreSQL and a loopback scripted model. Assert tool request/response and DB state, not only final AI prose. Simulate disconnect, duplicate confirmation, crash before commit, stale revision and second identity. Keep private values out of fixtures/traces.
 
-**Proposed UI test:** `maxim/app/tests/e2e/workspace.spec.mjs` using the explicitly declared local Playwright test dependency and fixed desktop/mobile viewports. Run the actual production build in at least one acceptance pass, not only dev rendering.
+**Implemented UI test:** [workspace.spec.mjs](../../maxim/app/tests/e2e/workspace.spec.mjs) uses pinned Playwright Chromium against production, with desktop/tablet/mobile and keyboard checks.
 
 S1 must create build/typecheck/test commands and isolated harness before any later stage cites them. Model stub proves plumbing; a consented live provider smoke is separate and requires a real key/budget.
 
@@ -75,14 +75,14 @@ S1 must create build/typecheck/test commands and isolated harness before any lat
 maxim/app/package.json                          new app/build/test tooling, pinned by S0
 maxim/app/src/app/                              workspace routes and API transports
 maxim/app/src/components/                       navigation, job/detail, agent/confirmation
-maxim/app/src/server/{auth,commands,jobs,applications,conversations}/
-maxim/app/src/server/{db,artifacts,models}/       scoped repositories and adapters
+maxim/app/src/server/{auth,commands,reads,conversations}.ts
+maxim/app/src/server/{db,artifacts,models,config,http,errors}.ts
 maxim/db/postgres/                              initial migrations
 compose.yml                                    proposed DB-only local composition
 maxim/app/tests/{support,integration,e2e}/       isolated actual-path harness
 docs/maxim/setup.md                             actual new runtime instructions when delivered
 ~~~
-Proposed paths are layout bindings, not existing files. Reuse existing native helpers through explicit ports instead of copying their business logic.
+The flat server modules implement the bindings above; no native evaluator/tracker business logic is copied. Runtime scripts and the exact package lock also live under maxim/app.
 
 ## Dependencies And Handoff
 
@@ -94,7 +94,9 @@ No search, LinkedIn, Gmail or Discord account is needed for this stage. Model-ba
 
 ## What Shipped
 
-Pending. No new URL, package command, API endpoint or DB authority is claimed active until implementation evidence is recorded.
+The real authenticated local workspace ships manual roles, intents, notes, activity, private references, streaming saved conversations and explicit human note confirmation. Astryx supplies the UI foundation. Preferred URL: http://127.0.0.1:3010/maxim; `npm run maxim:workspace` prints the actual port.
+
+All acceptance cases are linked in the [execution record](../reviews/s1-workspace.md). The live provider remains user-configured; fixtures do not imply live account access. Legacy candidate/tracker authority is untouched. Recovery verifies a separate database/files rather than silently promoting it. Conservative byte budgeting is not exact model-specific token counting.
 
 ## Deferred To Later Stages
 

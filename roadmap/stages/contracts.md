@@ -1,6 +1,6 @@
 # Shared Stage Contracts
 
-**Status:** Proposed implementation contracts, revision 0.3. Not a schema or API already implemented.
+**Status:** Revision 0.4. S1 workspace/auth/commands/conversations/artifact contracts are implemented; later worker/candidate/tracker/integration contracts remain proposed. See [S1 evidence](../reviews/s1-workspace.md) and [ADR 0006](../../docs/maxim/decisions/0006-workspace-implementation.md).
 **Updated:** 2026-11-16.
 **Purpose:** Keep the detailed stages consistent without repeating a full architecture in each file. A changed contract must update its producer, consumers, tests, and the stage registry together.
 

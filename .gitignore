@@ -64,3 +64,9 @@ bun.lock
 .claude/memory/
 career-dashboard
 package-lock.json
+!maxim/app/package-lock.json
+maxim/app/.next/
+maxim/app/tsconfig.tsbuildinfo
+maxim/app/test-results/
+maxim/app/playwright-report/
+maxim/app/.env.local

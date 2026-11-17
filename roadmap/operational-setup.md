@@ -1,13 +1,14 @@
 # Operational Setup And Inputs
 
 **Updated:** 2026-11-16.
+**Delivered workspace:** [Actual startup, model/private storage and recovery guide](../docs/maxim/workspace.md). Run `npm run maxim:workspace`; preferred URL http://127.0.0.1:3010/maxim. S1 is verified; later service accounts remain stage-gated.
 **Purpose:** What Xavier needs to provide, choose, authorize or install for the revised target. This is not a claim the future stack or configuration parser exists.
 **Legacy checklist:** [Earlier operational inputs](../docs/V2%20Redesign/maxim_apply_operational_inputs_needed.md). Historical COMPLETE labels there are not newly verified credentials.
 
 ## 1. Numbered Input Checklist
 
 1. **Sanitized candidate sources and approval:** Current resume/CV, contact details, portfolio/GitHub links, supported experience/metrics, restrictions and sample novel answers. Keep private files local; do not paste secrets or employer-proprietary evidence into public docs.
-2. **S1 stack/model choice:** Confirm the minimal web/backend/model approach and any existing frontend/API source location. Recommended TS/Node + React 19; one model adapter and shared tools. No new orchestration framework is required merely to use chat.
+2. **Model access:** S1 now uses the pinned Next/React/Astryx workspace and server-side OpenAI adapter. Provide your own compatible model ID and API key through Settings only when enabling chat; manual intake needs no key.
 3. **Persistence and recovery location:** Choose protected host storage for PostgreSQL, uploads/artifacts, sessions and encrypted/protected backups, plus retention and restore destination. Compose/DB/artifact direction is already accepted.
 4. **Dossier reuse choice:** Independent implementation of desired behavior is the recommended default. Copying/adapting its source needs an explicit AGPL-compatible plan or separately licensed permission.
 5. **Discovery inputs:** Refine NoVA/DC companies, role lanes, queries, freshness/cadence and any explicit Maryland override. Choose an optional broad-search provider and budget only after coverage testing.
@@ -33,7 +34,8 @@ Only the items needed by a stage block it. Gmail, search-provider accounts, Link
 | `MAXIM_DISCORD_WEBHOOK_URL` | Existing notifier environment key; prior record says configured | Do not expose value; prove correct acceptance/retry before relying on live scheduling |
 | Model keys in `.env.example` | Gemini evaluator key exists in current config contract; OpenAI/Anthropic entries are comments/placeholders | Do not treat a commented key as a working shared runtime integration |
 | EGM 0.1.1 | Installed/enabled complete Codex plugin | Fresh turn/session discovery; formal review config/human gates still needed |
-| Astryx/Tokenizer/agent-browser | Researched candidates | No product dependency installed by this pass; adopt only through stage proof |
+| Astryx | Pinned 0.7.16 workspace dependency, production/interaction proof | Maintain browser regressions |
+| Tokenizer/agent-browser | Researched candidates, not installed runtime adapters | S3 exact accounting and S6 executor gates remain |
 | Dossier/Cracked/Hiring Panel/LinkedIn/Graphify | References reviewed | No source vendored or runtime integration installed |
 | Reported web ports 3000/8000 | Source not located in previous bounded fork inspection | Locate source or approve the single replacement workspace; no active URL promised here |
 
@@ -78,9 +80,8 @@ The future settings UI and configuration parser must be implemented and document
 | `GEMINI_API_KEY` / `GEMINI_MODEL` | Existing native Gemini evaluator settings | Not proof of selected future agent runtime |
 | `MAXIM_CANDIDATE_*` and existing answer overrides | Current legacy application-assist configuration | Import/reconcile with reviewed canonical facts; don't create permanent env-vs-DB ambiguity |
 | `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Commented examples in current env template, not implemented shared-runtime proof | Select provider first; use its actual documented integration |
-| `DATABASE_URL` | Proposed S1 config name | PostgreSQL connection reference |
-| `MAXIM_PRIVATE_DATA_ROOT` | Proposed S1 config name | Protected uploads/artifacts/session root, outside public source/build |
-| `MAXIM_MODEL_PROVIDER` / `MAXIM_MODEL_ID` | Proposed runtime config names | Explicit provider/model selection |
+| `MAXIM_RUNTIME_FILE` | Implemented optional server-only selector | Normal startup generates protected runtime.json with DB/root credentials; no DATABASE_URL or MAXIM_PRIVATE_DATA_ROOT env parser |
+| Settings -> Model connection | Implemented, server-held OpenAI key/model | No MAXIM_MODEL_PROVIDER/MAXIM_MODEL_ID env parser; no frontend key exposure |
 | Search provider host/key/app reference | Proposed S4 settings, names unselected | Resolve credential shape from the selected provider; no invented working env command |
 | Gmail client/connection/token reference | Proposed S7 settings, names unselected | Protected OAuth/token storage and account consent |
 | Schedule/timezone/budget/retention settings | Proposed typed settings, names unselected | Persisted worker policy, not hidden process defaults |
@@ -102,7 +103,7 @@ The S1/S3 plan must resolve exactly which settings are secrets, user preferences
 7. **Provide authorized browser test cases.** Start with public postings and isolated forms. Log in manually in a dedicated visible session when needed. Never provide passwords/MFA codes in chat or ask tooling to bypass a challenge.
 8. **Confirm existing Discord privately.** Identify the intended channel/webhook reference and permitted contents. The eventual live test should follow a successful dry-run and HTTP-failure/retry test; existing manual delivery is not a scheduler.
 9. **Connect Gmail only at its stage gate.** Review the real grant and retention/model disclosure, authorize the chosen account, test one known thread plus an ambiguous case, then test revocation. Read-only still needs careful consent.
-10. **Rehearse the chosen claim.** Use the documented startup/recovery commands produced by the actual S1 implementation, prove same IDs across UI/agent, then rehearse only implemented stages. There is no new stack startup command in this planning revision.
+10. **Rehearse the chosen claim.** Use `npm run maxim:workspace` and the [operating guide](../docs/maxim/workspace.md). S1 proves saved manual records/chat, not application filling or live notifications. Only rehearse implemented stages.
 
 For EGM use, follow [development workflow](development-workflow.md); its install is complete, but a formal review requires configuration confirmation.
 
@@ -114,9 +115,9 @@ For EGM use, follow [development workflow](development-workflow.md); its install
 
 The [detailed stages](stages/README.md) now exist. Core path is S0 -> S1 -> S2 -> S3 -> S5 -> S6 -> S11; no search/Gmail/Discord account is required merely to evaluate a manually entered role. S4 follows S2's reviewed preferences and durable worker.
 
-[Shared contracts](stages/contracts.md) propose host web/worker/interactive browser with PostgreSQL in loopback Compose for Windows. This is not an already launched stack, and no new startup URL is asserted by the plan.
+[Shared contracts](stages/contracts.md) now have a delivered S1 host web/loopback PostgreSQL binding. Durable extraction workers and the interactive application browser remain later-stage work, not active processes.
 
-S0/S1 will verify Node/package manager, React/framework, PostgreSQL/Compose, private storage and model adapter requirements. Pin versions in real implementation manifests, not speculative installation commands here.
+S1 pins actual versions in maxim/app/package.json and its lockfile. See its operating guide and acceptance evidence; later optional dependencies still require their own gates.
 
 S2 chooses safe PDF/DOCX/text parsers and extraction limits. S3 chooses a compatible tokenizer/counter and measured budget. S4 chooses providers. S6 chooses a browser package/browser binary and session protection. S7/S8 choose live credentials and schedules.
 

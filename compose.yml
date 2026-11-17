@@ -1,0 +1,20 @@
+name: maxim-workspace
+services:
+  database:
+    image: postgres:18.1
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: maxim
+      POSTGRES_DB: maxim_workspace
+      POSTGRES_PASSWORD: ${MAXIM_DB_PASSWORD:?Run the workspace setup command}
+    ports:
+      - "127.0.0.1:${MAXIM_DB_PORT:-55432}:5432"
+    volumes:
+      - workspace_database:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U maxim -d maxim_workspace"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+volumes:
+  workspace_database:

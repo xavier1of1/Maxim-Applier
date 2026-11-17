@@ -2,7 +2,7 @@
 
 **Status:** Revision 0.3 refined target plan with detailed stage specifications. Implementation and unresolved design choices remain unapproved until their gates pass.
 **Updated:** 2026-11-16. **Demo target:** 2026-11-19, scope not yet frozen.
-**Implementation standing:** S0 verified for bounded baseline scope; S1-S11 Pending. No database migration, browser replacement, or new dashboard is shipped by this documentation pass.
+**Implementation standing:** S0 and S1 verified; S2-S11 Pending. The [workspace evidence](reviews/s1-workspace.md) records the actual Astryx/Next/PostgreSQL delivery. No legacy cutover or new application-browser executor is claimed.
 **Companions:** [Index](README.md), [manifesto](MANIFESTO.md), [component assessment](external-components-assessment.md), [setup](operational-setup.md), [development workflow](development-workflow.md).
 
 ## 1. Outcome And Planning Discipline
@@ -52,7 +52,7 @@ Latest accepted directions supersede older side-store-only and native-Go-only ta
 | Career-Ops reuse/retirement | Accepted; explicit inventory, adapters, and ownership migration required |
 | Greenhouse/Lever pilot, later custom company/Workday/LinkedIn/etc. | Direction accepted; per-site evidence/permission required |
 | Existing maxim applier Discord | Reuse accepted; destination and scheduling must be confirmed locally |
-| Model/runtime/design dependencies | TS/Node + React 19 recommended; Astryx and agent-browser are gated candidates, not installed product choices |
+| Model/runtime/design dependencies | Next/React 19/Astryx pinned and verified in S1; OpenAI adapter configured through Settings; agent-browser remains S6-gated |
 | Dossier source reuse | AGPL decision required before copying; independent implementation recommended by default |
 | Final submission | User review/manual action remains policy; no auto-submit scope |
 
@@ -69,7 +69,7 @@ Create small decision records for chosen stack, persistence/retention, source re
 | ID | Name | Thin user-visible proof | Dependencies | Status |
 | --- | --- | --- | --- | --- |
 | S0 | [Ownership, safety, and architecture baseline](stages/stage-00-ownership-and-baseline.md) | Trace one recoverable record/artifact and approve the minimal stack/cutover boundaries | Accepted direction; bounded audit | Verified |
-| S1 | [Real workspace and contextual agent](stages/stage-01-workspace-and-agent.md) | Add a job/application in UI; ask agent about same ID; restart and read it | S0 | Pending |
+| S1 | [Real workspace and contextual agent](stages/stage-01-workspace-and-agent.md) | Add a job/application in UI; ask agent about same ID; restart and read it | S0 | Verified |
 | S2 | [Reviewed candidate onboarding](stages/stage-02-reviewed-onboarding.md) | Upload, review/correct, confirm, restart, retrieve sourced facts | S1 | Pending |
 | S3 | [Reusable answers and bounded context](stages/stage-03-answer-memory.md) | Answer once, recall in scope, correct/revoke, suppress old reuse | S2 | Pending |
 | S4 | [Coverage-aware discovery](stages/stage-04-discovery.md) | Ingest a new role; expose unsupported/failed source separately | S2 | Pending |
@@ -181,12 +181,12 @@ See [shared contracts](stages/contracts.md) and the [stage registry](stages/mani
 - Do not automatically import or override the production legacy tracker. Label the new/fixture workspace and ownership state clearly.
 
 **Acceptance**
-- [ ] UI and agent share command handlers, candidate/workspace scope, record IDs, revisions, and event history.
-- [ ] Repeated commands are idempotent; stale revision, unauthenticated mutation, and unconfirmed consequential action are denied.
-- [ ] Records/conversation references survive the documented restart/recreate path; recovery doesn't lose artifact metadata.
-- [ ] Backend/model failure is visible, and retry cannot manufacture application success.
-- [ ] Desktop/mobile navigation, text fitting, keyboard access, and chat/tool error states pass UI checks.
-- [ ] Real build/start/check commands, local URL, persistence location, and backup/restore instructions are documented.
+- [x] UI and agent share command handlers, candidate/workspace scope, record IDs, revisions, and event history.
+- [x] Repeated commands are idempotent; stale revision, unauthenticated mutation, and unconfirmed consequential action are denied.
+- [x] Records/conversation references survive the documented restart/recreate path; recovery doesn't lose artifact metadata.
+- [x] Backend/model failure is visible, and retry cannot manufacture application success.
+- [x] Desktop/mobile navigation, text fitting, keyboard access, and chat/tool error states pass UI checks.
+- [x] Real build/start/check commands, local URL, persistence location, and backup/restore instructions are documented.
 
 **Handoff:** S2 gets a real upload/review host and durable candidate API; S4 gets a job-ingestion/read API. No browser or scanner is needed for S1 acceptance.
 
@@ -555,7 +555,7 @@ No day-by-day delivery commitment is implied. If the supported application path 
 | Item | Why not assumed now | Return condition |
 | --- | --- | --- |
 | Dossier source transplant | AGPL obligations and engine/ownership conflicts | Explicit compatible licensing/provenance decision; otherwise independent implementation |
-| Astryx adoption | React 19/beta/design/build/interaction compatibility not tested in Maxim | S1 spike passes or select one alternative |
+| Astryx adoption | Pinned 0.7.16 passes React 19 production build and desktop/mobile/keyboard workflows | S1 evidence recorded; maintain regressions |
 | Tokenizer runtime dependency | Exact model/framing support not established | S3 fixture and usage comparison |
 | agent-browser adoption | Session/control/policy coverage unproven in Maxim | S6 spike and final-action denial tests |
 | LinkedIn publishing connector tools | No product need; excess write authority | Not part of this roadmap |

@@ -1,0 +1,90 @@
+import { z } from 'zod';
+import { config,publicModelSettings,saveModelSettings } from './config';
+import { database } from './db';
+import { authenticate,checkOrigin,login,digest } from './auth';
+import { executeCommand,resolveProposal,uuid } from './commands';
+import { snapshot,getJob,getConversation } from './reads';
+import { createConversation,cancelConversation,chatResponse } from './conversations';
+import { uploadArtifact,downloadArtifact } from './artifacts';
+import { DomainError,invariant } from './errors';
+
+const json=(value:unknown,status=200,headers:Record<string,string>={})=>Response.json(value,{status,headers:{'Cache-Control':'no-store',...headers}});
+async function bytes(req:Request,max:number) {
+ const len=Number(req.headers.get('content-length'));
+ invariant(!Number.isFinite(len)||len<=max,'payload_too_large','Request exceeds its size limit.',413);
+ const reader=req.body?.getReader();if(!reader)return new Uint8Array();
+ const chunks:Uint8Array[]=[];let size=0;
+ try {
+  for(let i=0;i<100000;i++){
+   const r=await reader.read();if(r.done)break;
+   size+=r.value.byteLength;invariant(size<=max,'payload_too_large','Request exceeds its size limit.',413);chunks.push(r.value);
+  }
+ } finally {await reader.cancel().catch(()=>{});}
+ return new Uint8Array(Buffer.concat(chunks));
+}
+async function body(req:Request) {
+ invariant(req.headers.get('content-type')?.startsWith('application/json'),'invalid_content_type','JSON content is required.',415);
+ try {return JSON.parse(new TextDecoder().decode(await bytes(req,262144)));}
+ catch(e){if(e instanceof DomainError)throw e;throw new DomainError('invalid_json','Request body is not valid JSON.');}
+}
+export async function handle(req:Request) {
+ try {
+  const route=new URL(req.url).pathname.replace(/^\/api\/?/,'').split('/').filter(Boolean);
+  const name=route.join('/'),post=req.method==='POST',get=req.method==='GET';
+  if(get && name==='health') {
+   const version=await database().query('SELECT version FROM schema_migrations WHERE version=2');
+   invariant(version.rowCount,'schema_unavailable','Workspace schema is not initialized.',503);
+   return json({ok:true,application:'maxim-apply',installation:digest(config().workspaceId).slice(0,16),database:'available',recordFreshness:'not_assessed'});
+  }
+  invariant(['GET','POST'].includes(req.method),'method_denied','Method not supported.',405);
+  const c=config();
+  invariant(req.headers.get('host')===new URL(c.origin).host,'host_denied','Request host denied.',403);
+  if(post&&name==='auth/login') {
+   checkOrigin(req);
+   const p=z.object({accessKey:z.string().min(1).max(256)}).strict().parse(await body(req));
+   const result=await login(p.accessKey);
+   return json({authenticated:true,csrfToken:result.csrfToken},200,{'Set-Cookie':'maxim_session='+result.token+'; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200'});
+  }
+  const ctx=await authenticate(req,post);
+  if(get&&name==='session') {
+   const workspace=(await database().query('SELECT id,name,is_owner FROM workspaces WHERE id=$1',[ctx.workspaceId])).rows[0];
+   return json({authenticated:true,csrfToken:ctx.csrfToken,workspace,testMode:c.testMode});
+  }
+  if(post&&name==='auth/logout') {
+   await database().query('UPDATE sessions SET expires_at=now() WHERE id=$1',[ctx.sessionId]);
+   return json({ok:true},200,{'Set-Cookie':'maxim_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'});
+  }
+  if(get&&name==='workspace')return json(await snapshot(ctx));
+  if(post&&name==='commands')return json({result:await executeCommand(ctx,await body(req))});
+  if(get&&route[0]==='jobs'&&route.length===2)return json({job:await getJob(ctx,route[1])});
+  if(post&&name==='conversations')return json({conversation:await createConversation(ctx,await body(req))});
+  if(route[0]==='conversations'&&route[1]) {
+   const id=uuid.parse(route[1]);
+   if(get&&route.length===2)return json(await getConversation(ctx,id));
+   if(post&&route[2]==='messages'&&route.length===3)return await chatResponse(ctx,id,await body(req),req.signal);
+   if(post&&route[2]==='cancel'&&route.length===3)return json(await cancelConversation(ctx,id));
+  }
+  if(post&&route[0]==='proposals'&&route.length===3&&['confirm','reject'].includes(route[2])) {
+   const p=z.object({commandId:uuid}).strict().parse(await body(req));
+   return json({result:await resolveProposal(ctx,route[1],p.commandId,route[2]==='confirm'?'confirmed':'rejected')});
+  }
+  if(post&&name==='settings/model') {
+   invariant(ctx.isOwner,'not_found','Record not found.',404);
+   const p=z.object({model:z.string().trim().min(1).max(120).regex(/^[a-zA-Z0-9._:/-]+$/),apiKey:z.string().max(512).optional()}).strict().parse(await body(req));
+   saveModelSettings(p.model,p.apiKey);
+   return json({model:publicModelSettings()});
+  }
+  if(post&&name==='artifacts') {
+   const data=await bytes(req,10*1024*1024+65536);
+   const request=new Request(req.url,{method:'POST',headers:{'Content-Type':req.headers.get('content-type')||''},body:data});
+   return json({artifact:await uploadArtifact(ctx,await request.formData())});
+  }
+  if(get&&route[0]==='artifacts'&&route.length===2)return await downloadArtifact(ctx,route[1]);
+  return json({error:{code:'not_found',message:'Record not found.'}},404);
+ } catch(error) {
+  if(error instanceof z.ZodError)return json({error:{code:'validation_failed',message:'Check the required fields and valid identifiers, then try again.',fields:[...new Set(error.issues.map(i=>i.path.join('.')))]}},400);
+  if(error instanceof DomainError)return json({error:{code:error.code,message:error.message}},error.status);
+  console.error('Workspace request failed; private error details withheld.');
+  return json({error:{code:'service_unavailable',message:'Workspace storage is unavailable. Your action was not acknowledged. Retry after the connection recovers.'}},503);
+ }
+}

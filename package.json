@@ -39,7 +39,16 @@
     "maxim:alignment": "node maxim/scripts/alignment-check.mjs",
     "maxim:operational": "node maxim/scripts/operational-readiness.mjs",
     "maxim:e2e": "node maxim/scripts/e2e-fixture-validation.mjs",
-    "maxim:test": "node maxim/scripts/run-tests.mjs"
+    "maxim:test": "node maxim/scripts/run-tests.mjs",
+    "maxim:workspace:install": "npm --prefix maxim/app ci",
+    "maxim:workspace:build": "npm --prefix maxim/app run build",
+    "maxim:workspace:setup": "npm --prefix maxim/app run setup",
+    "maxim:workspace": "npm --prefix maxim/app run workspace",
+    "maxim:workspace:stop": "npm --prefix maxim/app run stop",
+    "maxim:workspace:key": "npm --prefix maxim/app run key",
+    "maxim:workspace:backup": "npm --prefix maxim/app run backup",
+    "maxim:workspace:restore": "npm --prefix maxim/app run restore",
+    "maxim:workspace:test": "npm --prefix maxim/app test"
   },
   "keywords": [
     "ai",

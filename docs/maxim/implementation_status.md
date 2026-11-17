@@ -5,6 +5,20 @@ Planning/development handoff updated: 2026-11-16
 
 ## November 2026 Planning Handoff
 
+### S1 Workspace Delivered
+
+S0 is its own commit, `59834bb`; the worktree was clean before S1 began.
+The new authenticated Astryx/React workspace, PostgreSQL migrations, manual jobs/intents,
+revisioned commands/events/outbox, scoped streaming agent, explicit note confirmations,
+private references and coordinated isolated recovery are implemented.
+See [workspace guide](workspace.md), [ADR 0006](decisions/0006-workspace-implementation.md)
+and [acceptance evidence](../../roadmap/reviews/s1-workspace.md).
+Use `npm run maxim:workspace`; preferred URL http://127.0.0.1:3010/maxim.
+The launcher prints the actual port; reveal the local key with `npm run maxim:workspace:key`.
+S1 acceptance is fixture-backed, not live-model access. Legacy candidate/tracker authority
+is unchanged. The historical planning/implementation notes below describe their original
+time of execution; they do not override this current S1 handoff.
+
 ### S0 Executed
 
 S0 is verified for its bounded foundation scope: guarded backup/restore library and CLI,

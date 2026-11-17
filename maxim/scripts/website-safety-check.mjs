@@ -22,7 +22,7 @@ function listFiles(root) {
   return fs.readdirSync(absolute, { withFileTypes: true }).flatMap((entry) => {
     const child = path.join(absolute, entry.name);
     if (entry.isDirectory()) {
-      if (["node_modules", ".venv", "__pycache__"].includes(entry.name)) {
+      if (["node_modules", ".venv", "__pycache__", ".next", "test-results", "playwright-report"].includes(entry.name)) {
         return [];
       }
       return listFiles(path.relative(fromRoot(), child));

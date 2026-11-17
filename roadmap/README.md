@@ -1,6 +1,6 @@
 # Maxim Apply Roadmap Index
 
-**Status:** Revision 0.3. Refined roadmap with detailed stage specifications; S0 is verified for bounded baseline scope; later stages remain Pending.
+**Status:** Revision 0.4. S0 foundation and S1 workspace are verified; S2-S11 remain Pending. See [S1 evidence](reviews/s1-workspace.md) and [workspace guide](../docs/maxim/workspace.md).
 **Updated:** 2026-11-16.
 **Demo target:** 2026-11-19. No claim that this entire roadmap fits before that date.
 
@@ -23,8 +23,8 @@ The refinement adds detailed stage plans, a code/design drift report and executa
 | Document | Read it for | Standing |
 | --- | --- | --- |
 | [System manifesto](MANIFESTO.md) | Product journey, authority, memory, architecture, boundaries | Revised target proposal with accepted decisions marked |
-| [High-level roadmap](high-level-roadmap.md) | Refined early UI stages, dependencies and optional lanes | S0 verified; S1-S11 Pending |
-| [Detailed stage plans](stages/README.md) | Twelve Vantage-style implementation plans with 92 acceptance cases | Drafted, not implemented |
+| [High-level roadmap](high-level-roadmap.md) | Refined early UI stages, dependencies and optional lanes | S0/S1 verified; S2-S11 Pending |
+| [Detailed stage plans](stages/README.md) | Twelve Vantage-style plans with 92 acceptance cases | S0/S1 verified, later cases unimplemented |
 | [Shared stage contracts](stages/contracts.md) | Runtime binding, commands, identity, storage, worker and consumer contracts | Proposed implementation detail with S0 gates |
 | [Refinement and validation](reviews/roadmap-refinement.md) | Changes, executed tests, remaining runtime gaps | Actual evidence scope recorded |
 | [External component assessment](external-components-assessment.md) | All ten suggestions, deep Dossier review, licensing, adoption gates | Primary-source research, not a benchmark or integration claim |
@@ -68,7 +68,7 @@ Blank comments in the original workflow remain unanswered. No candidate claims o
 | ID | Outcome visible to the user | Dependency | Status |
 | --- | --- | --- | --- |
 | S0 | [A reliable ownership/privacy baseline and approved minimal architecture](stages/stage-00-ownership-and-baseline.md) | Accepted direction; bounded audit | Verified |
-| S1 | [A real baseline dashboard and agent over persistent jobs/applications](stages/stage-01-workspace-and-agent.md) | S0 | Pending |
+| S1 | [A real baseline dashboard and agent over persistent jobs/applications](stages/stage-01-workspace-and-agent.md) | S0 | Verified |
 | S2 | [Upload, review, correct, and retain personal knowledge](stages/stage-02-reviewed-onboarding.md) | S1 | Pending |
 | S3 | [Answer once; recall safely through UI and agent](stages/stage-03-answer-memory.md) | S2 | Pending |
 | S4 | [Search/scan jobs with visible coverage and provider failures](stages/stage-04-discovery.md) | S2 | Pending |
