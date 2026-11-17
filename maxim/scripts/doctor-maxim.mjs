@@ -6,6 +6,16 @@ import "dotenv/config";
 
 import { fromRoot } from "../lib/path-utils.mjs";
 import { createStore } from "../lib/sqlite-store.mjs";
+import {readApplicationProjection} from '../lib/canonical-application-read.mjs';
+import {withWorkspace} from '../lib/workspace-client.mjs';
+const canonical=readApplicationProjection();
+if(canonical){
+ try{
+  const current=await withWorkspace(request=>request('/api/applications'));
+  console.log(JSON.stringify({ok:true,ownership:current.authority.owner,applications:current.applications.length,partial:current.partial,asOf:current.asOf,projectionAsOf:canonical.asOf,finalSubmissionAutomation:'not_implemented'},null,2));
+ }catch{console.error(JSON.stringify({ok:false,ownership:'canonical',projectionAsOf:canonical.asOf,message:'Canonical workspace is offline or unauthorized; no legacy fallback.'}));process.exitCode=1;}
+ process.exit(process.exitCode||0);
+}
 
 const requiredPaths = [
   "docs/V2 Redesign/maxim_apply_career_ops_redesign_v2_1.md",

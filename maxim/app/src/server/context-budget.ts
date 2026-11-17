@@ -31,11 +31,12 @@ export type ContextAccounting={
  estimatedInputTokens:number;outputReserve:number;localTotalBudget:number;byteUpperBoundWithFraming:number;
  exactProviderBilling:false;policy:string;
 };
-export function compileContext(body:{model:string;messages:unknown[];tools?:unknown[];max_completion_tokens:number;[key:string]:unknown},options:{testMode?:boolean;totalBudget?:number}={}){
+export function compileContext(body:{model:string;messages:unknown[];tools?:unknown[];max_completion_tokens:number;[key:string]:unknown},options:{testMode?:boolean;totalBudget?:number;purpose?:'evaluation'}={}){
  const serialized=JSON.stringify(body),bytes=Buffer.byteLength(serialized);
- invariant(bytes<=REQUEST_BYTE_LIMIT,'context_budget_exceeded','The full request exceeds 32,000 bytes. No mandatory instruction or evidence was silently trimmed.',413);
- const profile=modelProfile(body.model,options.testMode),budget=options.totalBudget||8192;
- invariant(Number.isInteger(budget)&&budget>=100&&budget<=8192,'invalid_context_budget','Context budget must be between 100 and 8,192 tokens.');
+ const byteLimit=options.purpose==='evaluation'?196608:REQUEST_BYTE_LIMIT,maxBudget=options.purpose==='evaluation'?49152:8192;
+ invariant(bytes<=byteLimit,'context_budget_exceeded','The full request exceeds its '+byteLimit+' byte policy. No mandatory instruction or evidence was silently trimmed.',413);
+ const profile=modelProfile(body.model,options.testMode),budget=options.totalBudget||maxBudget;
+ invariant(Number.isInteger(budget)&&budget>=100&&budget<=maxBudget,'invalid_context_budget','Context budget is outside its declared policy.');
  const framing=512+body.messages.length*16+(body.tools?.length||0)*64;
  const tokens=tokenizer(profile.encoding).encode(serialized,[]).length,estimated=Math.ceil(tokens*1.25)+framing;
  invariant(estimated+body.max_completion_tokens<=budget&&bytes+framing+body.max_completion_tokens<=profile.window,'context_budget_exceeded','The complete context plus framing/output reserve exceeds this model policy. Narrow the request; mandatory context was not trimmed.',413);

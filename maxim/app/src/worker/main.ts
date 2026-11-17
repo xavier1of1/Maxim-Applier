@@ -7,6 +7,10 @@ import {DomainError} from '../server/errors';
 import {projectionWork} from '../server/projections';
 import {expireAnswers} from '../server/answer-retention';
 import {discoverJobs} from './discovery';
+import {evaluateJob} from './evaluation';
+import {buildPacket} from './packet';
+import {applicationProjectionWork} from '../server/application-projections';
+import {expireApplicationWork} from '../server/private-artifacts';
 import {setTimeout as wait} from 'node:timers/promises';
 
 config();
@@ -18,6 +22,9 @@ process.on('SIGINT',()=>{stopping=true;});
 process.on('SIGTERM',()=>{stopping=true;});
 const delay=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
 export async function executeWork(item:WorkItem,signal?:AbortSignal){
+ if(item.kind==='evaluate_job')return evaluateJob(item,signal);
+ if(item.kind==='build_packet')return buildPacket(item,signal);
+ if(item.kind==='project_applications')return applicationProjectionWork(item);
  if(item.kind==='discover_jobs')return discoverJobs(item,signal);
  if(item.kind==='extract_source')return extractSource(item);
  if(item.kind==='purge_artifact')return purgeArtifact(item);
@@ -32,7 +39,7 @@ async function main(){
   try{
    await database().query('INSERT INTO worker_heartbeats(worker_id) VALUES($1) ON CONFLICT(worker_id) DO UPDATE SET last_seen=now()',[workerId]);
    active=await claimWork(workerId);
-   if(!active){if(++cycles%30===0){await expireRawSources();await expireAnswers();}await delay(1000);continue;}
+   if(!active){if(++cycles%30===0){await expireRawSources();await expireAnswers();await expireApplicationWork();}await delay(1000);continue;}
    const current=active;
    const renewal=(async()=>{for(let attempt=0;attempt<8&&!finished;attempt++){
     await wait(10000,undefined,{signal:renewalStop.signal});if(finished)break;

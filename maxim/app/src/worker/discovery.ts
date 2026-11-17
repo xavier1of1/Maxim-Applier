@@ -10,9 +10,11 @@ import {DomainError,invariant} from '../server/errors';
 import {DiscoveryError,secureGet} from '../server/discovery-network';
 import {feedUrl,pageRecords,normalizeProvider,providerHosts,supported,type Source,type NormalizedJob} from '../server/discovery-providers';
 import {domain} from '../server/domain';
+import {applicationWritable,queueApplicationProjection} from '../server/application-authority';
 
 const fallback='Review this source in a visible browser, or retry explicitly after fixing its configuration/cooldown. No access-control workaround is available.';
 async function active(tx:PoolClient,item:WorkItem,source?:Source){
+ await applicationWritable(tx,item.workspace_id);
  await checkLease(tx,item);
  const run=(await tx.query('SELECT * FROM discovery_runs WHERE workspace_id=$1 AND id=$2 FOR UPDATE',[item.workspace_id,item.input.runId])).rows[0];
  invariant(run&&run.revision===item.input.revision&&run.work_id===item.id&&['queued','running'].includes(run.status),'search_superseded','Search no longer authorizes this result.',409);
@@ -28,7 +30,8 @@ async function publishJob(tx:PoolClient,item:WorkItem,source:Source,page:{id:str
  const existing=(await tx.query('SELECT * FROM jobs WHERE workspace_id=$1 AND opening_key=$2 FOR UPDATE',[w,job.openingKey])).rows[0];
  const id=existing?.id||crypto.randomUUID(),identityConflict=Boolean(existing&&(existing.title!==job.title||existing.company!==job.company));
  const age=job.postedAt?(Date.now()-Date.parse(job.postedAt))/3600000:null;
- const policy=domain({operation:'job_policy',job:{title:job.title,description:job.description,locations:job.locations,locationText:job.location,salary:job.salary,postedAgeHours:age}});
+ const profile=(await tx.query('SELECT profile FROM workspace_policies WHERE workspace_id=$1',[w])).rows[0];
+ const policy=profile?.profile==='xavier-v1'?domain({operation:'job_policy',job:{title:job.title,description:job.description,locations:job.locations,locationText:job.location,salary:job.salary,postedAgeHours:age}}):{ok:true,eligibility:'review',allowed:false,flags:[{flagType:'policy',severity:'review',reason:'No approved policy profile for this candidate.'}]};
  if(!existing){
   await tx.query('INSERT INTO jobs(id,workspace_id,company,title,location,url,description,opening_key,source_platform,application_url,posted_at,source_updated_at,first_seen_at,last_seen_at,discovery_policy) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$13,$14)',[id,w,job.company,job.title,job.location,job.url,job.description,job.openingKey,source.provider,job.applicationUrl,job.postedAt,job.updatedAt,page.captured_at,JSON.stringify(policy)]);
  }else if(!identityConflict){
@@ -143,6 +146,7 @@ export async function discoverJobs(item:WorkItem,parentSignal?:AbortSignal){
   const counts={matched,created,identityConflicts:conflicts,successfulSources:successes,failedSources:failures,partialSources,requests,sourceCount:sources.length};
   await tx.query('UPDATE discovery_runs SET status=$1,counts=$2,error_code=$3,completed_at=now() WHERE workspace_id=$4 AND id=$5',[status,JSON.stringify(counts),stopped?'deadline_exceeded':missing?'incomplete_coverage':null,item.workspace_id,item.input.runId]);
   await event(tx,{workspaceId:item.workspace_id},String(item.input.runId),'discovery_search_finished',{status,counts},Number(item.input.revision));
+  await queueApplicationProjection(tx,item.workspace_id);
   await finishWork(tx,item,{runId:item.input.runId,status,counts});
  });
 }

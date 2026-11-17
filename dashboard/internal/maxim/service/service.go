@@ -71,6 +71,7 @@ type ApplicationDTO struct {
 	Role             string  `json:"role"`
 	Status           string  `json:"status"`
 	Score            float64 `json:"score"`
+	ScoreKnown       bool    `json:"scoreKnown"`
 	Tier             string  `json:"tier"`
 	PacketReady      bool    `json:"packetReady"`
 	PDFPath          string  `json:"pdfPath"`
@@ -114,6 +115,7 @@ type CareerOpsService struct {
 	jobs          []JobDTO
 	careerOpsPath string
 	snapshot      *dashboardSnapshot
+	readError     error
 }
 
 // NewCareerOpsService creates a dashboard service from already-loaded Career-Ops rows.
@@ -125,7 +127,23 @@ func NewCareerOpsService(apps []careermodel.CareerApplication, careerOpsPath str
 
 // Refresh rebuilds dashboard DTOs from the current tracker snapshot.
 func (s *CareerOpsService) Refresh() error {
+	s.readError = nil
+	state, err := data.ReadApplicationAuthority(s.careerOpsPath)
+	if err != nil || state.Applications == "frozen" {
+		s.snapshot = nil
+		s.jobs = nil
+		if err == nil {
+			err = fmt.Errorf("application authority is frozen; recover the workspace")
+		}
+		s.readError = err
+		return err
+	}
 	s.snapshot = loadSnapshot(s.careerOpsPath)
+	if state.Applications == "canonical" && s.snapshot == nil {
+		s.jobs = nil
+		s.readError = fmt.Errorf("canonical snapshot unavailable or invalid; no legacy fallback")
+		return s.readError
+	}
 	s.jobs = make([]JobDTO, 0, len(s.apps))
 	for _, app := range s.apps {
 		tier := maximTier(app.Score)
@@ -146,6 +164,9 @@ func (s *CareerOpsService) Refresh() error {
 
 // LoadToday returns urgent Maxim actions derived from Career-Ops tracker data.
 func (s *CareerOpsService) LoadToday() ([]TodayActionDTO, error) {
+	if s.readError != nil {
+		return nil, s.readError
+	}
 	if s.snapshot != nil {
 		return s.snapshot.TodayActions, nil
 	}
@@ -166,6 +187,9 @@ func (s *CareerOpsService) LoadToday() ([]TodayActionDTO, error) {
 
 // LoadHighConviction returns T3 and priority-overlay T2 jobs.
 func (s *CareerOpsService) LoadHighConviction() ([]JobDTO, error) {
+	if s.readError != nil {
+		return nil, s.readError
+	}
 	if s.snapshot != nil {
 		return s.snapshot.HighConvictionJobs, nil
 	}
@@ -180,6 +204,9 @@ func (s *CareerOpsService) LoadHighConviction() ([]JobDTO, error) {
 
 // LoadNetworking returns role-level queue hints. Message generation remains manual.
 func (s *CareerOpsService) LoadNetworking() ([]NetworkingDTO, error) {
+	if s.readError != nil {
+		return nil, s.readError
+	}
 	if s.snapshot != nil {
 		return s.snapshot.NetworkingQueue, nil
 	}
@@ -199,6 +226,9 @@ func (s *CareerOpsService) LoadNetworking() ([]NetworkingDTO, error) {
 
 // LoadRecruiterInbox returns a dashboard-safe empty state until stored recruiter DTOs are wired in.
 func (s *CareerOpsService) LoadRecruiterInbox() ([]RecruiterThreadDTO, error) {
+	if s.readError != nil {
+		return nil, s.readError
+	}
 	if s.snapshot != nil {
 		return s.snapshot.RecruiterInbox, nil
 	}
@@ -207,6 +237,9 @@ func (s *CareerOpsService) LoadRecruiterInbox() ([]RecruiterThreadDTO, error) {
 
 // LoadApplications returns packet readiness and manual action state.
 func (s *CareerOpsService) LoadApplications() ([]ApplicationDTO, error) {
+	if s.readError != nil {
+		return nil, s.readError
+	}
 	if s.snapshot != nil {
 		return s.snapshot.Applications, nil
 	}
@@ -224,6 +257,7 @@ func (s *CareerOpsService) LoadApplications() ([]ApplicationDTO, error) {
 			Role:          app.Role,
 			Status:        data.NormalizeStatus(app.Status),
 			Score:         app.Score,
+			ScoreKnown:    app.Score >= 1 && app.Score <= 5,
 			Tier:          tier,
 			PacketReady:   packetReady,
 			ReportPath:    app.ReportPath,
@@ -236,6 +270,9 @@ func (s *CareerOpsService) LoadApplications() ([]ApplicationDTO, error) {
 
 // LoadAnalytics returns the dashboard KPI scaffold from tracker rows.
 func (s *CareerOpsService) LoadAnalytics() (AnalyticsDTO, error) {
+	if s.readError != nil {
+		return AnalyticsDTO{}, s.readError
+	}
 	if s.snapshot != nil {
 		return s.snapshot.Analytics, nil
 	}
@@ -260,7 +297,7 @@ func (s *CareerOpsService) LoadAnalytics() (AnalyticsDTO, error) {
 
 // RecordDecision is present for the v1 dashboard seam; writes remain CLI-backed for now.
 func (s *CareerOpsService) RecordDecision(UserDecisionDTO) error {
-	return nil
+	return fmt.Errorf("decision was not recorded: use authenticated Maxim workspace commands; this native view has no decision writer")
 }
 
 func loadSnapshot(careerOpsPath string) *dashboardSnapshot {
@@ -270,6 +307,9 @@ func loadSnapshot(careerOpsPath string) *dashboardSnapshot {
 	path := filepath.Join(careerOpsPath, "data", "maxim", "dashboard-state.json")
 	bytes, err := os.ReadFile(path)
 	if err != nil {
+		return nil
+	}
+	if data.VerifyApplicationProjection(careerOpsPath, "data/maxim/dashboard-state.json", bytes) != nil {
 		return nil
 	}
 	var snapshot dashboardSnapshot
@@ -287,6 +327,9 @@ func jobID(app careermodel.CareerApplication) string {
 }
 
 func maximTier(score float64) string {
+	if !(score >= 1 && score <= 5) {
+		return "Unknown"
+	}
 	switch {
 	case score < 3.5:
 		return "T0"

@@ -9,6 +9,18 @@ license: MIT
 
 # career-ops -- Router
 
+## Maxim Application Ownership Gate
+
+For every mode below, check `node maxim/scripts/authority-check.mjs applications read`
+before reading tracker state and `node maxim/scripts/authority-check.mjs applications write`
+before writing trackers, pipeline, reports or managed PDFs. Canonical files are
+read projections; mutations use the authenticated Applications workspace or
+`npm run maxim:applications -- help`. Queue evaluation with
+`npm run maxim:evaluate-job -- <saved-job-uuid>`; never select an artifact by mtime
+or run the retired planner/browser runner. Human review and an actual manual
+submission are separate actions. S6 browser filling is not active.
+Read `docs/maxim/application-lifecycle.md` for the complete retained-engine flow.
+
 ## Mode Routing
 
 Determine the mode from `$mode`:

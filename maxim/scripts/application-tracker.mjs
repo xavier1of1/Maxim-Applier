@@ -5,8 +5,14 @@ import {
   queueEligibleApplications,
 } from "../lib/application-tracker.mjs";
 import { createStore } from "../lib/sqlite-store.mjs";
+import {readAuthority} from '../lib/authority-gate.mjs';
+import {runWorkspaceCommand} from '../lib/workspace-client.mjs';
 
 const command = process.argv[2] ?? "help";
+if(readAuthority().applications==='canonical'){
+ try{console.log(JSON.stringify(await runWorkspaceCommand(),null,2));}
+ catch(e){console.error(JSON.stringify({ok:false,message:e.message}));process.exitCode=1;}
+}else{
 const store = createStore();
 
 function fail(message) {
@@ -85,10 +91,11 @@ if (command === "create") {
     JSON.stringify(
       {
         ok: false,
-        message: "Commands: create <evaluation-id>, queue [--dry-run] [--include-t1], started <application-id>, submitted <application-id>, list",
+        message: "Legacy-only commands: create <evaluation-id>, queue [--dry-run] [--include-t1], started <application-id>, submitted <application-id>, list. After cutover use maxim:applications -- help.",
       },
       null,
       2,
     ),
   );
+}
 }

@@ -8,10 +8,11 @@ import {Archive, ArchiveRestore, ArrowUpRight, BriefcaseBusiness, Clock3, Histor
 import {errorMessage, type WorkspaceApi} from './api';
 import {Banner, EmptyState, Pill, ToolButton, eventJob, eventTitle, formatDate, initials} from './shared';
 import type {Application, Navigation, RecordFilter, WorkspaceData} from './types';
+import {ApplicationWorkbench} from './lifecycle';
 
-export function ApplicationsView({data, api, disabled, refresh, navigate, filter}: {
+export function ApplicationsView({data, api, disabled, refresh, navigate, filter,selectedId}: {
   data: WorkspaceData; api: WorkspaceApi; disabled: boolean; refresh: () => Promise<void>;
-  navigate: (selection: Navigation) => void; filter: RecordFilter;
+  navigate: (selection: Navigation) => void; filter: RecordFilter;selectedId:string|null;
 }) {
   const [search, setSearch] = useState('');
   const [pending, setPending] = useState('');
@@ -44,12 +45,11 @@ export function ApplicationsView({data, api, disabled, refresh, navigate, filter
       <thead><tr><th scope="col">Company / role</th><th scope="col">Location</th><th scope="col">Status</th><th scope="col">Created</th><th scope="col"><span className="visually-hidden">Actions</span></th></tr></thead>
       <tbody>{items.map(item => <tr key={item.id}>
         <td><button type="button" className="application-role" onClick={() => {
-          const job = data.jobs.find(record => record.id === item.job_id);
-          navigate({view: 'jobs', job: item.job_id, filter: job?.archived ? 'archived' : 'active'});
+          navigate({application:item.id});
         }}><span className="company-monogram" aria-hidden="true">{initials(item.company)}</span>
           <span><strong>{item.title}</strong><span className="muted">{item.company}</span></span><ArrowUpRight size={14} aria-hidden="true" /></button></td>
         <td className="location-cell">{item.location || 'Not specified'}</td>
-        <td><Pill tone={item.status === 'intent' ? 'amber' : 'neutral'}>{item.status === 'intent' ? 'Intent' : 'Archived'}</Pill></td>
+        <td><Pill tone={item.status === 'intent' ? 'amber' : 'neutral'}>{item.status === 'archived'?'Archived':(item.outcome!=='not_submitted'?item.outcome:item.workflow||'intent').replaceAll('_',' ')}</Pill></td>
         <td><time dateTime={item.created_at}>{formatDate(item.created_at)}</time></td>
         <td><ToolButton label={item.status === 'intent' ? 'Archive intent' : 'Restore intent'}
           icon={item.status === 'intent' ? Archive : ArchiveRestore} onClick={() => void changeStatus(item)}
@@ -59,7 +59,7 @@ export function ApplicationsView({data, api, disabled, refresh, navigate, filter
       title={search ? 'No matching applications' : filter === 'archived' ? 'No archived intents' : 'No application intents'}
       detail={search ? 'Try a different company or title.' : filter === 'active' ? 'No submission is recorded.' : undefined}
       action={<Button label={search ? 'Clear search' : 'View roles'} variant="secondary" onClick={() => search ? setSearch('') : navigate({view: 'jobs', filter: 'active'})} />} />}
-    <div className="view-footnote"><BriefcaseBusiness size={14} aria-hidden="true" /><span>Application intents</span><span className="separator-dot" /> <span>Not submitted applications</span></div>
+    <ApplicationWorkbench api={api} disabled={disabled} refresh={refresh} asOf={data.asOf} selectedId={selectedId} onSelect={id=>navigate({application:id})} hasModel={Boolean(data.settings.model.configured)} isOwner={data.workspace.is_owner}/>
   </section>;
 }
 

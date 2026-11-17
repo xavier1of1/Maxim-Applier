@@ -14,6 +14,12 @@ import {candidateContext} from './candidate-context';
 import {answerCommand,answerLibrary,exportAnswers} from './answers';
 import {recallAnswers} from './answer-recall';
 import {discoveryCommand,discoveryView} from './discovery';
+import {evaluationCommand} from './evaluations';
+import {applicationCommand} from './applications';
+import {packetCommand} from './packets';
+import {applicationView} from './application-reads';
+import {legacyImportCommand,legacyView} from './legacy-import';
+import {applicationCutoverCommand,applicationAuthorityView} from './application-cutover';
 import { DomainError,invariant } from './errors';
 
 const json=(value:unknown,status=200,headers:Record<string,string>={})=>Response.json(value,{status,headers:{'Cache-Control':'no-store',...headers}});
@@ -40,7 +46,7 @@ export async function handle(req:Request) {
   const route=new URL(req.url).pathname.replace(/^\/api\/?/,'').split('/').filter(Boolean);
   const name=route.join('/'),post=req.method==='POST',get=req.method==='GET';
   if(get && name==='health') {
-   const version=await database().query('SELECT version FROM schema_migrations WHERE version=5');
+   const version=await database().query('SELECT version FROM schema_migrations WHERE version=6');
    invariant(version.rowCount,'schema_unavailable','Workspace schema is not initialized.',503);
    return json({ok:true,application:'maxim-apply',installation:digest(config().workspaceId).slice(0,16),database:'available',recordFreshness:'not_assessed'});
   }
@@ -63,6 +69,20 @@ export async function handle(req:Request) {
    return json({ok:true},200,{'Set-Cookie':'maxim_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'});
   }
   if(get&&name==='workspace')return json(await snapshot(ctx));
+  if(get&&name==='applications'){const q=new URL(req.url).searchParams;return json(await applicationView(ctx,{applicationId:q.get('application')||undefined,offset:q.has('offset')?Number(q.get('offset')):0}));}
+  if(get&&name==='applications/authority')return json(await applicationAuthorityView(ctx));
+  if(post&&name==='applications/cutover')return json({result:await applicationCutoverCommand(ctx,await body(req))});
+  if(get&&name==='legacy'){const q=new URL(req.url).searchParams;return json(await legacyView(ctx,{importId:q.get('import')||undefined,offset:q.has('offset')?Number(q.get('offset')):0}));}
+  if(post&&name==='legacy/commands')return json({result:await legacyImportCommand(ctx,await body(req))});
+  if(get&&route[0]==='legacy'&&route[1]==='export'&&route.length===3){
+   invariant(ctx.isOwner,'not_found','Record not found.',404);const id=uuid.parse(route[2]);
+   const row=(await database().query('SELECT raw_bundle FROM legacy_imports WHERE workspace_id=$1 AND id=$2',[ctx.workspaceId,id])).rows[0];
+   invariant(row,'not_found','Record not found.',404);
+   return json(row.raw_bundle,200,{'Content-Disposition':'attachment; filename="maxim-legacy-import-'+id+'.json"'});
+  }
+  if(post&&name==='applications/commands')return json({result:await applicationCommand(ctx,await body(req))});
+  if(post&&name==='evaluations/commands')return json({result:await evaluationCommand(ctx,await body(req))});
+  if(post&&name==='packets/commands')return json({result:await packetCommand(ctx,await body(req))});
   if(get&&name==='discovery')return json(await discoveryView(ctx));
   if(post&&name==='discovery/commands')return json({result:await discoveryCommand(ctx,await body(req))});
   if(get&&name==='candidate')return json(await candidateView(ctx));

@@ -1,8 +1,8 @@
 # Maxim Apply High-Level Roadmap
 
 **Status:** Revision 0.3 refined target plan with detailed stage specifications. Implementation and unresolved design choices remain unapproved until their gates pass.
-**Updated:** 2026-11-16. **Demo target:** 2026-11-19, scope not yet frozen.
-**Implementation standing:** S0 and S1 verified; S2-S11 Pending. The [workspace evidence](reviews/s1-workspace.md) records the actual Astryx/Next/PostgreSQL delivery. No legacy cutover or new application-browser executor is claimed.
+**Updated:** 2026-11-17. **Demo target: 2026-11-19, scope not yet frozen.
+**Implementation standing:** S0-S5 verified for their bounded scopes; S6-S11 Pending. The [workspace evidence](reviews/s1-workspace.md) records the actual Astryx/Next/PostgreSQL delivery. Reviewed candidate/application cutover is implemented and fixture-tested; production activation stays explicit. No new browser executor is claimed.
 **Companions:** [Index](README.md), [manifesto](MANIFESTO.md), [component assessment](external-components-assessment.md), [setup](operational-setup.md), [development workflow](development-workflow.md).
 
 ## 1. Outcome And Planning Discipline
@@ -73,7 +73,7 @@ Create small decision records for chosen stack, persistence/retention, source re
 | S2 | [Reviewed candidate onboarding](stages/stage-02-reviewed-onboarding.md) | Upload, review/correct, confirm, restart, retrieve sourced facts | S1 | Verified |
 | S3 | [Reusable answers and bounded context](stages/stage-03-answer-memory.md) | Answer once, recall in scope, correct/revoke, suppress old reuse | S2 | Verified |
 | S4 | [Coverage-aware discovery](stages/stage-04-discovery.md) | Ingest a new role; expose unsupported/failed source separately | S2 | Verified |
-| S5 | [Career-Ops evaluation, packet, and tracker cutover](stages/stage-05-evaluation-and-tracker-cutover.md) | Evaluate/prepare one role; prove one lifecycle after migration | S3; S4 only for automated-discovery jobs | Pending |
+| S5 | [Career-Ops evaluation, packet, and tracker cutover](stages/stage-05-evaluation-and-tracker-cutover.md) | Evaluate/prepare one role; prove one lifecycle after migration | S3; S4 only for automated-discovery jobs | Verified |
 | S6 | [Supported browser application assistance](stages/stage-06-browser-assistance.md) | Fill supported controls, ask unknowns, resume, stop at manual review | S5 and approved browser design | Pending |
 | S7 | [Gmail evidence and response tasks](stages/stage-07-gmail-evidence.md) | Link a consented thread; hold ambiguous match; handle revoked access | S5 | Pending |
 | S8 | [Durable existing-Discord delivery](stages/stage-08-discord-delivery.md) | Accept alert once; fail/retry visibly; digest matches confirmed state | S5; S4 automated freshness; S7 Gmail; S9 networking/manual recruiter alerts | Pending |
@@ -301,6 +301,9 @@ This is opt-in reviewed candidate authority, not automatic import/approval of pr
 
 **Detailed specification:** [S5 plan](stages/stage-05-evaluation-and-tracker-cutover.md).
 
+**Verified implementation:** [Case evidence](reviews/s5-evaluation-and-cutover.md),
+2026-11-17. Production ownership activation remains an explicit reviewed operation.
+
 **Objective:** Use the retained engine in one observable lifecycle and finish controlled operational cutover. Manual jobs from S1 do not require S4; automated-discovery inputs do.
 
 **Thin E2E proof:** Ask the agent to evaluate a discovered/stored role, inspect the same Career-Ops score in UI, prepare/approve a linked PDF, record a reviewed action, and prove all supported readers agree after migration.
@@ -315,13 +318,13 @@ This is opt-in reviewed candidate authority, not automatic import/approval of pr
 - Retire the rejected runner's entry points, imports, docs and active registrations once dependent data/paths are preserved; keep native Playwright PDF/liveness and useful safety scenarios.
 
 **Acceptance**
-- [ ] Score bands, confirmed location/salary/clearance rules, and next actions pass focused tests.
-- [ ] One command identity cannot create duplicate evaluations/applications or overwrite reviewed artifacts.
-- [ ] Packet links identify exact evidence/evaluation/resume revision; fabricated claims and placeholders cannot enter approved PDFs.
-- [ ] Migration comparisons cover counts, IDs, raw fields, status history, score/tier at action, artifacts and conflicts; rollback works.
-- [ ] One production writer exists per application; supported native commands/readers cannot silently diverge.
-- [ ] No live route invokes the retired runner, and agreed native regression checks still pass.
-- [ ] Prepared/reviewed/filled/submitted/outcome states remain distinct in UI and agent.
+- [x] Score bands, confirmed location/salary/clearance rules, and next actions pass focused tests.
+- [x] One command identity cannot create duplicate evaluations/applications or overwrite reviewed artifacts.
+- [x] Packet links identify exact evidence/evaluation/resume revision; fabricated claims and placeholders cannot enter approved PDFs.
+- [x] Migration comparisons cover counts, IDs, raw fields, status history, score/tier at action, artifacts and conflicts; rollback works.
+- [x] One production writer exists per application; supported native commands/readers cannot silently diverge.
+- [x] No live route invokes the retired runner, and agreed native regression checks still pass.
+- [x] Prepared/reviewed/filled/submitted/outcome states remain distinct in UI and agent.
 
 **Handoff:** S6 receives one application identity, approved packet, reusable answers, event/command API and duplicate policy. S7-S10 can build on the same lifecycle.
 

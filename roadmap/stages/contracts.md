@@ -90,7 +90,13 @@ Keep workflow readiness separate from outcome:
 - Outcome: not_submitted, submitted, responded, interviewing, offer, rejected, withdrawn or unknown.
 - Evidence: user declaration or attributable observation with source/time; an email hint or a filled page is not a submitted outcome.
 
-These are proposed normalized values. S5 must map native statuses and preserve originals without silently treating Evaluated as Applied.
+S5 implements workflow separately from outcome, retaining S1's intent/archived
+column for compatibility. Workflow is intent/packet_missing/packet_ready/
+assist_running/needs_input/review_ready/paused/failed. Outcome is not_submitted/
+submitted/responded/interviewing/offer/rejected/withdrawn/unknown. Actual manual
+fill/review/submission timestamps and immutable action snapshots are separate.
+Legacy statuses remain raw and require explicit outcome review; Evaluated is
+never silently treated as Applied. See the [implemented lifecycle contract](../../docs/maxim/application-lifecycle.md).
 
 An approved packet binds report/PDF/answer revisions and content hashes. Only user confirmation or accepted attributable receipt evidence records submission; the application retains score/tier/policy and artifact snapshots at action time. Manual legitimate submissions outside the assistant can be recorded without requiring an already prepared packet.
 

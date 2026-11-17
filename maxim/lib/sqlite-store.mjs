@@ -5,6 +5,8 @@ import crypto from "node:crypto";
 
 import { EventLog } from "./event-log.mjs";
 import { fromRoot } from "./path-utils.mjs";
+import {readAuthority} from './authority-gate.mjs';
+import {withLegacyApplicationWrite} from './application-write-gate.mjs';
 
 const PY_SQLITE_BRIDGE = String.raw`
 import json
@@ -82,12 +84,15 @@ export class SQLiteMaximStore {
   constructor({
     dbPath = fromRoot("data", "maxim", "maxim.db"),
     schemaPath = fromRoot("maxim", "db", "schema.sql"),
-    eventLog = new EventLog(),
+    eventLog,
+    authorityRoot,
   } = {}) {
     this.dbPath = dbPath;
     this.schemaPath = schemaPath;
-    this.eventLog = eventLog;
     this.initialized = false;
+    const directory=path.dirname(path.resolve(dbPath));
+    this.authorityRoot=authorityRoot||(path.basename(directory)==='maxim'&&path.basename(path.dirname(directory))==='data'?path.resolve(directory,'../..'):directory);
+    this.eventLog=eventLog||new EventLog({eventDir:path.join(directory,'events'),authorityRoot:this.authorityRoot});
   }
 
   init() {
@@ -1051,6 +1056,38 @@ export class SQLiteMaximStore {
     return record;
   }
 }
+
+const applicationTables=/\b(?:career_ops_evaluations|career_ops_artifacts|maxim_jobs|priority_flags|applications)\b/i;
+const applicationEntity=/career.?ops.?evaluation|maxim.?job|application.?record|careerops_synced|application_|evaluation_/i;
+const originalInit=SQLiteMaximStore.prototype.init;
+SQLiteMaximStore.prototype.init=function(){
+ const owner=readAuthority(this.authorityRoot).applications||'legacy';
+ if(owner!=='legacy'){
+  if(!fs.existsSync(this.dbPath))throw Error('Legacy extension SQLite is absent. Canonical application storage cannot be recreated as another tracker.');
+  this.initialized=true;return;
+ }
+ return withLegacyApplicationWrite(()=>originalInit.call(this),this.authorityRoot);
+};
+for(const method of ['upsertEvaluation','upsertJob','replaceFlags','upsertApplication','migrateLegacyColumns']){
+ const original=SQLiteMaximStore.prototype[method];
+ SQLiteMaximStore.prototype[method]=function(...args){return withLegacyApplicationWrite(()=>original.apply(this,args),this.authorityRoot);};
+}
+for(const method of ['execute','query']){
+ const original=SQLiteMaximStore.prototype[method];
+ SQLiteMaximStore.prototype[method]=function(sql,...args){
+  if(applicationTables.test(sql)){
+   const owner=readAuthority(this.authorityRoot).applications||'legacy';
+   if(owner!=='legacy')throw Error('Application family is '+owner+'. Read the labeled canonical projection or use authenticated workspace commands; legacy SQL cannot silently diverge.');
+   if(method==='execute')return withLegacyApplicationWrite(()=>original.call(this,sql,...args),this.authorityRoot);
+  }
+  return original.call(this,sql,...args);
+ };
+}
+const originalAudit=SQLiteMaximStore.prototype.appendAuditEvent;
+SQLiteMaximStore.prototype.appendAuditEvent=function(event){
+ if(applicationEntity.test((event.entity_type||'')+' '+(event.event_type||'')))return withLegacyApplicationWrite(()=>originalAudit.call(this,event),this.authorityRoot);
+ return originalAudit.call(this,event);
+};
 
 export function createStore(options) {
   const store = new SQLiteMaximStore(options);

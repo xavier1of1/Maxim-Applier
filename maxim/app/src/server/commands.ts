@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { transaction } from './db';
 import { reauthorize, digest, type Context } from './auth';
 import { invariant, notFound } from './errors';
+import {applicationWritable,queueApplicationProjection} from './application-authority';
 
 export const uuid = z.string().uuid();
 const note = z.string().max(8000);
@@ -54,6 +55,8 @@ export async function jobFor(tx: PoolClient, ctx: Context, id: string) {
 export async function executeCommand(ctx: Context, raw: unknown) {
  const c = schema.parse(raw);
  return command(ctx,c.commandId,c,async tx => {
+  await applicationWritable(tx,ctx.workspaceId);
+  await queueApplicationProjection(tx,ctx.workspaceId);
   if (c.action === 'create_job') {
    const p = c.payload;
    if (p.url) {
@@ -99,6 +102,8 @@ export async function executeCommand(ctx: Context, raw: unknown) {
 export async function resolveProposal(ctx: Context, id: string, commandId: string, decision: 'confirmed'|'rejected') {
  uuid.parse(id);
  return command(ctx,commandId,{id,decision},async tx => {
+  await applicationWritable(tx,ctx.workspaceId);
+  await queueApplicationProjection(tx,ctx.workspaceId);
   const r = await tx.query('SELECT * FROM proposals WHERE id=$1 AND workspace_id=$2 FOR UPDATE',[id,ctx.workspaceId]);
   const p = r.rows[0]; if (!p) throw notFound();
   invariant(p.session_id === ctx.sessionId,'confirmation_denied','This proposal belongs to a different session. Request a new proposal.',403);

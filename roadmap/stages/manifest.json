@@ -463,7 +463,7 @@
       "id": "S5",
       "title": "Career-Ops evaluation, packet, and tracker cutover",
       "file": "stage-05-evaluation-and-tracker-cutover.md",
-      "status": "Pending",
+      "status": "Verified",
       "requires": [
         "S3"
       ],
@@ -496,6 +496,72 @@
         "APP-06",
         "APP-07",
         "APP-08"
+      ],
+      "evidence": [
+        {
+          "caseId": "APP-01",
+          "result": "passed",
+          "command": "npm run maxim:workspace:test; npm run maxim:test; npm run maxim:native:test; go test ./...; npm run maxim:safety; npm run maxim:privacy",
+          "environment": "Windows; Node 24.22.3; Rust 1.76/MSVC; PostgreSQL 18.1; Chromium; Go 1.26.4",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s5-evaluation-and-cutover.md"
+        },
+        {
+          "caseId": "APP-02",
+          "result": "passed",
+          "command": "npm run maxim:workspace:test; npm run maxim:test; npm run maxim:native:test; go test ./...; npm run maxim:safety; npm run maxim:privacy",
+          "environment": "Windows; Node 24.22.3; Rust 1.76/MSVC; PostgreSQL 18.1; Chromium; Go 1.26.4",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s5-evaluation-and-cutover.md"
+        },
+        {
+          "caseId": "APP-03",
+          "result": "passed",
+          "command": "npm run maxim:workspace:test; npm run maxim:test; npm run maxim:native:test; go test ./...; npm run maxim:safety; npm run maxim:privacy",
+          "environment": "Windows; Node 24.22.3; Rust 1.76/MSVC; PostgreSQL 18.1; Chromium; Go 1.26.4",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s5-evaluation-and-cutover.md"
+        },
+        {
+          "caseId": "APP-04",
+          "result": "passed",
+          "command": "npm run maxim:workspace:test; npm run maxim:test; npm run maxim:native:test; go test ./...; npm run maxim:safety; npm run maxim:privacy",
+          "environment": "Windows; Node 24.22.3; Rust 1.76/MSVC; PostgreSQL 18.1; Chromium; Go 1.26.4",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s5-evaluation-and-cutover.md"
+        },
+        {
+          "caseId": "APP-05",
+          "result": "passed",
+          "command": "npm run maxim:workspace:test; npm run maxim:test; npm run maxim:native:test; go test ./...; npm run maxim:safety; npm run maxim:privacy",
+          "environment": "Windows; Node 24.22.3; Rust 1.76/MSVC; PostgreSQL 18.1; Chromium; Go 1.26.4",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s5-evaluation-and-cutover.md"
+        },
+        {
+          "caseId": "APP-06",
+          "result": "passed",
+          "command": "npm run maxim:workspace:test; npm run maxim:test; npm run maxim:native:test; go test ./...; npm run maxim:safety; npm run maxim:privacy",
+          "environment": "Windows; Node 24.22.3; Rust 1.76/MSVC; PostgreSQL 18.1; Chromium; Go 1.26.4",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s5-evaluation-and-cutover.md"
+        },
+        {
+          "caseId": "APP-07",
+          "result": "passed",
+          "command": "npm run maxim:workspace:test; npm run maxim:test; npm run maxim:native:test; go test ./...; npm run maxim:safety; npm run maxim:privacy",
+          "environment": "Windows; Node 24.22.3; Rust 1.76/MSVC; PostgreSQL 18.1; Chromium; Go 1.26.4",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s5-evaluation-and-cutover.md"
+        },
+        {
+          "caseId": "APP-08",
+          "result": "passed",
+          "command": "npm run maxim:workspace:test; npm run maxim:test; npm run maxim:native:test; go test ./...; npm run maxim:safety; npm run maxim:privacy",
+          "environment": "Windows; Node 24.22.3; Rust 1.76/MSVC; PostgreSQL 18.1; Chromium; Go 1.26.4",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s5-evaluation-and-cutover.md"
+        }
       ]
     },
     {

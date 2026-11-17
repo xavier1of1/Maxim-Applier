@@ -1,7 +1,7 @@
 # S5: Career-Ops evaluation, packet, and tracker cutover
 
-**Status:** Pending implementation. Detailed plan drafted; no acceptance criterion is claimed passed.
-**Updated:** 2026-11-16.
+**Status:** Verified for the bounded S5 scope. APP-01 through APP-08 passed; no production data cutover or browser executor is implied.
+**Updated:** 2026-11-17.
 **Roadmap:** [Stage index](README.md) | [High-level roadmap](../high-level-roadmap.md) | [Shared contracts](contracts.md)
 **Requires:** [S3](stage-03-answer-memory.md)
 
@@ -20,9 +20,9 @@ Use the retained Career-Ops evaluator and packet generators through one applicat
 
 ## Current Evidence And Boundary
 
-[Evaluation wrapper](../../maxim/scripts/evaluate-job.mjs) invokes Gemini, finds a recent report by filesystem modification time, writes TSV, merges, syncs and starts additional commands. Do not expose this whole CLI pipeline as the canonical web service.
+[Evaluation wrapper](../../maxim/scripts/evaluate-job.mjs) is now a narrow canonical API adapter. The former Gemini/newest-mtime/TSV/merge/sync chain is retired. Invocation-bound durable work uses the retained shared Career-Ops prompt/modes and generator.
 
-[Tracker sync](../../maxim/lib/tracker-sync.mjs), [application tracker](../../maxim/lib/application-tracker.mjs) and [duplicate detector](../../maxim/lib/duplicate-detector.mjs) contain useful parsing/state concepts but fuzzy identity and per-call persistence need adaptation. [Go service](../../dashboard/internal/maxim/service/service.go) decision writes are not implemented.
+[Tracker sync](../../maxim/lib/tracker-sync.mjs) uses a hash-checked offline projection after cutover, not another writable SQLite tracker. Legacy tracker helpers remain gated. The canonical service uses exact opening IDs and attributable warnings; the [Go service](../../dashboard/internal/maxim/service/service.go) explicitly rejects unsupported decision writes rather than returning successful no-ops.
 
 Preserve native [PDF generation](../../generate-pdf.mjs), scoring/modes and report semantics. A selected model transport does not permit silently changing Career-Ops scoring behavior.
 
@@ -50,20 +50,20 @@ Preserve native [PDF generation](../../generate-pdf.mjs), scoring/modes and repo
 
 ## Acceptance
 
-- [ ] **APP-01:** Retained Career-Ops score/explanation drives tiers with threshold, policy, override and absent/invalid-score tests; no alternative fit score exists.
-- [ ] **APP-02:** Concurrent/retried evaluations link only their own invocation outputs; command replay and malformed reports cannot duplicate or delete unrelated artifacts.
-- [ ] **APP-03:** Packet approval binds current facts/JD/report/PDF hashes; stale, placeholder, fabricated or unapproved fallback material is withheld.
-- [ ] **APP-04:** Duplicate/reapply handling respects company/role/URL/source job IDs and preserves distinct openings; any merge or reviewed reapplication is attributable.
-- [ ] **APP-05:** Staged legacy import preserves raw fields, stable IDs, status/evaluation-at-action, history and artifacts; conflicts are reviewed and repeat import is idempotent.
-- [ ] **APP-06:** Freeze/switch/rollback covers all supported native/Maxim/Go writers and projections; no acknowledged edit is lost and no no-op returns success.
-- [ ] **APP-07:** Rejected runner entry points and stale recommendations are inactive, while retained scoring/PDF/liveness/native read behavior passes bounded regressions.
-- [ ] **APP-08:** UI/agent/native compatibility reads agree after restart; prepared/reviewed/filled/submitted/outcome remain distinct, including legitimate manually recorded external submissions.
+- [x] **APP-01:** Retained Career-Ops score/explanation drives tiers with threshold, policy, override and absent/invalid-score tests; no alternative fit score exists.
+- [x] **APP-02:** Concurrent/retried evaluations link only their own invocation outputs; command replay and malformed reports cannot duplicate or delete unrelated artifacts.
+- [x] **APP-03:** Packet approval binds current facts/JD/report/PDF hashes; stale, placeholder, fabricated or unapproved fallback material is withheld.
+- [x] **APP-04:** Duplicate/reapply handling respects company/role/URL/source job IDs and preserves distinct openings; any merge or reviewed reapplication is attributable.
+- [x] **APP-05:** Staged legacy import preserves raw fields, stable IDs, status/evaluation-at-action, history and artifacts; conflicts are reviewed and repeat import is idempotent.
+- [x] **APP-06:** Freeze/switch/rollback covers all supported native/Maxim/Go writers and projections; no acknowledged edit is lost and no no-op returns success.
+- [x] **APP-07:** Rejected runner entry points and stale recommendations are inactive, while retained scoring/PDF/liveness/native read behavior passes bounded regressions.
+- [x] **APP-08:** UI/agent/native compatibility reads agree after restart; prepared/reviewed/filled/submitted/outcome remain distinct, including legitimate manually recorded external submissions.
 
 ## Integration Test
 
 **Existing regression references:** `maxim/tests/integration/sync-store.test.mjs`, `application-tracker-store.test.mjs` and unit tier/policy/parser/safety tests. Run in their fixture scope; passing old tests is not PostgreSQL cutover evidence.
 
-**Proposed:** `node --test maxim/app/tests/integration/evaluation-and-cutover.test.mjs` and `maxim/app/tests/e2e/application-packet.spec.mjs`.
+**Implemented:** `npm run maxim:workspace:test` runs strict Rust/unit checks, real PostgreSQL worker/invocation/packet/cutover/restore tests and `maxim/app/tests/e2e/application-packet.spec.mjs` in desktop/mobile Chromium.
 
 Use S1-S3 harness plus two concurrent evaluations, two similar company-role openings with different IDs, a malformed result, stale approval, failed migration phase and restore. Perform a real retained local PDF fixture. Script model responses for deterministic score contract tests; live evaluation quality review is separately recorded.
 
@@ -93,7 +93,20 @@ S6 gets one ID, approved artifacts, scoped answers and command API. S7-S10 can w
 
 ## What Shipped
 
-Pending. This plan does not migrate records, approve attachments or retire actual code.
+See [case evidence](../reviews/s5-evaluation-and-cutover.md) and the
+[operator/compatibility guide](../../docs/maxim/application-lifecycle.md).
+
+Shipped schema 006, retained evaluation and native PDF adapters, Rust report/GFM
+validation, exact fact/answer/report/PDF approval, policy/override and duplicate
+guards, distinct manual workflow/outcomes, shared UI/agent/CLI reads, raw legacy
+reconciliation, controlled family cutover and native/Go write gates/read projections.
+Recovery preserves acknowledged edits; rollback and backup v3 retain latest state,
+unrelated SQLite families and application/candidate journals.
+
+The rejected planner/mapper/browser executor, imports and package registrations
+are retired. Useful safety scenarios and private historical run reports survive;
+obsolete guides are explicitly archived. Candidate/application production ownership
+is never activated automatically by startup or tests.
 
 ## Deferred To Later Stages
 

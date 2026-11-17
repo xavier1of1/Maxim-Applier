@@ -197,7 +197,7 @@ func (m Model) renderApplications() string {
 		if duplicate == "" {
 			duplicate = "unknown"
 		}
-		lines = append(lines, fmt.Sprintf("%s | %s | %.1f/5 | %s | duplicate:%s", application.Tier, application.Company+" - "+application.Role, application.Score, packet, duplicate))
+		lines = append(lines, fmt.Sprintf("%s | %s | %s | %s | %s | duplicate:%s", application.Tier, application.Company+" - "+application.Role, scoreLabel(application.Score), application.Status, packet, duplicate))
 		lines = append(lines, "  next: "+application.NextAction)
 		if application.DuplicateWarning != "" {
 			lines = append(lines, "  warning: "+application.DuplicateWarning)
@@ -241,10 +241,17 @@ func (m Model) renderJobList(title, subtitle string, jobs []maximservice.JobDTO,
 		if flags == "" {
 			flags = "no overlays"
 		}
-		lines = append(lines, fmt.Sprintf("%s | %.1f/5 | %s | %s | %s", job.Tier, job.Score, job.Company, job.Role, flags))
+		lines = append(lines, fmt.Sprintf("%s | %s | %s | %s | %s", job.Tier, scoreLabel(job.Score), job.Company, job.Role, flags))
 		lines = append(lines, "  next: "+job.NextAction)
 	}
 	return m.panel(title, subtitle, lines)
+}
+
+func scoreLabel(score float64) string {
+	if !(score >= 1 && score <= 5) {
+		return "Unknown"
+	}
+	return fmt.Sprintf("%g/5", score)
 }
 
 func (m Model) panel(title, subtitle string, lines []string) string {

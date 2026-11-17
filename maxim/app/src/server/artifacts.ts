@@ -7,6 +7,7 @@ import { database } from './db';
 import { type Context } from './auth';
 import { command, event, jobFor, uuid } from './commands';
 import { invariant, notFound } from './errors';
+import {applicationWritable,queueApplicationProjection} from './application-authority';
 
 const artifactRoot = () => path.join(config().privateRoot,'artifacts');
 export async function uploadArtifact(ctx:Context,form:FormData) {
@@ -24,6 +25,7 @@ export async function uploadArtifact(ctx:Context,form:FormData) {
  let created=false,committed=false;
  try {
   const result=await command(ctx,commandId,{action:'attach_reference',jobId,hash,name},async tx=>{
+   await applicationWritable(tx,ctx.workspaceId);await queueApplicationProjection(tx,ctx.workspaceId);
    await tx.query('SELECT pg_advisory_xact_lock_shared(120032)');
    await jobFor(tx,ctx,jobId);
    await fs.mkdir(root,{recursive:true,mode:0o700});

@@ -27,12 +27,14 @@
  *   node scan.mjs --verify         # Playwright-check each new URL; drop expired postings
  */
 
-import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync as nativeWrite, appendFileSync as nativeAppend, existsSync, mkdirSync, readdirSync } from 'fs';
 import { pathToFileURL, fileURLToPath } from 'url';
 import path from 'path';
 import yaml from 'js-yaml';
 
 import { makeHttpCtx } from './providers/_http.mjs';
+import {assertLegacyWriteAllowed} from './maxim/lib/authority-gate.mjs';
+import {withLegacyApplicationWrite} from './maxim/lib/application-write-gate.mjs';
 
 const parseYaml = yaml.load;
 
@@ -44,8 +46,8 @@ const PIPELINE_PATH = 'data/pipeline.md';
 const APPLICATIONS_PATH = 'data/applications.md';
 const PROVIDERS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'providers');
 
-// Ensure required directories exist (fresh setup)
-mkdirSync('data', { recursive: true });
+const writeFileSync=(...args)=>withLegacyApplicationWrite(()=>nativeWrite(...args),process.cwd());
+const appendFileSync=(...args)=>withLegacyApplicationWrite(()=>nativeAppend(...args),process.cwd());
 
 const CONCURRENCY = 10;
 
@@ -395,6 +397,7 @@ async function main() {
     return;
   }
   const dryRun = args.includes('--dry-run');
+  if(!dryRun){assertLegacyWriteAllowed('applications',process.cwd());mkdirSync('data',{recursive:true});}
   const verify = args.includes('--verify');
   const companyFlag = args.indexOf('--company');
   const filterCompany = companyFlag !== -1 ? args[companyFlag + 1]?.toLowerCase() : null;

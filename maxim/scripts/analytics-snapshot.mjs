@@ -1,5 +1,10 @@
 import { createMetricSnapshot } from "../lib/metrics.mjs";
 import { createStore } from "../lib/sqlite-store.mjs";
+import {readApplicationProjection} from '../lib/canonical-application-read.mjs';
+if(readApplicationProjection()){
+ console.error(JSON.stringify({ok:false,message:'Legacy SQLite analytics are retired for canonical applications. S9 owns historical/networking analytics adaptation. No stale KPI was generated.'}));
+ process.exit(1);
+}
 
 const store = createStore();
 const records = store.query(

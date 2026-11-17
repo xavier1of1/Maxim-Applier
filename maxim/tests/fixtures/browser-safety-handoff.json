@@ -1,0 +1,18 @@
+{
+  "stage": "S6 requirements, not proof of an implemented browser executor",
+  "retiredIn": "S5",
+  "cases": [
+    "Never infer consent, citizenship, sponsorship, active clearance or sensitive self-identification from a missing value",
+    "Unknown required fields stop assistance and become review questions",
+    "Private contact/address fields require explicit scoped disclosure",
+    "Optional self-identification, SMS consent and platform challenges stay manual",
+    "Native typed input and ambiguous dropdown/radio/checkbox values require exact reviewed mapping",
+    "Safe nonfinal navigation must not click submit, finish, apply, confirm or send controls",
+    "Visible upload and styled file controls may attach only current hash-approved packet bytes",
+    "Iframe, popup, hidden future-step and visually unlabeled fields require observable bounded discovery",
+    "Failures must be recorded per field without claiming it was filled",
+    "Start/review/fill records cannot be inferred from opening a page or preparing answers",
+    "Redacted run evidence must not expose private values, session tokens or credentials",
+    "Removed postings, access controls and CAPTCHA stop rather than trigger retries or evasion"
+  ]
+}

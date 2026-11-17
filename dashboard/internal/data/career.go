@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"html"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -39,6 +40,10 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 			return nil
 		}
 	}
+	relative, _ := filepath.Rel(careerOpsPath, filePath)
+	if VerifyApplicationProjection(careerOpsPath, relative, content) != nil {
+		return nil
+	}
 
 	lines := strings.Split(string(content), "\n")
 	apps := make([]model.CareerApplication, 0)
@@ -68,7 +73,7 @@ func ParseApplications(careerOpsPath string) []model.CareerApplication {
 			line = strings.Trim(line, "|")
 			parts := strings.Split(line, "|")
 			for _, p := range parts {
-				fields = append(fields, strings.TrimSpace(p))
+				fields = append(fields, html.UnescapeString(strings.TrimSpace(p)))
 			}
 		}
 
@@ -543,6 +548,11 @@ func LoadReportSummary(careerOpsPath, reportPath string) (archetype, tldr, remot
 
 // UpdateApplicationStatus updates the status of an application in applications.md.
 func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, newStatus string) error {
+	release, err := beginLegacyApplicationWrite(careerOpsPath)
+	if err != nil {
+		return err
+	}
+	defer release()
 	filePath := filepath.Join(careerOpsPath, "applications.md")
 	content, err := os.ReadFile(filePath)
 	if err != nil {

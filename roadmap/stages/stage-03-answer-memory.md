@@ -20,7 +20,7 @@ Let a user answer once and safely reuse that answer without losing scope, eviden
 
 ## Current Evidence And Boundary
 
-The existing [auto-apply planner](../../maxim/lib/auto-apply-planner.mjs) loads answers from files/env; it is rejected as the future foundation. Existing [application mapper tests](../../maxim/tests/unit/application-form-mapper.test.mjs) provide useful unknown/sensitive-field scenarios, not a reusable answer service.
+The former file/env planner and application mapper were rejected and retired in S5. Their useful unknown/sensitive-field scenarios survive in the [browser safety handoff](../../maxim/tests/fixtures/browser-safety-handoff.json); they are not a reusable answer service or a delivered S6 executor.
 
 Candidate facts and durable work are supplied by S2. Do not create a second profile under a skill's home directory or save a model summary as approved candidate truth.
 

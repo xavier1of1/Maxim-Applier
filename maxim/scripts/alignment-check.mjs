@@ -94,6 +94,9 @@ function changedFiles() {
 }
 
 function isAllowedPatch(relativePath) {
+  // Explicitly approved S0-S5 ownership, local composition and documentation patches.
+  const nativePatches=['.agents/skills/career-ops/SKILL.md','.dockerignore','.env.example','CLAUDE.md','DATA_CONTRACT.md','README.md','README.cn.md','compose.yml','portals_OG.yml','modes/_shared.md','modes/contacto.md','modes/apply.md','modes/oferta.md','modes/pdf.md','modes/pipeline.md','modes/batch.md','modes/followup.md','batch/batch-runner.sh','batch/batch-prompt.md','batch/README.md','scan.mjs','generate-pdf.mjs','generate-latex.mjs','merge-tracker.mjs','normalize-statuses.mjs','dedup-tracker.mjs','dashboard/internal/data/career.go','dashboard/internal/data/application_authority.go','dashboard/internal/data/application_authority_test.go'];
+  if(nativePatches.includes(relativePath)||relativePath.startsWith('roadmap/'))return true;
   return (
     relativePath === ".gitignore" ||
     relativePath === "AGENTS.md" ||

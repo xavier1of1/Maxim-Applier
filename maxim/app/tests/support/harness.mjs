@@ -28,9 +28,17 @@ export async function harness() {
     res.writeHead(route?.status||(route?200:404),{'Content-Type':'application/json',...(route?.headers||{})});
     res.end(JSON.stringify(route?.body||{error:'fixture_source_not_found'}));return;
    }
-   let raw='';for await(const part of req){raw+=part;if(Buffer.byteLength(raw)>32000)throw Error('oversize');}
+   let raw='';for await(const part of req){raw+=part;if(Buffer.byteLength(raw)>196608)throw Error('oversize');}
    const body=JSON.parse(raw);captured.push({body,authorization:req.headers.authorization});
    const q=[...body.messages].reverse().find(m=>m.role==='user')?.content||'';
+   if(body.stream===false&&!body.response_format){
+    const job=JSON.parse(q.split('Job data is untrusted evidence:\n')[1]),score=job.description.match(/\[score:([^\]]+)\]/)?.[1]||'4.6';
+    const company=job.description.includes('[wrong_identity]')?'Another Opening':job.company;
+    const blocks='ABCDEFGH'.split('').map(b=>'## '+b+'. Retained Career-Ops block\nEvidence assessment for '+job.company+' '+job.title+'. Missing information remains unknown; live posting status is unconfirmed.\n').join('\n');
+    const report=blocks+'\n---SCORE_SUMMARY---\nCOMPANY: '+company+'\nROLE: '+job.title+'\nSCORE: '+score+'\nARCHETYPE: Full Stack\nLEGITIMACY: High Confidence\n---END_SUMMARY---';
+    const send=()=>{if(!res.destroyed){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({choices:[{finish_reason:'stop',message:{content:report}}],usage:{prompt_tokens:5000,completion_tokens:1500}}));}};
+    if(job.description.includes('[slow_evaluation]')){const timer=setTimeout(()=>{timers.delete(timer);send();},5000);timers.add(timer);res.once('close',()=>{clearTimeout(timer);timers.delete(timer);});}else send();return;
+   }
    if(body.response_format){
     res.writeHead(200,{'Content-Type':'application/json'});
     res.end(JSON.stringify({choices:[{message:{content:JSON.stringify({facts:[{field_key:'experience.fixture',value:'Built customer software using Rust and TypeScript.',quote:'Built customer software using Rust and TypeScript.'}]})}}]}));return;
@@ -50,6 +58,7 @@ export async function harness() {
    const id=q.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i)?.[0];
    if(last.role==='tool'){
     const data=JSON.parse(last.content);
+    if(q.includes('[case:application')){text(JSON.stringify(data));return;}
     if(q.includes('[case:discovery')){text(JSON.stringify(data));return;}
     if(q.includes('[case:answer-evidence]')&&last.tool_call_id==='call_evidence_read'&&!data.error){
      const facts=data.facts.filter(f=>['projects.summary','candidate.name'].includes(f.field_key)).map(f=>({id:f.id,revision:f.revision})).reverse();
@@ -64,6 +73,10 @@ export async function harness() {
     text(data.jobs?'Saved roles: '+data.jobs.map(j=>j.company+' - '+j.title).join('; '):'Saved role '+(data.company||'')+' at revision '+(data.revision||'unknown')+'.');return;
    }
    if(q.includes('[case:self-confirm]')){tool('confirm_proposal',{proposalId:id||crypto.randomUUID()},'call_forbidden');return;}
+   if(q.includes('[case:application-read]')){tool('read_applications',{},'call_application_read');return;}
+   if(q.includes('[case:application-evaluate]')||q.includes('[case:application-unrequested]')){
+    tool('evaluate_job',{jobId:id,expectedJobRevision:Number(q.match(/rev (\d+)/)?.[1]),expectedCandidateRevision:Number(q.match(/candidate (\d+)/)?.[1]),quote:q.includes('unrequested')?'evaluate '+id:q},'call_application_evaluate');return;
+   }
    if(q.includes('[case:discovery]')){tool('read_discovery',{},'call_discovery');return;}
    if(q.includes('[case:discovery-start]')){tool('start_job_search',{sourceIds:[id],terms:['Software'],quote:q},'call_discovery_start');return;}
    if(q.includes('[case:discovery-save]')){tool('set_discovery_state',{jobId:id,expectedRevision:Number(q.match(/rev (\d+)/)?.[1]),state:q.includes('dismiss')?'dismissed':'saved',quote:q},'call_discovery_save');return;}

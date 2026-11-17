@@ -6,11 +6,11 @@ export const TIERS = Object.freeze({
 });
 
 export function assignTier(score) {
-  const numericScore = Number(score);
-  if (!Number.isFinite(numericScore)) {
+  const numericScore = typeof score==='number'||typeof score==='string'&&/^\d+(?:\.\d+)?$/.test(score.trim()) ? Number(score) : NaN;
+  if (!Number.isFinite(numericScore)||numericScore<1||numericScore>5) {
     return {
-      tier: TIERS.T1,
-      explanation: "Career-Ops score missing or unparseable; queue for strategic review.",
+      tier: null,
+      explanation: "Career-Ops score missing, invalid or outside 1.0-5.0; fit remains unknown pending review.",
       nextAction: "queue_review",
     };
   }
@@ -43,6 +43,8 @@ export function assignTier(score) {
 }
 
 export function chooseNextAction({ tier, flags = [] }) {
+  if(!Object.values(TIERS).includes(tier))return "queue_review";
+  if(tier===TIERS.T0)return "no_apply";
   const hasBlocker = flags.some((flag) => flag.severity === "blocker");
   if (hasBlocker) {
     return "no_apply_or_manual_override";

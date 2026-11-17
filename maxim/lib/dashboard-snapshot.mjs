@@ -3,6 +3,8 @@ import path from "node:path";
 
 import { createStore } from "./sqlite-store.mjs";
 import { fromRoot } from "./path-utils.mjs";
+import {readApplicationProjection} from './canonical-application-read.mjs';
+import {withLegacyApplicationWrite} from './application-write-gate.mjs';
 
 function splitFlags(value) {
   if (!value) {
@@ -192,7 +194,10 @@ function analyticsDTO(store) {
   };
 }
 
-export function buildDashboardSnapshot({ store = createStore(), now = new Date() } = {}) {
+export function buildDashboardSnapshot({ store, now = new Date() } = {}) {
+  const projection=readApplicationProjection(store?.authorityRoot??fromRoot(),'data/maxim/dashboard-state.json');
+  if(projection)return projection;
+  store??=createStore();
   const todayJobs = store.listTodayActions().map(todayJobAction);
   const readyDrafts = store.listReadyMessageDrafts().map(readyDraftAction);
   const recruiterNeedsResponse = store.listRecruiterNeedsResponse().map(recruiterAction);
@@ -217,12 +222,15 @@ export function buildDashboardSnapshot({ store = createStore(), now = new Date()
 }
 
 export function writeDashboardSnapshot({
-  store = createStore(),
+  store,
   outputPath = fromRoot("data", "maxim", "dashboard-state.json"),
   now = new Date(),
 } = {}) {
   const snapshot = buildDashboardSnapshot({ store, now });
+  if(snapshot.ownership==='canonical')return {outputPath:fromRoot('data/maxim/dashboard-state.json'),snapshot,written:false};
+  return withLegacyApplicationWrite(()=>{
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
   return { outputPath, snapshot };
+  },store?.authorityRoot??fromRoot());
 }

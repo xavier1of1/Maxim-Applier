@@ -44,6 +44,7 @@ export async function migrate(c){
   await client.query('BEGIN');
   await client.query('INSERT INTO workspaces(id,name,is_owner) VALUES($1,$2,true) ON CONFLICT(id) DO NOTHING',[c.workspaceId,'Personal workspace']);
   await client.query('INSERT INTO candidates(id,workspace_id,display_name) VALUES($1,$2,$3) ON CONFLICT(workspace_id) DO NOTHING',[crypto.randomUUID(),c.workspaceId,'Local candidate']);
+  await client.query("INSERT INTO workspace_policies(workspace_id,profile,approved_source) VALUES($1,'xavier-v1','Explicit project owner policy') ON CONFLICT(workspace_id) DO NOTHING",[c.workspaceId]);
   await client.query('INSERT INTO access_keys(key_hash,workspace_id) VALUES($1,$2) ON CONFLICT(key_hash) DO NOTHING',[sha(c.bootstrapKey),c.workspaceId]);
   await client.query('COMMIT');
  }finally{await client.query('SELECT pg_advisory_unlock(120031)').catch(()=>{});await client.end();}

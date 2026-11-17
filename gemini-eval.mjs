@@ -28,10 +28,12 @@
  * `modelName` below and the `--model` examples accordingly.
  */
 
-import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync as nativeWrite, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import {assertNativeCandidateCurrent} from './maxim/lib/authority-gate.mjs';
+import {assertNativeCandidateCurrent,assertLegacyWriteAllowed} from './maxim/lib/authority-gate.mjs';
+import {withLegacyApplicationWrite} from './maxim/lib/application-write-gate.mjs';
+import {buildCareerOpsPrompt} from './maxim/lib/careerops-evaluation-prompt.mjs';
 
 // ---------------------------------------------------------------------------
 // Bootstrap: load .env before anything else
@@ -49,6 +51,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Paths
 // ---------------------------------------------------------------------------
 const ROOT = dirname(fileURLToPath(import.meta.url));
+const writeFileSync=(...args)=>withLegacyApplicationWrite(()=>nativeWrite(...args),ROOT);
 
 const PATHS = {
   // Primary evaluation logic lives in these two mode files
@@ -125,6 +128,7 @@ if (!jdText) {
   console.error('❌  No Job Description provided. Run with --help for usage.');
   process.exit(1);
 }
+if(saveReport)assertLegacyWriteAllowed('applications',ROOT);
 
 // ---------------------------------------------------------------------------
 // Validate environment
@@ -187,54 +191,7 @@ const profileYml     = readFile(PATHS.profileYml,  'config/profile.yml');
 // ---------------------------------------------------------------------------
 // Build the system prompt (mirrors the Claude skill router logic)
 // ---------------------------------------------------------------------------
-const systemPrompt = `You are career-ops, an AI-powered job search assistant.
-You evaluate job offers against the user's CV using a structured A-G scoring system.
-
-Your evaluation methodology is defined below. Follow it exactly.
-
-═══════════════════════════════════════════════════════
-SYSTEM CONTEXT (_shared.md)
-═══════════════════════════════════════════════════════
-${sharedContext}
-
-═══════════════════════════════════════════════════════
-EVALUATION MODE (oferta.md)
-═══════════════════════════════════════════════════════
-${ofertaLogic}
-
-═══════════════════════════════════════════════════════
-CANDIDATE RESUME (cv.md)
-═══════════════════════════════════════════════════════
-${cvContent}
-
-═══════════════════════════════════════════════════════
-CANDIDATE PROFILE & TARGETS (config/profile.yml)
-═══════════════════════════════════════════════════════
-${profileYml}
-
-═══════════════════════════════════════════════════════
-USER ARCHETYPES & NARRATIVE (_profile.md)
-═══════════════════════════════════════════════════════
-${profileContent}
-
-═══════════════════════════════════════════════════════
-IMPORTANT OPERATING RULES FOR THIS CLI SESSION
-═══════════════════════════════════════════════════════
-1. You do NOT have access to WebSearch, Playwright, or file writing tools.
-   - For Block D (Comp research): provide salary estimates based on your training data, clearly noted as estimates.
-   - For Block G (Legitimacy): analyze the JD text only; skip URL/page freshness checks.
-   - Post-evaluation file saving is handled by the script, not by you.
-2. Generate Blocks A through G in full, in English, unless the JD is in another language.
-3. At the very end, output a machine-readable summary block in this exact format:
-
----SCORE_SUMMARY---
-COMPANY: <company name or "Unknown">
-ROLE: <role title>
-SCORE: <global score as decimal, e.g. 3.8>
-ARCHETYPE: <detected archetype>
-LEGITIMACY: <High Confidence | Proceed with Caution | Suspicious>
----END_SUMMARY---
-`;
+const systemPrompt = buildCareerOpsPrompt({sharedContext,ofertaLogic,cvContent,profileContent,profileYml,articleDigest:readFile(join(ROOT, 'article-digest.md'), 'article-digest.md')});
 
 // ---------------------------------------------------------------------------
 // Call Gemini API

@@ -1,8 +1,8 @@
 # Detailed Roadmap Stages
 
-**Status:** Revision 0.6. S0-S4 verified for their bounded scopes; S5-S11 Pending.
+**Status:** Revision 0.6. S0-S5 verified for their bounded scopes; S6-S11 Pending.
 **Updated:** 2026-11-17.
-**Purpose:** Vantage-style implementation plans for the revised Maxim Apply journey. These files describe work to perform, not work already shipped.
+**Purpose:** Vantage-style implementation plans for the revised Maxim Apply journey. Verified stages link measured evidence; Pending stages describe work to perform, not shipped features.
 
 ## 1. Start Here
 
@@ -25,7 +25,7 @@ The format follows inspected Vantage files under `E:\10x\10x-vantage\roadmaps`: 
 | [S2](stage-02-reviewed-onboarding.md) | Reviewed candidate onboarding | S1 | 8 | Verified |
 | [S3](stage-03-answer-memory.md) | Reusable answers and bounded context | S2 | 8 | Verified |
 | [S4](stage-04-discovery.md) | Coverage-aware discovery | S2 | 8 | Verified |
-| [S5](stage-05-evaluation-and-tracker-cutover.md) | Career-Ops evaluation, packet, and tracker cutover | S3 | 8 | Pending |
+| [S5](stage-05-evaluation-and-tracker-cutover.md) | Career-Ops evaluation, packet, and tracker cutover | S3 | 8 | Verified |
 | [S6](stage-06-browser-assistance.md) | Supported browser application assistance | S5 | 8 | Pending |
 | [S7](stage-07-gmail-evidence.md) | Gmail evidence and response tasks | S5 | 8 | Pending |
 | [S8](stage-08-discord-delivery.md) | Durable existing-Discord delivery | S5 | 8 | Pending |

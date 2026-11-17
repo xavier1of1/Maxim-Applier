@@ -45,7 +45,7 @@ This is independent of the reference uploads attached to individual jobs below.
 2. Create intent: persist an intention to apply, not a submitted application. Repeating cannot duplicate the intent for that role.
 3. Save a Working note. Revision checks prevent stale-tab overwrites; unsaved drafts are guarded during navigation.
 4. Upload PDF/TXT/MD references up to 10 MB. These are private hash-checked references, not approved resumes or extracted facts.
-5. Applications lists intents; Activity lists events. Archive/restore roles and intents without deleting history.
+5. Applications evaluates retained Career-Ops reports, prepares/reviews exact PDF packets and tracks actual manual progress/outcomes; Activity lists events. Archive/restore without deleting history.
 6. Select a role and open Agent. Wide desktop shows it alongside the record; smaller screens use a separate dialog. Role/view/conversation IDs survive refresh in the URL. No private records are saved in browser localStorage.
 7. With a model configured, ask "What roles have I saved?" or "Read this role and propose a note reminding me to research the team."
 8. Review the exact proposed target, note and revision, then Confirm update or Reject. Only a completed run's proposal can be confirmed, within ten minutes, in its original session and against the unchanged revision.
@@ -53,13 +53,33 @@ This is independent of the reference uploads attached to individual jobs below.
 
 Empty data is genuinely empty. Failed refreshes label last-loaded data and disable mutations; there are no sample-job fallbacks.
 
+## Evaluation And Application Tracking
+
+After reviewing Candidate knowledge and configuring the evaluation model, create
+an intent for a saved role. In Applications, review posted policy, evaluate with
+Career-Ops, select approved facts, generate the retained PDF and review the exact
+report/PDF hashes. T1 needs a strategic override; T0 cannot approve for assistance.
+Open the posting and submit manually, then record the actual action/outcome.
+The full [application lifecycle guide](application-lifecycle.md) covers commands,
+manual posting repair, stale approval, duplicates, paginated legacy reconciliation,
+ownership activation, recovery, rollback and native/Go compatibility.
+
+Starting the workspace never imports personal information, approves facts/packets,
+clears the pipeline or activates application ownership. The rejected runner is
+retired; the new S6 browser executor is not implemented yet.
+
 ## Model Configuration And Privacy
 
 Settings -> Model connection accepts an OpenAI model ID and API key. Choose a model your own project can access that supports Chat Completions, streaming and strict tools. Billing/access is your account's responsibility. Blank replacement-key input preserves the stored key.
 
 Secrets remain in the protected runtime file, not public settings, bundles, Git or model messages. Chat sends bounded recent messages, selected IDs and authorized tool data to the provider. Job-reference bytes are not interpreted. Candidate sources are parsed locally; minimized model interpretation and future candidate context require explicit source permission. Private/sensitive fields remain withheld from general model context. Do not put prohibited proprietary material in chat, sources, notes or JDs.
 
-Tools: read_workspace, get_job, propose_job_note, read_candidate_context, propose_candidate_fact. No shell, SQL, arbitrary file access, submit, send, fact approval or confirm tool exists. Conversation prose is not candidate truth; exact declaration proposals require Candidate review. Missing evaluations remain unknown; no competing score is generated.
+Tools include read_workspace, get_job, propose_job_note, read_candidate_context, propose_candidate_fact, read_applications and evaluate_job, plus the scoped answer/discovery tools below. No shell, SQL, arbitrary file access, submit, send, fact/packet approval or human-confirmation tool exists. Evaluation requires an exact current user instruction containing the opening UUID. Conversation prose is not candidate truth; exact declaration proposals require Candidate review. Missing evaluations remain unknown; no competing score is generated.
+
+Evaluation has a separate bounded request purpose: up to 196,608 bytes and 49,152
+local total tokens, with 8,192 output tokens reserved and a 75-second deadline.
+Conversation limits are unchanged. Local estimates and actual provider usage are
+stored separately; a larger evaluation budget does not authorize additional facts.
 
 S3 adds the [Answers workspace](answer-memory.md), filtered answer recall, exact-declaration
 drafts and extractive drafts from reviewed facts. Approval, disclosure and actual reuse

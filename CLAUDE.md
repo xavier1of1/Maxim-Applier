@@ -10,6 +10,21 @@ The portfolio that goes with this system is also open source: [cv-santiago](http
 
 ## Data Contract (CRITICAL)
 
+### Conditional Application Authority
+
+Run `node maxim/scripts/authority-check.mjs applications read` before native reads
+and `node maxim/scripts/authority-check.mjs applications write` before any
+tracker/pipeline/report/PDF/application mutation, in every mode/language.
+Canonical ownership means native files are read-only, hash-checked projections.
+Use the local Applications workspace or `npm run maxim:applications -- help`;
+`maxim:evaluate-job -- <job-uuid>` queues the retained evaluator, not the old
+mtime/merge/sync pipeline. Frozen/offline writes must fail, never fall back.
+Only a user may approve exact packet hashes or declare an actual manual
+submission. Prepared/reviewed/filled is not submitted. The rejected browser
+runner is retired; S6 owns future browser filling. See
+`docs/maxim/application-lifecycle.md`. Candidate and application cutovers are
+independent; no migration or disclosure approval is implied by starting the app.
+
 ### Conditional Candidate Authority
 
 Before onboarding, personalization or evaluation, run

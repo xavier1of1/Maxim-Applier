@@ -1,8 +1,8 @@
 # Operational Setup And Inputs
 
-**Updated:** 2026-11-16.
+**Updated:** 2026-11-17.
 **Delivered workspace:** [Actual startup, model/private storage and recovery guide](../docs/maxim/workspace.md). Run `npm run maxim:workspace`; preferred URL http://127.0.0.1:3010/maxim. S1 is verified; later service accounts remain stage-gated.
-**Purpose:** What Xavier needs to provide, choose, authorize or install for the revised target. This is not a claim the future stack or configuration parser exists.
+**Purpose:** What Xavier needs to provide, choose, authorize or install. The local workspace, reviewed intake, answer memory, public-feed discovery and S5 evaluation/manual tracking now exist; browser/mail/delivery/networking adaptations remain separately gated. See [current application workflow](../docs/maxim/application-lifecycle.md).
 **Legacy checklist:** [Earlier operational inputs](../docs/V2%20Redesign/maxim_apply_operational_inputs_needed.md). Historical COMPLETE labels there are not newly verified credentials.
 
 ## 1. Numbered Input Checklist
@@ -35,9 +35,9 @@ Only the items needed by a stage block it. Gmail, search-provider accounts, Link
 | Model keys in `.env.example` | Gemini evaluator key exists in current config contract; OpenAI/Anthropic entries are comments/placeholders | Do not treat a commented key as a working shared runtime integration |
 | EGM 0.1.1 | Installed/enabled complete Codex plugin | Fresh turn/session discovery; formal review config/human gates still needed |
 | Astryx | Pinned 0.7.16 workspace dependency, production/interaction proof | Maintain browser regressions |
-| Tokenizer/agent-browser | Researched candidates, not installed runtime adapters | S3 exact accounting and S6 executor gates remain |
+| Tokenizer / agent-browser | Microsoft tokenizer is pinned and tested in S3; agent-browser is not a product executor | S6 browser acceptance remains |
 | Dossier/Cracked/Hiring Panel/LinkedIn/Graphify | References reviewed | No source vendored or runtime integration installed |
-| Reported web ports 3000/8000 | Source not located in previous bounded fork inspection | Locate source or approve the single replacement workspace; no active URL promised here |
+| Reported web ports 3000/8000 | Legacy, not the running workspace | Use the launcher URL, normally 3010; no second stack |
 
 > **Comments**
 >

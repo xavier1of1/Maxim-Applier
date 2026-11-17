@@ -11,6 +11,8 @@ import {recallAnswers} from './answer-recall';
 import {answerCommand} from './answers';
 import {validRefs,renderFactEvidence} from './answer-validity';
 import {discoveryView,discoveryCommand} from './discovery';
+import {applicationView} from './application-reads';
+import {evaluationCommand} from './evaluations';
 
 const controllers=new Map<string,AbortController>();
 const toolSchemas = {
@@ -41,6 +43,19 @@ async function invoke(ctx:Context,cid:string,rid:string,call:ToolCall) {
  await live(ctx,cid,rid);
  let args:unknown;
  try { args=JSON.parse(call.function.arguments); } catch { return {error:'invalid_arguments'}; }
+ if(call.function.name==='read_applications'){
+  toolSchemas.read_workspace.parse(args);const d=await applicationView(ctx);
+  return {asOf:d.asOf,partial:d.partial||d.applications.length>6,authority:d.authority.owner,applications:d.applications.slice(0,6).map(a=>{
+   const e=d.evaluations.find(e=>e.job_id===a.job_id&&e.current),p=d.packets.find(p=>p.application_id===a.id&&p.status==='approved'&&p.current);
+   return {id:a.id,jobId:a.job_id,jobRevision:a.job_revision,candidateRevision:d.candidate.revision,company:a.company,title:a.title,workflow:a.workflow,outcome:a.outcome,score:e?.score||null,tier:e?.tier||null,evaluationId:e?.id||null,packetApproved:Boolean(p),duplicateRisk:(d.duplicates[a.id] as {risk:string})?.risk||'unknown'};
+  }),detailView:'applications',submissionAutomation:'not_implemented'};
+ }
+ if(call.function.name==='evaluate_job'){
+  const p=z.object({jobId:uuid,expectedJobRevision:z.number().int().positive(),expectedCandidateRevision:z.number().int().positive(),quote:z.string().min(3).max(4000)}).strict().parse(args);
+  const user=(await database().query("SELECT content FROM messages WHERE workspace_id=$1 AND run_id=$2 AND role='user' ORDER BY sequence DESC LIMIT 1",[ctx.workspaceId,rid])).rows[0];
+  invariant(typeof user?.content.text==='string'&&user.content.text.includes(p.quote)&&/\b(evaluate|assess)\b/i.test(p.quote)&&p.quote.includes(p.jobId),'explicit_request_required','Quote the exact current evaluation request and job UUID.');
+  return evaluationCommand(ctx,{commandId:digest(rid+':evaluate:'+p.jobId).slice(0,8)+'-'+digest(rid+p.jobId).slice(8,12)+'-4'+digest(rid+p.jobId).slice(13,16)+'-a'+digest(rid+p.jobId).slice(17,20)+'-'+digest(rid+p.jobId).slice(20,32),action:'start_evaluation',payload:{jobId:p.jobId,expectedJobRevision:p.expectedJobRevision,expectedCandidateRevision:p.expectedCandidateRevision}});
+ }
  if(call.function.name==='read_discovery'){
   toolSchemas.read_workspace.parse(args);const d=await discoveryView(ctx);
   return {asOf:d.asOf,coverage:d.coverage,partial:{...d.partial,toolSummary:d.sources.length>5||d.runs.length>3||d.attempts.length>3||d.jobs.length>5},sources:d.sources.slice(0,5).map(s=>({id:s.id,name:s.name,provider:s.provider,revision:s.revision,enabled:s.enabled,status:s.stale?'stale':s.status})),runs:d.runs.slice(0,3).map(r=>({id:r.id,revision:r.revision,status:r.status,counts:r.counts,terms:r.terms})),attempts:d.attempts.slice(0,3).map(a=>({runId:a.run_id,sourceId:a.source_id,status:a.status,error:a.error_code})),jobs:d.jobs.slice(0,5).map(j=>({id:j.id,revision:j.revision,title:j.title,company:j.company,state:j.discovery_state,eligibility:j.discovery_policy.eligibility,postedAt:j.posted_at})),detailView:'discovery'};
@@ -69,7 +84,8 @@ async function invoke(ctx:Context,cid:string,rid:string,call:ToolCall) {
  if(call.function.name==='get_job') {
   const p=toolSchemas.get_job.parse(args),j=await getJob(ctx,p.jobId);
   assertDisclosureText(j.description+' '+j.note);
-  return {id:j.id,company:j.company,title:j.title,location:j.location,description:j.description.slice(0,3000),note:j.note.slice(0,2000),revision:j.revision,evaluation:'not_available',source:'manually_entered',asOf:new Date().toISOString()};
+  const e=(await database().query("SELECT id,score,tier,status FROM evaluations WHERE workspace_id=$1 AND job_id=$2 ORDER BY created_at DESC LIMIT 1",[ctx.workspaceId,j.id])).rows[0];
+  return {id:j.id,company:j.company,title:j.title,location:j.location,description:j.description.slice(0,3000),note:j.note.slice(0,2000),revision:j.revision,evaluation:e||null,source:j.opening_key?'discovered':'manually_entered',asOf:new Date().toISOString()};
  }
  if(call.function.name==='read_candidate_context'){
   toolSchemas.read_workspace.parse(args);

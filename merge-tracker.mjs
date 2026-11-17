@@ -14,12 +14,18 @@
  * Run: node career-ops/merge-tracker.mjs [--dry-run] [--verify]
  */
 
-import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync as nativeWrite, readdirSync, mkdirSync, renameSync as nativeRename, existsSync } from 'fs';
 import { join, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { execFileSync } from 'child_process';
+import {assertLegacyWriteAllowed} from './maxim/lib/authority-gate.mjs';
+import {withLegacyApplicationWrite} from './maxim/lib/application-write-gate.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
+if(process.argv.includes('--help')||process.argv.includes('-h')){console.log('Usage: node merge-tracker.mjs [--dry-run] [--verify]. Canonical ownership requires workspace commands.');process.exit(0);}
+assertLegacyWriteAllowed('applications',CAREER_OPS);
+const writeFileSync=(...args)=>withLegacyApplicationWrite(()=>nativeWrite(...args),CAREER_OPS);
+const renameSync=(...args)=>withLegacyApplicationWrite(()=>nativeRename(...args),CAREER_OPS);
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original)
 const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
   ? join(CAREER_OPS, 'data/applications.md')

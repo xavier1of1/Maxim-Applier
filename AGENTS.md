@@ -10,6 +10,29 @@ The portfolio that goes with this system is also open source: [cv-santiago](http
 
 ## Data Contract (CRITICAL)
 
+### Conditional Application Authority
+
+Before any tracker/pipeline/report/PDF/application mutation, run
+`node maxim/scripts/authority-check.mjs applications write`. Before reading
+application state, run `node maxim/scripts/authority-check.mjs applications read`.
+If canonical, PostgreSQL owns applications and native Markdown/JSON files are
+hash-checked read projections labeled with revision/as-of, never writable truth.
+Use Applications in the local workspace or `npm run maxim:applications -- help`.
+`maxim:evaluate-job -- <job-uuid>` queues the retained evaluator through that API;
+it no longer fetches arbitrary URLs, selects newest files or chains merge/sync.
+Native merge/normalize/dedup/scan-save/Gemini-save/batch and managed PDF writes
+fail closed after cutover. Unsaved native evaluation/PDF generation to private
+explicit output remains available with current candidate authority.
+
+Only the user approves exact report/PDF hashes and records an already completed
+manual submission. Preparation, start, filled, reviewed, submitted and outcome
+are distinct. Never infer submission from a packet or an opened page.
+The rejected planner/mapper/browser runner is retired; browser assistance is S6,
+not a hidden fallback. S8 delivery and S9 networking/analytics adaptation remain
+separate gates. Candidate and application ownership switch independently.
+See `docs/maxim/application-lifecycle.md` for reconciliation, writer inventory,
+recovery, rollback, retained native behavior and operator steps.
+
 ### Conditional Candidate Authority
 
 Before onboarding, personalization or evaluation, run

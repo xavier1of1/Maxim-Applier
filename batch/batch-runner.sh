@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+ORIGINAL_ARGS=("$@")
 
 # career-ops batch runner — standalone orchestrator for claude -p workers
 # Reads batch-input.tsv, delegates each offer to a claude -p worker,
@@ -90,6 +91,12 @@ while [[ $# -gt 0 ]]; do
     *) echo "Unknown option: $1"; usage; exit 1 ;;
   esac
 done
+
+# Keep the whole native worker session inside the reviewed ownership boundary.
+if [[ -z "${MAXIM_APPLICATION_WRITE_LEASE:-}" ]]; then
+  exec node "$PROJECT_DIR/maxim/scripts/native-batch-session.mjs" "${ORIGINAL_ARGS[@]}"
+fi
+node "$PROJECT_DIR/maxim/scripts/native-batch-session.mjs" --verify-lease
 
 # Lock file to prevent double execution
 acquire_lock() {

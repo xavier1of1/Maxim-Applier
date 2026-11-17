@@ -9,6 +9,7 @@ import {validateFacts,type TypedFact} from './domain';
 import {invariant,notFound} from './errors';
 import {assertDisclosureText} from './candidate-context';
 import {invalidateFactAnswers,eraseSourceAnswers} from './answer-invalidation';
+import {invalidateMaterial} from './application-material';
 
 const revision=z.number().int().nonnegative();
 const reason=z.string().trim().min(3).max(500);
@@ -22,6 +23,7 @@ const schema=z.discriminatedUnion('action',[
  z.object({commandId:uuid,action:z.literal('cancel_work'),payload:z.object({workId:uuid}).strict()}).strict(),
 ]);
 export async function invalidateCandidate(tx:PoolClient,workspaceId:string,factId?:string){
+ await invalidateMaterial(tx,workspaceId);
  const candidate=(await tx.query('UPDATE candidates SET revision=revision+1 WHERE workspace_id=$1 RETURNING revision,ownership',[workspaceId])).rows[0];
  if(candidate.ownership==='canonical')await enqueue(tx,workspaceId,'project_candidate',String(candidate.revision),{candidateRevision:candidate.revision});
  await tx.query("UPDATE candidate_contexts SET status='invalidated' WHERE workspace_id=$1 AND status='current'",[workspaceId]);
@@ -46,9 +48,11 @@ async function saveFact(tx:PoolClient,ctx:Context,fact:TypedFact,source:Record<s
  return saved;
 }
 export async function retireSource(tx:PoolClient,ctx:Pick<Context,'workspaceId'>,source:Record<string,any>,eraseFacts:boolean){
+ await tx.query('SELECT pg_advisory_xact_lock_shared(120032)');
  await tx.query("UPDATE work_items SET status='cancelled',error_code='source_retired',lease_until=null,updated_at=now() WHERE workspace_id=$1 AND input->>'sourceId'=$2 AND status IN ('queued','leased')",[ctx.workspaceId,source.id]);
  await tx.query("UPDATE fact_proposals SET status='withdrawn',value='null'::jsonb,quote='' WHERE workspace_id=$1 AND source_id=$2",[ctx.workspaceId,source.id]);
  if(eraseFacts){
+  await invalidateMaterial(tx,ctx.workspaceId,true,undefined,String(source.id));
   await eraseSourceAnswers(tx,ctx.workspaceId,source.id);
   // Keep run/audit identities, but remove copies of source-derived private content.
   const runs=(await tx.query("SELECT DISTINCT m.run_id FROM messages m WHERE m.workspace_id=$1 AND (m.run_id=$3 OR EXISTS(SELECT 1 FROM fact_dependencies d JOIN fact_versions v ON v.fact_id=d.fact_id AND v.workspace_id=d.workspace_id WHERE d.workspace_id=$1 AND d.entity_id=m.run_id AND v.source_id=$2))",[ctx.workspaceId,source.id,source.origin_run||null])).rows.map(r=>r.run_id);
@@ -116,6 +120,7 @@ export async function candidateCommand(ctx:Context,raw:unknown){
   if(c.action==='cancel_work'){
    const row=(await tx.query("UPDATE work_items SET status='cancelled',error_code='cancelled',lease_until=null,updated_at=now() WHERE id=$1 AND workspace_id=$2 AND status IN ('queued','leased') RETURNING *",[c.payload.workId,ctx.workspaceId])).rows[0];
    if(!row){const exists=await tx.query('SELECT id FROM work_items WHERE id=$1 AND workspace_id=$2',[c.payload.workId,ctx.workspaceId]);if(!exists.rowCount)throw notFound();return {cancelled:false};}
+   invariant(['extract_source','purge_artifact','project_candidate'].includes(row.kind),'work_scope','Use the application/discovery command for this work type.',409);
    if(row.input.sourceId)await tx.query("UPDATE candidate_sources SET status='failed',extraction_error='cancelled',updated_at=now() WHERE id=$1 AND workspace_id=$2 AND status IN ('queued','running')",[row.input.sourceId,ctx.workspaceId]);
    await event(tx,ctx,row.id,'work_cancelled',{kind:row.kind});
    return {cancelled:true};

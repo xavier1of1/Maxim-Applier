@@ -15,6 +15,7 @@ import { resolve, dirname } from 'path';
 import { readFile } from 'fs/promises';
 import { mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
+import {withLegacyApplicationWrite,isManagedApplicationArtifact} from './maxim/lib/application-write-gate.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -161,7 +162,9 @@ async function generatePDF() {
 
     // Write PDF
     const { writeFile } = await import('fs/promises');
-    await writeFile(outputPath, pdfBuffer);
+    const managed=isManagedApplicationArtifact(outputPath,__dirname);
+    if(managed)await withLegacyApplicationWrite(()=>writeFile(outputPath,pdfBuffer),__dirname);
+    else await writeFile(outputPath,pdfBuffer);
 
     // Count pages (approximate from PDF structure)
     const pdfString = pdfBuffer.toString('latin1');

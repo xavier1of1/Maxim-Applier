@@ -1,5 +1,6 @@
 # Personal data (user fills these)
 cv.md
+article-digest.md
 data/applications.md
 data/pipeline.md
 data/scan-history.tsv
@@ -73,3 +74,9 @@ maxim/app/.env.local
 maxim/runtime/target/
 maxim/app/.cache/
 data/maxim/authority.json
+applications.md
+data/maxim/canonical-events.jsonl
+data/maxim/application-write.lock/
+data/maxim/*.db-wal
+data/maxim/*.db-shm
+data/maxim/*.db-journal

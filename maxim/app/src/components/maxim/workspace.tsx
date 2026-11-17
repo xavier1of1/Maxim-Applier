@@ -204,13 +204,13 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
       {error && <Banner><span>{error} </span>{data && <span>Showing the last loaded workspace. </span>}
         <button type="button" className="text-link" disabled={!online || refreshing} onClick={() => void refresh()}>Retry</button></Banner>}
       <div className="page-heading"><div><div className="eyebrow">{view === 'settings' ? 'WORKSPACE PREFERENCES' : 'WORKSPACE OVERVIEW'}</div>
-        <h2>{currentNav.label}{view === 'applications' && <span className="heading-qualifier">Intents</span>}</h2></div>
+        <h2>{currentNav.label}</h2></div>
         <div className="page-heading-actions"><span className="last-sync">{data ? 'Updated ' + formatDate(data.asOf, true) : 'Connecting...'}</span>
           {view === 'jobs' && <Button label="New role" variant="primary" icon={<Glyph icon={Plus} />} onClick={() => setCreateOpen(true)} isDisabled={!data || disabled} />}</div>
       </div>
       {data && !['settings','candidate','answers'].includes(view) && <div className="workspace-stats" aria-label="Workspace totals">
         <div><span className="stat-icon stat-green"><BriefcaseBusiness size={16} aria-hidden="true" /></span><span>Active roles<strong className="tabular">{activeJobs}</strong></span></div>
-        <div><span className="stat-icon stat-amber"><Send size={16} aria-hidden="true" /></span><span>Application intents<strong className="tabular">{activeIntents}</strong></span></div>
+        <div><span className="stat-icon stat-amber"><Send size={16} aria-hidden="true" /></span><span>Applications<strong className="tabular">{activeIntents}</strong></span></div>
         <div><span className="stat-icon stat-coral"><FileCheck2 size={16} aria-hidden="true" /></span><span>Pending reviews<strong className="tabular">{data.proposals.length}</strong></span></div>
         <div><span className="stat-icon"><Activity size={16} aria-hidden="true" /></span><span>Recorded events<strong className="tabular">{data.events.length}</strong></span></div>
       </div>}
@@ -224,7 +224,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
           : view === 'candidate' ? <CandidateView api={api} disabled={disabled} refresh={refresh} navigate={navigate} sourceId={searchParams.get('source')} asOf={data.asOf} isOwner={data.workspace.is_owner}/>
           : view === 'answers' ? <AnswersView api={api} disabled={disabled} refresh={refresh} asOf={data.asOf}/>
           : view === 'discovery' ? <DiscoveryView api={api} disabled={disabled} refresh={refresh} asOf={data.asOf} navigate={navigate}/>
-          : view === 'applications' ? <ApplicationsView data={data} api={api} disabled={disabled} refresh={refresh} navigate={navigate} filter={filter} />
+          : view === 'applications' ? <ApplicationsView data={data} api={api} disabled={disabled} refresh={refresh} navigate={navigate} filter={filter} selectedId={searchParams.get('application')}/>
           : view === 'activity' ? <ActivityView data={data} navigate={navigate} />
           : <SettingsView data={data} api={api} disabled={disabled} refresh={refresh} onLogout={async () => { await api.post('/api/auth/logout', {}); onSignedOut(); }} />}
       </div>

@@ -10,6 +10,7 @@ import { MaximPolicyEngine } from "./policy-engine.mjs";
 import { fromRoot } from "./path-utils.mjs";
 import { routeEvaluation } from "./tier-router.mjs";
 import { createStore } from "./sqlite-store.mjs";
+import {readApplicationProjection} from './canonical-application-read.mjs';
 
 function normalizeText(value) {
   return String(value ?? "")
@@ -139,9 +140,12 @@ function enrichTrackerApplication(application, evaluations, jobs, root) {
 
 export function syncCareerOpsArtifacts({
   root,
-  store = createStore(),
+  store,
   now = new Date(),
 } = {}) {
+  const projection=readApplicationProjection(root??store?.authorityRoot??fromRoot());
+  if(projection)return {ownership:'canonical',evaluations:0,applications:0,synced:false,asOf:projection.asOf,revision:projection.revision,warnings:['Legacy sync is retired. This is a hash-checked offline projection, not a fresh database sync.']};
+  store??=createStore();
   const artifacts = discoverCareerOpsArtifacts({ root });
   const artifactRoot = root ?? fromRoot();
   const policy = new MaximPolicyEngine();

@@ -20,7 +20,7 @@ Prepare a representative supported application in a visible browser, ask missing
 
 ## Current Evidence And Boundary
 
-The old [browser runner](../../maxim/scripts/auto-apply-browser.mjs), [mapper](../../maxim/lib/application-form-mapper.mjs) and [planner](../../maxim/lib/auto-apply-planner.mjs) are not the replacement foundation. Their fixture scenarios can inform safety requirements; passing them is not acceptance of this stage.
+S5 retired the old planner/mapper/browser runner and its registrations/imports. The old [script path](../../maxim/scripts/auto-apply-browser.mjs) is a failure-only retirement notice, not an executor. The [preserved safety scenarios](../../maxim/tests/fixtures/browser-safety-handoff.json) are S6 requirements, not acceptance evidence. Reuse the [canonical S5 lifecycle](../../docs/maxim/application-lifecycle.md), current packet hashes, answer service and scoped commands.
 
 [Native PDF](../../generate-pdf.mjs) and [liveness](../../liveness-core.mjs) behavior stays intact. agent-browser is a reviewed executor candidate, not a product policy engine or guaranteed platform permission.
 

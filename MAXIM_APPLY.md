@@ -2,6 +2,20 @@
 
 Maxim Apply is Xavier Kubancik's controlled Career-Ops fork.
 
+## Current Workspace
+
+Use the [workspace guide](docs/maxim/workspace.md) and
+[application lifecycle guide](docs/maxim/application-lifecycle.md), not archived
+planner/browser-runner instructions. `npm run maxim:workspace` starts the local
+web/worker/PostgreSQL composition, normally at http://127.0.0.1:3010/maxim.
+
+Reviewed onboarding, answer memory, bounded company-feed discovery, retained
+Career-Ops evaluation, exact PDF/report approval and manual application tracking
+are implemented. Legacy ownership changes remain explicit reviewed operations.
+There is no new browser fill/submit executor in S5; S6-S11 remain separate gates.
+See [current implementation status](docs/maxim/implementation_status.md) and
+[case-level S5 evidence](roadmap/reviews/s5-evaluation-and-cutover.md).
+
 ## November 2026 Planning
 
 The [detailed stage index](roadmap/stages/README.md) contains twelve implementation plans with 92 acceptance cases. Read the [refinement and validation record](roadmap/reviews/roadmap-refinement.md) for actual test results and unresolved runtime defects; planning delivery does not mark these stages implemented.

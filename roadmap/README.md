@@ -1,7 +1,7 @@
 # Maxim Apply Roadmap Index
 
-**Status:** Revision 0.4. S0-S4 are verified for their bounded scopes; S5-S11 remain Pending. See [S1 evidence](reviews/s1-workspace.md) and [workspace guide](../docs/maxim/workspace.md).
-**Updated:** 2026-11-16.
+**Status:** Revision 0.4. S0-S5 are verified for their bounded scopes; S6-S11 remain Pending. See [S1 evidence](reviews/s1-workspace.md) and [workspace guide](../docs/maxim/workspace.md).
+**Updated:** 2026-11-17.
 **Demo target:** 2026-11-19. No claim that this entire roadmap fits before that date.
 
 ## 1. Direction And Authority
@@ -12,7 +12,7 @@ One candidate knowledge authority, one application lifecycle, and shared command
 
 The latest accepted directions supersede older SQLite-sidecar-only and Go-dashboard-only target constraints. They do not authorize replacing Career-Ops scoring, PDFs, useful scanners, or deleting user data. PostgreSQL and a web experience are target changes with explicit migration gates, not capabilities this documentation ships.
 
-The refinement adds detailed stage plans, a code/design drift report and executable roadmap checks. EGM was installed in the preceding pass. No product stack, migration, runner retirement or other candidate runtime dependency is installed by this documentation task.
+The refinement adds detailed stage plans, a code/design drift report and executable roadmap checks. EGM was installed in the preceding pass. That original documentation refinement did not install a runtime. Subsequent S0-S5 delivery is recorded in the stage evidence and current operating guides.
 
 > **Comments**
 >
@@ -23,8 +23,8 @@ The refinement adds detailed stage plans, a code/design drift report and executa
 | Document | Read it for | Standing |
 | --- | --- | --- |
 | [System manifesto](MANIFESTO.md) | Product journey, authority, memory, architecture, boundaries | Revised target proposal with accepted decisions marked |
-| [High-level roadmap](high-level-roadmap.md) | Refined early UI stages, dependencies and optional lanes | S0-S4 verified; S5-S11 Pending |
-| [Detailed stage plans](stages/README.md) | Twelve Vantage-style plans with 92 acceptance cases | S0/S1 verified, later cases unimplemented |
+| [High-level roadmap](high-level-roadmap.md) | Refined early UI stages, dependencies and optional lanes | S0-S5 verified; S6-S11 Pending |
+| [Detailed stage plans](stages/README.md) | Twelve Vantage-style plans with 92 acceptance cases | S0-S5 verified, S6-S11 pending |
 | [Shared stage contracts](stages/contracts.md) | Runtime binding, commands, identity, storage, worker and consumer contracts | Proposed implementation detail with S0 gates |
 | [Refinement and validation](reviews/roadmap-refinement.md) | Changes, executed tests, remaining runtime gaps | Actual evidence scope recorded |
 | [External component assessment](external-components-assessment.md) | All ten suggestions, deep Dossier review, licensing, adoption gates | Primary-source research, not a benchmark or integration claim |
@@ -190,6 +190,7 @@ Capture additional user-journey, integration, or product ideas here. Give each a
 
 | Date | Change |
 | --- | --- |
+| 2026-11-17 | S0-S5 independently committed and verified; reviewed intake, answers, discovery, retained evaluation/packets and tracker cutover delivered; S6-S11 remain pending |
 | 2026-11-16 | Preserved original commented workflow; created target manifesto and high-level roadmap |
 | 2026-11-16 | Incorporated eight decision-group replies; moved dashboard/agent to S1 and onboarding to S2 |
 | 2026-11-16 | Evaluated ten external references; installed EGM 0.1.1; added component, setup, and development documents |

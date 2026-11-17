@@ -42,7 +42,7 @@ No drift detected.
 
 - **DR-18 [runtime defect]:** [Discord notifier](../../maxim/scripts/discord-notify.mjs) stores a fingerprint before [POST](../../maxim/scripts/discord-notify.mjs) and ignores response acceptance. The isolated 429 test reproduced permanent suppression; S8 owns replacement/repair and durable retry.
 - **DR-19 [runtime defect]:** [Source-audit help](../../maxim/tests/unit/source-readiness.test.mjs) fails because --help is treated as an input filename. S4 DSC-01 owns the fix.
-- **DR-20 [runtime defect]:** [Fallback attachment safety](../../maxim/tests/unit/assisted-apply-safety.test.mjs) fails: an existing unapproved resume is offered. S5/S6 require explicit attachment approval, not filename/config existence.
+- **DR-20 [runtime defect, historical]:** The former fallback attachment safety test failed: an existing unapproved resume was offered. S5 now enforces exact packet approval/untailored consent; the rejected test/runner was retired. [Preserved S6 safety scenarios](../../maxim/tests/fixtures/browser-safety-handoff.json) remain requirements, not browser acceptance.
 - **DR-21 [planned gap]:** Future DB/model/Gmail/search/schedule settings still have no implementing parser/runtime; current secrets were not inspected or used for live actions. Detailed stages retain current-vs-proposed setup and require actual startup/recovery instructions upon delivery.
 
 This report changes no runtime code or candidate data. See [refinement record](roadmap-refinement.md) for the planning repairs, test scope and remaining decisions.

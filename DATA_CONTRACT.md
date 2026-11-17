@@ -4,6 +4,24 @@ This document defines which files belong to the **system** (auto-updatable) and 
 
 ## User Layer (NEVER auto-updated)
 
+### Explicit Application Cutover Exception
+
+S5 adds an independent, owner-reviewed application migration. Before activation,
+legacy tracker/SQLite ownership remains intact; new workspace intents are
+isolated. After activation PostgreSQL owns evaluations, packets and application
+actions. `data/applications.md`, `applications.md`, `data/pipeline.md`, generated
+`reports/*-maxim-<uuid>.md` / `output/*-maxim-<uuid>.pdf` and the three canonical
+JSON/JSONL exports are read projections, not another writable tracker.
+
+Native files are never overwritten by ordinary upstream updates. A reviewed
+cutover captures exact raw files/SQLite types/history/artifacts, requires explicit
+mapping/outcome review, freezes supported writers, verifies hashes and preserves
+stable IDs. Recovery cannot restore an old baseline over an acknowledged edit.
+Rollback exports the latest canonical state and reconciles only the application
+family into legacy SQLite; unrelated contact/history data is retained.
+Canonical API writes are disabled after rollback until a reviewed new cutover.
+See [Application lifecycle](docs/maxim/application-lifecycle.md).
+
 ### Explicit Candidate Cutover Exception
 
 System updates still never overwrite private data. A user-reviewed S2 candidate

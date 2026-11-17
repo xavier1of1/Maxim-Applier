@@ -5,7 +5,7 @@ import { snapshotDatabase,restoreDatabase,sha } from './environment.mjs';
 
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const hash=/^[0-9a-f]{64}$/;
-const journalPath=/^[0-9a-f-]{36}\/(?:manifest\.json|rollback-facts\.json|(?:baseline|projection)\/(?:cv\.md|config\/profile\.yml|modes\/_profile\.md|article-digest\.md))$/;
+const journalPath=/^[0-9a-f-]{36}\/(?:manifest\.json|rollback-(?:facts|state|ids)\.json|(?:baseline|projection)\/(?:cv\.md|config\/profile\.yml|modes\/_profile\.md|article-digest\.md|applications\.md|data\/(?:applications\.md|pipeline\.md|maxim\/(?:dashboard-state\.json|canonical-application-state\.json|canonical-events\.jsonl))|(?:reports|output)\/\d+-maxim-[0-9a-f-]{36}\.(?:md|pdf)))$/;
 function journalFile(root,relative){
  if(!journalPath.test(relative))throw Error('Invalid cutover recovery reference.');
  return path.join(root,...relative.split('/'));
@@ -25,15 +25,23 @@ export async function backupWorkspace(c){
   const entries=(await client.query('SELECT id,storage_key AS key,content_hash AS hash,bytes FROM artifacts WHERE deleted_at IS NULL ORDER BY id')).rows;
   const databaseHash=snapshotDatabase(c,path.join(root,'database.sql'));
   const journals=[],cutovers=path.join(c.privateRoot,'cutovers');
-  const transitions=(await client.query("SELECT id FROM ownership_transitions WHERE family='candidate' ORDER BY id")).rows;
+  const transitions=(await client.query("SELECT id,family FROM ownership_transitions WHERE family IN ('candidate','applications') ORDER BY id")).rows;
   const names=['manifest.json','rollback-facts.json',...['baseline','projection'].flatMap(prefix=>['cv.md','config/profile.yml','modes/_profile.md','article-digest.md'].map(file=>prefix+'/'+file))];
-  for(const transition of transitions)for(const name of names){
+  for(const transition of transitions){
+   let selected=names;
+   if(transition.family==='applications'){
+    const manifestFile=journalFile(cutovers,transition.id+'/manifest.json');
+    const manifest=JSON.parse(fs.readFileSync(regular(manifestFile,cutovers),'utf8'));
+    selected=['manifest.json','rollback-state.json','rollback-ids.json',...['baseline','projection'].flatMap(prefix=>Object.keys(manifest.projection||{}).map(file=>prefix+'/'+file))];
+   }
+   for(const name of [...new Set(selected)]){
    const relative=transition.id+'/'+name,source=journalFile(cutovers,relative);
    if(!fs.existsSync(source))continue;
    const bytes=fs.readFileSync(regular(source,cutovers)),target=journalFile(path.join(root,'cutovers'),relative);
    fs.mkdirSync(path.dirname(target),{recursive:true,mode:0o700});
    fs.writeFileSync(target,bytes,{flag:'wx',mode:0o600});
    journals.push({path:relative,hash:sha(bytes),bytes:bytes.length});
+  }
   }
   const artifacts=path.join(c.privateRoot,'artifacts');
   for(const e of entries){
@@ -43,7 +51,7 @@ export async function backupWorkspace(c){
    fs.mkdirSync(path.join(root,'artifacts'),{recursive:true,mode:0o700});
    fs.writeFileSync(path.join(root,'artifacts',e.key),bytes,{flag:'wx',mode:0o600});
   }
-  fs.writeFileSync(path.join(root,'manifest.json'),JSON.stringify({version:2,databaseHash,entries,journals},null,2),{flag:'wx',mode:0o600});
+  fs.writeFileSync(path.join(root,'manifest.json'),JSON.stringify({version:3,databaseHash,entries,journals},null,2),{flag:'wx',mode:0o600});
   return {backupId:id,artifacts:entries.length,cutoverFiles:journals.length,credentialsExcluded:true};
  }finally{await client.query('SELECT pg_advisory_unlock(120032)').catch(()=>{});await client.end();}
 }
@@ -51,8 +59,8 @@ export async function restoreWorkspace(c,id){
  if(!/^workspace-\d+$/.test(id||''))throw Error('Choose a valid private workspace backup ID.');
  const root=path.join(c.privateRoot,'backups',id);
  const manifest=JSON.parse(fs.readFileSync(regular(path.join(root,'manifest.json'),root),'utf8'));
- if(![1,2].includes(manifest.version)||!hash.test(manifest.databaseHash)||!Array.isArray(manifest.entries)||manifest.entries.length>100000)throw Error('Invalid recovery manifest.');
- const journals=manifest.version===2?manifest.journals:[];
+ if(![1,2,3].includes(manifest.version)||!hash.test(manifest.databaseHash)||!Array.isArray(manifest.entries)||manifest.entries.length>100000)throw Error('Invalid recovery manifest.');
+ const journals=manifest.version>=2?manifest.journals:[];
  if(!Array.isArray(journals)||journals.length>100000)throw Error('Invalid cutover recovery manifest.');
  const journalKeys=new Set();
  for(const e of journals){

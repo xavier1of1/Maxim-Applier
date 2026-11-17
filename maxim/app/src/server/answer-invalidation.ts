@@ -1,8 +1,12 @@
 import type {PoolClient} from 'pg';
+import {queueApplicationProjection} from './application-authority';
 
 export async function invalidateAnswerUses(tx:PoolClient,workspaceId:string,answerId:string){
  await tx.query("UPDATE answer_dependencies SET status='invalidated' WHERE workspace_id=$1 AND answer_id=$2",[workspaceId,answerId]);
  await tx.query("UPDATE answer_uses SET status='invalidated',revision=revision+1,updated_at=now() WHERE workspace_id=$1 AND answer_id=$2 AND status IN ('draft','confirmed')",[workspaceId,answerId]);
+ await tx.query("UPDATE application_packets SET status='invalidated',revision=revision+1 WHERE workspace_id=$1 AND status IN ('draft','approved') AND id IN(SELECT entity_id FROM answer_dependencies WHERE workspace_id=$1 AND answer_id=$2 AND kind='packet')",[workspaceId,answerId]);
+ await tx.query("UPDATE applications SET workflow='packet_missing',revision=revision+1,updated_at=now() WHERE workspace_id=$1 AND outcome='not_submitted' AND id IN(SELECT application_id FROM application_packets WHERE workspace_id=$1 AND status='invalidated')",[workspaceId]);
+ await queueApplicationProjection(tx,workspaceId);
 }
 export async function invalidateFactAnswers(tx:PoolClient,workspaceId:string,factIds:string[]){
  if(!factIds.length)return;

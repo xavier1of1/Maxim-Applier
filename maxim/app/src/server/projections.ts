@@ -17,7 +17,7 @@ const hash=(bytes:string|Buffer)=>crypto.createHash('sha256').update(bytes).dige
 export const nativeRoot=()=>config().testMode?path.join(config().privateRoot,'native'):path.resolve(/* turbopackIgnore: true */ process.cwd(),'../..');
 const journalRoot=()=>path.join(config().privateRoot,'cutovers');
 const markerFile=()=>path.join(nativeRoot(),'data/maxim/authority.json');
-async function safeTarget(target:string){
+export async function safeTarget(target:string){
  const allowed=[nativeRoot(),journalRoot()].map(p=>path.resolve(/* turbopackIgnore: true */ p));
  const root=allowed.find(p=>target.startsWith(p+path.sep));
  invariant(root,'invalid_path','Projection target is outside its owned directory.');
@@ -35,20 +35,27 @@ async function safeTarget(target:string){
  }
  return target;
 }
-async function atomic(target:string,bytes:string|Buffer){
+export async function atomic(target:string,bytes:string|Buffer){
  await safeTarget(target);
  await fs.mkdir(path.dirname(target),{recursive:true,mode:0o700});
  const temp=target+'.'+crypto.randomUUID()+'.new';
  await fs.writeFile(temp,bytes,{flag:'wx',mode:0o600});await fs.rename(temp,target);
 }
-async function marker(value:unknown){await atomic(markerFile(),JSON.stringify(value,null,2));}
-async function readMarker(){try{return JSON.parse(await fs.readFile(markerFile(),'utf8'));}catch{return {};}}
+export async function marker(value:unknown){await atomic(markerFile(),JSON.stringify(value,null,2));}
+export async function readMarker(){
+ try{
+  const value=JSON.parse(await fs.readFile(markerFile(),'utf8'));
+  invariant(value&&typeof value==='object'&&['candidate','applications'].every(k=>!value[k]||['legacy','canonical','frozen'].includes(value[k])),'authority_marker_unreadable','Authority marker is invalid; implicit legacy fallback is refused.',503);
+  return value;
+ }catch(e){if((e as NodeJS.ErrnoException).code==='ENOENT')return {};invariant(false,'authority_marker_unreadable','Authority marker is unreadable; preserve and recover it before continuing.',503);}
+}
+export async function markerLock(tx:PoolClient){await tx.query('SELECT pg_advisory_xact_lock(120033)');}
 async function current(tx:PoolClient,workspaceId:string){
  const candidate=(await tx.query('SELECT * FROM candidates WHERE workspace_id=$1 FOR UPDATE',[workspaceId])).rows[0];
  const facts=(await tx.query("SELECT f.*,s.model_consent,s.classification FROM candidate_facts f JOIN candidate_sources s ON s.id=f.source_id AND s.workspace_id=f.workspace_id WHERE f.workspace_id=$1 AND f.status='current' AND s.deleted_at IS NULL AND f.source_revision=s.revision ORDER BY field_key",[workspaceId])).rows;
  return {candidate,facts};
 }
-function render(revision:number,facts:Array<Record<string,any>>){
+export function render(revision:number,facts:Array<Record<string,any>>){
  const disclosed=facts.filter(f=>f.model_consent&&f.classification!=='restricted'&&f.sensitivity==='standard');
  for(const fact of disclosed)assertDisclosureText(JSON.stringify(fact.value));
  const values=new Map(disclosed.map(f=>[f.field_key,f.value]));
@@ -74,6 +81,7 @@ async function hashes(root:string){
  return result;
 }
 async function syncFiles(tx:PoolClient,workspaceId:string,transitionId:string){
+ await markerLock(tx);
  await tx.query('SELECT pg_advisory_xact_lock_shared(120032)');
  const {candidate,facts}=await current(tx,workspaceId);
  invariant(candidate.ownership==='canonical','owner_inactive','Candidate ownership is not canonical.',409);
@@ -105,6 +113,7 @@ export async function cutoverCommand(ctx:Context,raw:unknown){
  const c=z.object({commandId:uuid,action:z.enum(['prepare','activate','recover','rollback']),expectedRevision:z.number().int().positive(),transitionId:uuid.optional()}).strict().parse(raw);
  const result=await command(ctx,c.commandId,c,async tx=>{
   await candidateLock(tx,ctx.workspaceId);
+  await markerLock(tx);
   await tx.query('SELECT pg_advisory_xact_lock_shared(120032)');
   const state=await current(tx,ctx.workspaceId);
   invariant(state.candidate.revision===c.expectedRevision,'revision_conflict','Candidate knowledge changed. Review the projection again.',409);

@@ -17,6 +17,8 @@ import { readFile, writeFile, stat, copyFile, rm } from 'fs/promises';
 import { resolve, basename, dirname, join } from 'path';
 import { execFileSync } from 'child_process';
 import { existsSync, mkdirSync } from 'fs';
+import {fileURLToPath} from 'url';
+import {beginLegacyApplicationWrite,isManagedApplicationArtifact} from './maxim/lib/application-write-gate.mjs';
 
 const REQUIRED_SECTIONS = [
   '\\\\section{Education}',
@@ -123,6 +125,10 @@ async function main() {
   const texBase = basename(absPath, '.tex');
   const defaultPdf = join(texDir, `${texBase}.pdf`);
   const targetPdf = outputPath ? resolve(outputPath) : defaultPdf;
+  const root=dirname(fileURLToPath(import.meta.url));
+  const managed=[absPath,targetPdf].some(file=>isManagedApplicationArtifact(file,root));
+  // The process exit handler releases this lease, including compile failures.
+  if(managed)beginLegacyApplicationWrite(root);
 
   // Ensure output directory exists
   const targetDir = dirname(targetPdf);

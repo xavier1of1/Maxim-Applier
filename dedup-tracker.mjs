@@ -9,11 +9,17 @@
  * Run: node career-ops/dedup-tracker.mjs [--dry-run]
  */
 
-import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync as nativeWrite, copyFileSync as nativeCopy, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import {assertLegacyWriteAllowed} from './maxim/lib/authority-gate.mjs';
+import {withLegacyApplicationWrite} from './maxim/lib/application-write-gate.mjs';
 
 const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
+if(process.argv.includes('--help')||process.argv.includes('-h')){console.log('Usage: node dedup-tracker.mjs [--dry-run]. Canonical ownership requires workspace commands.');process.exit(0);}
+assertLegacyWriteAllowed('applications',CAREER_OPS);
+const writeFileSync=(...args)=>withLegacyApplicationWrite(()=>nativeWrite(...args),CAREER_OPS);
+const copyFileSync=(...args)=>withLegacyApplicationWrite(()=>nativeCopy(...args),CAREER_OPS);
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original)
 const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
   ? join(CAREER_OPS, 'data/applications.md')

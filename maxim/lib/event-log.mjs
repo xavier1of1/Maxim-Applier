@@ -3,6 +3,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 
 import { fromRoot } from "./path-utils.mjs";
+import {withLegacyApplicationWrite} from './application-write-gate.mjs';
 
 function nowIso() {
   return new Date().toISOString();
@@ -13,8 +14,10 @@ function eventFileName(date = new Date()) {
 }
 
 export class EventLog {
-  constructor({ eventDir = fromRoot("data", "maxim", "events") } = {}) {
+  constructor({ eventDir = fromRoot("data", "maxim", "events"), authorityRoot } = {}) {
     this.eventDir = eventDir;
+    const parent=path.dirname(path.resolve(eventDir));
+    this.authorityRoot=authorityRoot||(path.basename(parent)==='maxim'&&path.basename(path.dirname(parent))==='data'?path.resolve(parent,'../..'):parent);
   }
 
   append(event) {
@@ -55,3 +58,11 @@ export class EventLog {
 export function appendEvent(event, options) {
   return new EventLog(options).append(event);
 }
+
+const appendLegacy=EventLog.prototype.append;
+EventLog.prototype.append=function(event){
+ if(/career.?ops.?evaluation|maxim.?job|application.?record|careerops_synced|application_|evaluation_/i.test((event.entity_type||'')+' '+(event.event_type||''))){
+  return withLegacyApplicationWrite(()=>appendLegacy.call(this,event),this.authorityRoot);
+ }
+ return appendLegacy.call(this,event);
+};

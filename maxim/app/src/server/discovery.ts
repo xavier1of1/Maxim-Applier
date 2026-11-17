@@ -6,6 +6,7 @@ import {type Context,reauthorize,digest} from './auth';
 import {invariant,notFound} from './errors';
 import {enqueue} from './work';
 import {sourceDefinition,supported} from './discovery-providers';
+import {applicationWritable} from './application-authority';
 
 const schema=z.discriminatedUnion('action',[
  z.object({commandId:uuid,action:z.literal('add_source'),payload:z.object({name:z.string().trim().min(1).max(180),provider:z.enum(['greenhouse','lever','ashby','manual']),board:z.string().max(100).default(''),careersUrl:z.string().url().max(2048).optional()}).strict()}).strict(),
@@ -18,6 +19,7 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
  const c=schema.parse(raw);
  return command(ctx,c.commandId,c,async tx=>{
   const w=ctx.workspaceId;
+  if(['start_search','retry_search','set_discovery_state'].includes(c.action))await applicationWritable(tx,w);
   if(c.action==='add_source'){
    const p=c.payload,d=sourceDefinition(p.provider,p.board,p.careersUrl),id=crypto.randomUUID(),hash=digest(JSON.stringify(d));
    const prior=(await tx.query('SELECT * FROM discovery_sources WHERE workspace_id=$1 AND identity_hash=$2',[w,hash])).rows[0];
