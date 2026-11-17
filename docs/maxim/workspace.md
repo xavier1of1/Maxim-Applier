@@ -61,7 +61,11 @@ Secrets remain in the protected runtime file, not public settings, bundles, Git 
 
 Tools: read_workspace, get_job, propose_job_note, read_candidate_context, propose_candidate_fact. No shell, SQL, arbitrary file access, submit, send, fact approval or confirm tool exists. Conversation prose is not candidate truth; exact declaration proposals require Candidate review. Missing evaluations remain unknown; no competing score is generated.
 
-Limits: 32,000 UTF-8 serialized request bytes including history/tools/results; 1,024 output tokens per call; four model rounds; three tool calls per round; 60-second run deadline. Oversize requests fail explicitly. This is a conservative byte budget, not exact Microsoft Tokenizer accounting or universal model-window compatibility. Saved usage totals actual reported tokens across calls and reports usage coverage.
+S3 adds the [Answers workspace](answer-memory.md), filtered answer recall, exact-declaration
+drafts and extractive drafts from reviewed facts. Approval, disclosure and actual reuse
+remain separate human decisions. Current question/answer IDs and revisions survive restart.
+
+Limits: 32,000 UTF-8 serialized request bytes including policy/history/tools/results; local 8,192-token total policy including framing/margin and 1,024 output reserve; four model rounds; three tool calls per round; 60-second run deadline. Microsoft Tokenizer counts pinned local vocabularies. Oversize mandatory context and unknown model profiles fail explicitly. Local BPE/framing estimates are not exact provider billing; saved runs show local accounting and separately reported provider usage.
 
 Manual records work without a key. The isolated fixture model proves plumbing, not live access/model quality. No live provider smoke was performed.
 

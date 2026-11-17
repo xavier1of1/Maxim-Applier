@@ -16,6 +16,7 @@ export async function candidateContext(ctx:Context,runId?:string){
   await reauthorize(tx,ctx);await candidateLock(tx,ctx.workspaceId);
   const candidate=(await tx.query('SELECT revision,ownership FROM candidates WHERE workspace_id=$1',[ctx.workspaceId])).rows[0];
   if(candidate.ownership!=='canonical')return {revision:candidate.revision,sourceStatus:'staging_not_active',facts:[],warnings:['Candidate knowledge is not the active authority. Review and activate it before reuse.']};
+  if(runId)await tx.query("UPDATE runs SET candidate_revision=$1 WHERE workspace_id=$2 AND id=$3 AND status='running'",[candidate.revision,ctx.workspaceId,runId]);
   const rows=(await tx.query("SELECT f.id,f.field_key,f.value,f.revision,f.source_id,f.source_revision FROM candidate_facts f JOIN candidate_sources s ON s.workspace_id=f.workspace_id AND s.id=f.source_id WHERE f.workspace_id=$1 AND f.status='current' AND f.sensitivity='standard' AND s.model_consent=true AND s.classification<>'restricted' AND s.deleted_at IS NULL AND f.source_revision=s.revision ORDER BY f.field_key LIMIT 21",[ctx.workspaceId])).rows;
   const selected=rows.slice(0,20);
   const facts=selected.map(f=>({...f,value:JSON.stringify(f.value).length<=600?f.value:null,valueOmitted:JSON.stringify(f.value).length>600}));

@@ -43,13 +43,24 @@ export async function harness() {
    const id=q.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i)?.[0];
    if(last.role==='tool'){
     const data=JSON.parse(last.content);
+    if(q.includes('[case:answer-evidence]')&&last.tool_call_id==='call_evidence_read'&&!data.error){
+     const facts=data.facts.filter(f=>['projects.summary','candidate.name'].includes(f.field_key)).map(f=>({id:f.id,revision:f.revision})).reverse();
+     tool('draft_answer_from_facts',{question:'Describe relevant project evidence.',company:'Evidence',roleLane:'fde',facts},'call_evidence_draft');return;
+    }
+    if(q.includes('[case:answer-evidence]')){text(JSON.stringify(data));return;}
     if(q.includes('[case:note]')&&last.tool_call_id==='call_job'&&!data.error){tool('propose_job_note',{jobId:data.id,expectedRevision:data.revision,note:'Follow up with the hiring team.'},'call_note');return;}
     if(data.error){text('No authorized action is available for that request.');return;}
     if(data.proposalId){text(last.tool_call_id==='call_fact'?'A candidate fact is ready in Candidate review. It is not approved.':'A note change is ready for your review. It has not been saved.');return;}
     if(q.includes('[case:candidate]')){text(JSON.stringify(data));return;}
+    if(q.includes('[case:answer-recall]')||q.includes('[case:answer-draft]')||q.includes('[case:answer-private]')){text(JSON.stringify(data));return;}
     text(data.jobs?'Saved roles: '+data.jobs.map(j=>j.company+' - '+j.title).join('; '):'Saved role '+(data.company||'')+' at revision '+(data.revision||'unknown')+'.');return;
    }
    if(q.includes('[case:self-confirm]')){tool('confirm_proposal',{proposalId:id||crypto.randomUUID()},'call_forbidden');return;}
+   if(q.includes('[case:answer-self-confirm]')){tool('approve_answer',{answerId:id||crypto.randomUUID()},'call_forbidden');return;}
+   if(q.includes('[case:answer-recall]')){tool('recall_application_answer',{question:'Describe a customer project.',company:'Alpha',roleLane:'fde'},'call_answer_read');return;}
+   if(q.includes('[case:answer-private]')){tool('recall_application_answer',{question:'Describe a private plan.',company:'Private',roleLane:'fde'},'call_answer_read');return;}
+   if(q.includes('[case:answer-evidence]')){tool('read_candidate_context',{},'call_evidence_read');return;}
+   if(q.includes('[case:answer-draft]')){tool('propose_application_answer',{question:'Describe a customer project.',company:'Alpha',roleLane:'fde',answer:'I built a customer integration in Rust.',quote:'I built a customer integration in Rust.'},'call_answer_draft');return;}
    if(q.includes('[case:fact]')){tool('propose_candidate_fact',{fieldKey:'candidate.location',value:'Arlington, VA',quote:'I live in Arlington, VA.'},'call_fact');return;}
    if(q.includes('[case:candidate]')){tool('read_candidate_context',{},'call_candidate');return;}
    if(q.includes('[case:note]')||q.includes('[case:cross]')){tool('get_job',{jobId:id},'call_job');return;}

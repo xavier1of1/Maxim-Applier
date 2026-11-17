@@ -40,7 +40,7 @@ export async function getConversation(ctx: Context,id: string) {
  const conversation=(await db.query('SELECT * FROM conversations WHERE id=$1 AND workspace_id=$2',[id,ctx.workspaceId])).rows[0];
  if(!conversation)throw notFound();
  const messages=(await db.query('SELECT id,role,content,run_id,created_at FROM messages WHERE conversation_id=$1 AND workspace_id=$2 ORDER BY sequence',[id,ctx.workspaceId])).rows;
- const runs=(await db.query('SELECT id,status,error_code,usage,created_at FROM runs WHERE conversation_id=$1 AND workspace_id=$2 ORDER BY created_at',[id,ctx.workspaceId])).rows;
+ const runs=(await db.query('SELECT id,status,error_code,usage,context_accounting,created_at FROM runs WHERE conversation_id=$1 AND workspace_id=$2 ORDER BY created_at',[id,ctx.workspaceId])).rows;
  const proposals=(await db.query('SELECT p.id,p.run_id,p.job_id,p.note,p.expected_revision,p.status,p.expires_at FROM proposals p JOIN runs r ON r.id=p.run_id AND r.workspace_id=p.workspace_id WHERE r.conversation_id=$1 AND p.workspace_id=$2 ORDER BY p.created_at',[id,ctx.workspaceId])).rows;
  return {conversation,messages,runs,proposals};
  });

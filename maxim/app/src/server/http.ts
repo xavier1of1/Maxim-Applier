@@ -11,6 +11,8 @@ import {candidateCommand} from './candidates';
 import {authorityView,projectionPreview,cutoverCommand} from './projections';
 import {importLegacyCandidate} from './candidate-import';
 import {candidateContext} from './candidate-context';
+import {answerCommand,answerLibrary,exportAnswers} from './answers';
+import {recallAnswers} from './answer-recall';
 import { DomainError,invariant } from './errors';
 
 const json=(value:unknown,status=200,headers:Record<string,string>={})=>Response.json(value,{status,headers:{'Cache-Control':'no-store',...headers}});
@@ -37,7 +39,7 @@ export async function handle(req:Request) {
   const route=new URL(req.url).pathname.replace(/^\/api\/?/,'').split('/').filter(Boolean);
   const name=route.join('/'),post=req.method==='POST',get=req.method==='GET';
   if(get && name==='health') {
-   const version=await database().query('SELECT version FROM schema_migrations WHERE version=3');
+   const version=await database().query('SELECT version FROM schema_migrations WHERE version=4');
    invariant(version.rowCount,'schema_unavailable','Workspace schema is not initialized.',503);
    return json({ok:true,application:'maxim-apply',installation:digest(config().workspaceId).slice(0,16),database:'available',recordFreshness:'not_assessed'});
   }
@@ -61,6 +63,10 @@ export async function handle(req:Request) {
   }
   if(get&&name==='workspace')return json(await snapshot(ctx));
   if(get&&name==='candidate')return json(await candidateView(ctx));
+  if(get&&name==='answers')return json(await answerLibrary(ctx));
+  if(get&&name==='answers/export')return json(await exportAnswers(ctx),200,{'Content-Disposition':'attachment; filename="maxim-answer-memory.json"'});
+  if(post&&name==='answers/commands')return json({result:await answerCommand(ctx,await body(req))});
+  if(post&&name==='answers/recall')return json(await recallAnswers(ctx,await body(req)));
   if(get&&name==='candidate/context')return json(await candidateContext(ctx));
   if(get&&name==='candidate/authority')return json(await authorityView(ctx));
   if(get&&name==='candidate/projection')return json(await projectionPreview(ctx));

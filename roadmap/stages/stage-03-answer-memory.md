@@ -1,7 +1,7 @@
 # S3: Reusable answers and bounded context
 
-**Status:** Pending implementation. Detailed plan drafted; no acceptance criterion is claimed passed.
-**Updated:** 2026-11-16.
+**Status:** Verified for the reusable-answer and bounded-context scope.
+**Updated:** 2026-11-17.
 **Roadmap:** [Stage index](README.md) | [High-level roadmap](../high-level-roadmap.md) | [Shared contracts](contracts.md)
 **Requires:** [S2](stage-02-reviewed-onboarding.md)
 
@@ -47,18 +47,21 @@ Candidate facts and durable work are supplied by S2. Do not create a second prof
 
 ## Acceptance
 
-- [ ] **MEM-01:** Standard facts precede employer-specific and compatible same-candidate cross-employer answers; source/revision/scope explanations are returned.
-- [ ] **MEM-02:** Unknown, contradictory or materially ambiguous questions ask the user, and missing booleans remain unknown.
-- [ ] **MEM-03:** Stored-unapproved, sensitive-without-consent, withdrawn, expired and cross-candidate answers are withheld from fill and model context.
-- [ ] **MEM-04:** Explicit approval binds exact answer/context/revisions; duplicate/stale/self-confirmation attempts cannot broaden reuse.
-- [ ] **MEM-05:** Correction/revocation changes future recall and invalidates dependent current drafts; submitted historical versions are unchanged.
-- [ ] **MEM-06:** Context compilation stays within a declared model-specific hard request/output budget; oversize mandatory context or unsupported tokenization yields an honest refusal/estimate policy.
-- [ ] **MEM-07:** UI and agent inspection/confirmation return the same answer revision after restart; cancelled model calls don't approve memory.
-- [ ] **MEM-08:** Retention/delete/export and source authorization tests prevent private context leakage into unrelated prompts, events or other identities.
+- [x] **MEM-01:** Standard facts precede employer-specific and compatible same-candidate cross-employer answers; source/revision/scope explanations are returned.
+- [x] **MEM-02:** Unknown, contradictory or materially ambiguous questions ask the user, and missing booleans remain unknown.
+- [x] **MEM-03:** Stored-unapproved, sensitive-without-consent, withdrawn, expired and cross-candidate answers are withheld from fill and model context.
+- [x] **MEM-04:** Explicit approval binds exact answer/context/revisions; duplicate/stale/self-confirmation attempts cannot broaden reuse.
+- [x] **MEM-05:** Correction/revocation changes future recall and invalidates dependent current drafts; submitted historical versions are unchanged.
+- [x] **MEM-06:** Context compilation stays within a declared model-specific hard request/output budget; oversize mandatory context or unsupported tokenization yields an honest refusal/estimate policy.
+- [x] **MEM-07:** UI and agent inspection/confirmation return the same answer revision after restart; cancelled model calls don't approve memory.
+- [x] **MEM-08:** Retention/delete/export and source authorization tests prevent private context leakage into unrelated prompts, events or other identities.
 
 ## Integration Test
 
-**Proposed:** `node --test maxim/app/tests/integration/answer-memory.test.mjs` and `maxim/app/tests/e2e/answer-memory.spec.mjs`.
+**Implemented:** `npm --prefix maxim/app test` runs the actual
+[answer integration](../../maxim/app/tests/integration/answer-memory.test.mjs),
+[answer UI](../../maxim/app/tests/e2e/answer-memory.spec.mjs), Rust/tokenizer/parser
+unit tests, type/build and S1/S2 regressions.
 
 Use S1/S2's actual service/DB path with two candidates, two employers, conflicting answers, correction/revocation and an oversize synthetic context. Capture complete model input and tool outputs, not only answer prose. Test a source revision change between proposal and confirmation.
 
@@ -85,7 +88,22 @@ S4 can run in parallel after S2. No search/site integration is necessary to prov
 
 ## What Shipped
 
-Pending. No answers or personal facts are imported or approved by this plan.
+Versioned exact questions/context, reviewed answer revisions, fact dependencies,
+company-first/explicit cross-company recall, corrections/revocation, reuse review,
+retention/erasure/export and current agent tools are implemented. Rust classifies
+standard/special questions conservatively. Microsoft Tokenizer uses pinned local
+official ranks and full-request accounting with separate provider usage.
+
+Agent drafts quote a current declaration or preserve exact reviewed fact text;
+neither grants reuse/disclosure or approval. Current-use invalidation and in-flight
+run fencing prevent stale reuse; submitted snapshots remain historical.
+No personal facts or answers were imported/approved during implementation.
+
+See [case evidence](../reviews/s3-answer-memory.md),
+[operation](../../docs/maxim/answer-memory.md) and
+[ADR 0008](../../docs/maxim/decisions/0008-answer-memory-and-token-accounting.md).
+The final suite passed 14 Rust, 10 unit, 42 integration TAP cases and 10 Chromium workflows.
+Proposed directory groups resolve to the repository's flat server module convention.
 
 ## Deferred To Later Stages
 

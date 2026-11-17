@@ -8,7 +8,7 @@ No drift detected within the implemented bounded S2 acceptance scope. Source par
 
 ## stage-03-answer-memory.md
 
-- Versioned questions, approved answer reuse, answer dependencies, export/retention and model-specific context accounting remain unimplemented at this checkpoint.
+No drift detected within the bounded S3 scope. Real service/worker/model and responsive UI checks now cover versioned questions/answers, filtered recall, dependencies, exact approvals, reuse review, corrections, erasure/export, local token counting and separate provider usage. No live billing/model-quality or browser-execution claim is made.
 
 ## stage-04-discovery.md
 

@@ -5,7 +5,7 @@ import {usePathname, useRouter, useSearchParams} from 'next/navigation';
 import {Button} from '@astryxdesign/core/Button';
 import {TextInput} from '@astryxdesign/core/TextInput';
 import {Dialog, DialogHeader} from '@astryxdesign/core/Dialog';
-import {Activity, ArrowRight, Bot, BriefcaseBusiness, ChevronRight, CircleCheck, FileCheck2, History,
+import {Activity, ArrowRight, Bot, BookOpen, BriefcaseBusiness, ChevronRight, CircleCheck, FileCheck2, History,
   KeyRound, LayoutGrid, LockKeyhole, Menu, MessageSquare, Plus, RefreshCw, Send, Settings2,
   ShieldCheck, WifiOff, X} from 'lucide-react';
 import {ApiError, WorkspaceApi, errorMessage, isAbort, readJson, request} from './api';
@@ -13,6 +13,7 @@ import {AgentPanel, ProposalReview} from './agent';
 import {CreateRoleDialog, JobsView} from './jobs';
 import {SettingsView} from './settings';
 import {CandidateView} from './candidate';
+import {AnswersView} from './answers';
 import {ApplicationsView, ActivityView} from './views';
 import {useAgent} from './use-agent';
 import {Banner, Brand, EmptyState, Glyph, Pill, PrivacyStamp, ToolButton, WorkspaceLoading, formatDate, useMediaQuery, useOnline} from './shared';
@@ -21,6 +22,7 @@ import type {Navigation, Proposal, Session, View, WorkspaceData} from './types';
 const navigation = [
   {view: 'jobs' as const, label: 'Jobs', icon: BriefcaseBusiness},
   {view: 'candidate' as const, label: 'Candidate', icon: ShieldCheck},
+  {view: 'answers' as const, label: 'Answers', icon: BookOpen},
   {view: 'applications' as const, label: 'Applications', icon: Send},
   {view: 'activity' as const, label: 'Activity', icon: History},
   {view: 'settings' as const, label: 'Settings', icon: Settings2},
@@ -204,7 +206,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
         <div className="page-heading-actions"><span className="last-sync">{data ? 'Updated ' + formatDate(data.asOf, true) : 'Connecting...'}</span>
           {view === 'jobs' && <Button label="New role" variant="primary" icon={<Glyph icon={Plus} />} onClick={() => setCreateOpen(true)} isDisabled={!data || disabled} />}</div>
       </div>
-      {data && view !== 'settings' && view !== 'candidate' && <div className="workspace-stats" aria-label="Workspace totals">
+      {data && !['settings','candidate','answers'].includes(view) && <div className="workspace-stats" aria-label="Workspace totals">
         <div><span className="stat-icon stat-green"><BriefcaseBusiness size={16} aria-hidden="true" /></span><span>Active roles<strong className="tabular">{activeJobs}</strong></span></div>
         <div><span className="stat-icon stat-amber"><Send size={16} aria-hidden="true" /></span><span>Application intents<strong className="tabular">{activeIntents}</strong></span></div>
         <div><span className="stat-icon stat-coral"><FileCheck2 size={16} aria-hidden="true" /></span><span>Pending reviews<strong className="tabular">{data.proposals.length}</strong></span></div>
@@ -218,6 +220,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
             selectedId={jobId} filter={filter} onCreate={() => setCreateOpen(true)} onDirtyChange={setNoteDirty}
             onAgent={() => { setAgentOpen(true); if (conversationId && agent.detail && agent.detail.conversation.job_id !== jobId && !agent.isRunning) void agent.newConversation(); }} />
           : view === 'candidate' ? <CandidateView api={api} disabled={disabled} refresh={refresh} navigate={navigate} sourceId={searchParams.get('source')} asOf={data.asOf} isOwner={data.workspace.is_owner}/>
+          : view === 'answers' ? <AnswersView api={api} disabled={disabled} refresh={refresh} asOf={data.asOf}/>
           : view === 'applications' ? <ApplicationsView data={data} api={api} disabled={disabled} refresh={refresh} navigate={navigate} filter={filter} />
           : view === 'activity' ? <ActivityView data={data} navigate={navigate} />
           : <SettingsView data={data} api={api} disabled={disabled} refresh={refresh} onLogout={async () => { await api.post('/api/auth/logout', {}); onSignedOut(); }} />}

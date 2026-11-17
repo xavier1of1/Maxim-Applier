@@ -5,6 +5,7 @@ import {claimWork,renewWork,failWork,type WorkItem} from '../server/work';
 import {extractSource,purgeArtifact,expireRawSources} from './extraction';
 import {DomainError} from '../server/errors';
 import {projectionWork} from '../server/projections';
+import {expireAnswers} from '../server/answer-retention';
 import {setTimeout as wait} from 'node:timers/promises';
 
 config();
@@ -29,7 +30,7 @@ async function main(){
   try{
    await database().query('INSERT INTO worker_heartbeats(worker_id) VALUES($1) ON CONFLICT(worker_id) DO UPDATE SET last_seen=now()',[workerId]);
    active=await claimWork(workerId);
-   if(!active){if(++cycles%30===0)await expireRawSources();await delay(1000);continue;}
+   if(!active){if(++cycles%30===0){await expireRawSources();await expireAnswers();}await delay(1000);continue;}
    const current=active;
    const renewal=(async()=>{for(let attempt=0;attempt<8&&!finished;attempt++){
     await wait(10000,undefined,{signal:renewalStop.signal});if(finished)break;

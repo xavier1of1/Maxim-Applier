@@ -1,4 +1,4 @@
-export type View = 'jobs' | 'applications' | 'activity' | 'settings' | 'candidate';
+export type View = 'jobs' | 'applications' | 'activity' | 'settings' | 'candidate' | 'answers';
 export type RecordFilter = 'active' | 'archived';
 export type Navigation = Partial<Record<'view' | 'job' | 'conversation' | 'filter' | 'source', string | null>>;
 
@@ -80,6 +80,8 @@ export interface ModelSettings {
   model: string;
   provider: string;
   requestByteLimit: number;
+  inputTokenBudget?:number;
+  tokenizer?:string;
   outputTokenLimit: number;
 }
 
@@ -109,7 +111,7 @@ export interface Message {
 export interface ConversationData {
   conversation: Conversation;
   messages: Message[];
-  runs: {id: string; status: string; error_code: string | null}[];
+  runs: {id: string; status: string; error_code: string | null;context_accounting?:{estimatedInputTokens:number;serializedTokens:number;outputReserve:number;encoding:string;providerUsage?:{prompt_tokens?:number;completion_tokens?:number}|null}[]}[];
   proposals: Proposal[];
 }
 

@@ -57,6 +57,8 @@ export function SettingsView({data, api, disabled, refresh, onLogout}: {
       </form>
       <dl className="connection-limits"><div><dt>Request budget</dt><dd className="tabular">{formatBytes(current.requestByteLimit)}</dd></div>
         <div><dt>Output limit</dt><dd className="tabular">{Number.isFinite(current.outputTokenLimit) ? current.outputTokenLimit.toLocaleString() + ' tokens' : 'Not set'}</dd></div>
+        <div><dt>Context policy</dt><dd className="tabular">{current.inputTokenBudget?.toLocaleString()||'Unknown'} tokens with framing/output reserve</dd></div>
+        <div><dt>Local counter</dt><dd>{current.tokenizer||'Unavailable'}</dd></div>
         <div><dt>Credential storage</dt><dd>Server only</dd></div></dl>
     </section>
     <section className="settings-section">

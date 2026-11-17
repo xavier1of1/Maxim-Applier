@@ -94,6 +94,12 @@ export function AgentPanel({agent, data, conversationId, jobId, disabled, naviga
         {eventTitle(failedRun.status)}{failedRun.error_code ? ' / ' + eventTitle(failedRun.error_code) : ''}
       </Banner>}
       {agent.error && <Banner>{agent.error}</Banner>}
+      {!agent.isRunning&&Boolean(lastRun?.context_accounting?.length)&&<details className="tool-record">
+       <summary>Context accounting</summary>{lastRun?.context_accounting?.map((item,i)=><p className="small muted" key={i}>
+        Call {i+1}: {item.estimatedInputTokens.toLocaleString()} local input estimate / {item.outputReserve.toLocaleString()} output reserve / {item.encoding}.
+        {' '}Provider: {item.providerUsage?.prompt_tokens??'unreported'} input, {item.providerUsage?.completion_tokens??'unreported'} output.
+       </p>)}
+      </details>}
       {proposals.map(proposal => <div className="proposal-item" key={proposal.id}>
         <div className="proposal-item-heading"><ShieldCheck size={15} aria-hidden="true" /><strong>Note update</strong><Pill tone="amber">Review</Pill></div>
         <p>{proposal.note || 'Empty note'}</p>
@@ -102,6 +108,9 @@ export function AgentPanel({agent, data, conversationId, jobId, disabled, naviga
       {!agent.isRunning&&messages.some(m=>m.role==='tool'&&m.content.name==='propose_candidate_fact')&&
        <Button label="Review candidate facts" size="sm" variant="secondary" endContent={<Glyph icon={ArrowRight}/>}
         onClick={()=>{navigate({view:'candidate'});onClose?.();}}/>}
+      {!agent.isRunning&&messages.some(m=>m.role==='tool'&&['propose_application_answer','draft_answer_from_facts'].includes(m.content.name||''))&&
+       <Button label="Review answer drafts" size="sm" variant="secondary" endContent={<Glyph icon={ArrowRight}/>}
+        onClick={()=>{navigate({view:'answers'});onClose?.();}}/>}
     </div>
     {!nearBottom && <button type="button" className="latest-messages" onClick={() => {
       setNearBottom(true); transcript.current?.scrollTo({top: transcript.current.scrollHeight, behavior: 'smooth'});

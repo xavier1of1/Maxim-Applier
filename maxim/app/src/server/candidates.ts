@@ -8,6 +8,7 @@ import {enqueue} from './work';
 import {validateFacts,type TypedFact} from './domain';
 import {invariant,notFound} from './errors';
 import {assertDisclosureText} from './candidate-context';
+import {invalidateFactAnswers,eraseSourceAnswers} from './answer-invalidation';
 
 const revision=z.number().int().nonnegative();
 const reason=z.string().trim().min(3).max(500);
@@ -24,7 +25,10 @@ export async function invalidateCandidate(tx:PoolClient,workspaceId:string,factI
  const candidate=(await tx.query('UPDATE candidates SET revision=revision+1 WHERE workspace_id=$1 RETURNING revision,ownership',[workspaceId])).rows[0];
  if(candidate.ownership==='canonical')await enqueue(tx,workspaceId,'project_candidate',String(candidate.revision),{candidateRevision:candidate.revision});
  await tx.query("UPDATE candidate_contexts SET status='invalidated' WHERE workspace_id=$1 AND status='current'",[workspaceId]);
- if(factId)await tx.query("UPDATE fact_dependencies SET status='invalidated' WHERE workspace_id=$1 AND fact_id=$2 AND status='current'",[workspaceId,factId]);
+ if(factId){
+  await tx.query("UPDATE fact_dependencies SET status='invalidated' WHERE workspace_id=$1 AND fact_id=$2 AND status='current'",[workspaceId,factId]);
+  await invalidateFactAnswers(tx,workspaceId,[factId]);
+ }
 }
 async function saveFact(tx:PoolClient,ctx:Context,fact:TypedFact,source:Record<string,unknown>,expected:number,why:string){
  if(source.model_consent)assertDisclosureText(JSON.stringify(fact.value));
@@ -45,6 +49,7 @@ export async function retireSource(tx:PoolClient,ctx:Pick<Context,'workspaceId'>
  await tx.query("UPDATE work_items SET status='cancelled',error_code='source_retired',lease_until=null,updated_at=now() WHERE workspace_id=$1 AND input->>'sourceId'=$2 AND status IN ('queued','leased')",[ctx.workspaceId,source.id]);
  await tx.query("UPDATE fact_proposals SET status='withdrawn',value='null'::jsonb,quote='' WHERE workspace_id=$1 AND source_id=$2",[ctx.workspaceId,source.id]);
  if(eraseFacts){
+  await eraseSourceAnswers(tx,ctx.workspaceId,source.id);
   // Keep run/audit identities, but remove copies of source-derived private content.
   const runs=(await tx.query("SELECT DISTINCT m.run_id FROM messages m WHERE m.workspace_id=$1 AND (m.run_id=$3 OR EXISTS(SELECT 1 FROM fact_dependencies d JOIN fact_versions v ON v.fact_id=d.fact_id AND v.workspace_id=d.workspace_id WHERE d.workspace_id=$1 AND d.entity_id=m.run_id AND v.source_id=$2))",[ctx.workspaceId,source.id,source.origin_run||null])).rows.map(r=>r.run_id);
   if(runs.length){
@@ -125,6 +130,8 @@ export async function candidateCommand(ctx:Context,raw:unknown){
   if(c.action==='source_consent'){
    if(c.payload.allow)assertDisclosureText(source.extracted_text||'');
    await tx.query("UPDATE fact_dependencies SET status='invalidated' WHERE workspace_id=$1 AND fact_id IN (SELECT id FROM candidate_facts WHERE workspace_id=$1 AND source_id=$2)",[ctx.workspaceId,source.id]);
+   const affected=(await tx.query('SELECT id FROM candidate_facts WHERE workspace_id=$1 AND source_id=$2',[ctx.workspaceId,source.id])).rows;
+   await invalidateFactAnswers(tx,ctx.workspaceId,affected.map(f=>f.id));
    if(source.format==='manual'){
     await tx.query('UPDATE candidate_sources SET model_consent=$1,consent_revision=consent_revision+1,updated_at=now() WHERE workspace_id=$2 AND id=$3',[c.payload.allow,ctx.workspaceId,source.id]);
     await invalidateCandidate(tx,ctx.workspaceId);

@@ -8,6 +8,7 @@ const schema = z.object({
   bootstrapKey: z.string().min(32), workspaceId: z.string().uuid(),
   model: z.object({ model: z.string().max(120), apiKey: z.string(), baseUrl: z.string().url() }),
   testMode: z.boolean().default(false),
+  contextBudget:z.number().int().min(100).max(8192).default(8192),
 });
 export type RuntimeConfig = z.infer<typeof schema>;
 export function configFile() {
@@ -39,7 +40,8 @@ export function publicModelSettings() {
   const c = config();
   return { configured: Boolean(c.model.model && c.model.apiKey), model: c.model.model,
     hasKey: Boolean(c.model.apiKey), provider: 'OpenAI', requestByteLimit: 32000, outputTokenLimit: 1024,
-    accounting: 'Conservative request-byte cap; actual usage is reported by the provider.' };
+    inputTokenBudget:c.contextBudget,tokenizer:'@microsoft/tiktokenizer@1.0.10',
+    accounting: 'Full-request local BPE with framing/margin and output reserve; measured provider usage is separate.' };
 }
 export function saveModelSettings(model: string, apiKey?: string) {
   const c = config();

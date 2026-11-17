@@ -5,6 +5,19 @@ Planning/development handoff updated: 2026-11-17
 
 ## November 2026 Planning Handoff
 
+### S3 Answer Memory Delivered
+
+Exact-context questions, versioned reviewed answers, company-first/explicit cross-company
+recall, fact dependencies, human-reviewed reuse drafts, correction/revocation,
+retention/erasure/export and matching agent tools are implemented. Evidence-only
+agent drafts preserve reviewed fact text rather than inventing candidate claims.
+Microsoft Tokenizer counts pinned local encodings; complete request framing/output
+budgeting is distinct from actual provider usage. Unknown profiles refuse explicitly.
+See [answer guide](answer-memory.md), [ADR 0008](decisions/0008-answer-memory-and-token-accounting.md)
+and [case evidence](../../roadmap/reviews/s3-answer-memory.md).
+Final full suite: 14 Rust, 10 unit, 42 integration TAP cases and 10 Chromium workflows passed.
+No application submission/browser execution, personal approval or tracker cutover occurred.
+
 ### S2 Reviewed Onboarding Delivered
 
 Reviewed source intake, local isolated PDF/DOCX/MD/TXT extraction, fenced durable
@@ -16,7 +29,7 @@ See [onboarding guide](reviewed-onboarding.md), [ADR 0007](decisions/0007-review
 and [S2 evidence](../../roadmap/reviews/s2-onboarding.md).
 Full app suite: 8 Rust, 6 parser, 32 integration TAP cases, 8 Chromium workflows passed.
 Go dashboard, native evaluator help and static platform safety passed.
-S3-S5 are in progress under [execution record](s2-s5-execution.md); tracker authority
+S4-S5 remain under [execution record](s2-s5-execution.md); tracker authority
 remains legacy until its own reviewed migration.
 
 ### S1 Workspace Delivered

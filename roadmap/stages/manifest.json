@@ -273,7 +273,7 @@
       "id": "S3",
       "title": "Reusable answers and bounded context",
       "file": "stage-03-answer-memory.md",
-      "status": "Pending",
+      "status": "Verified",
       "requires": [
         "S2"
       ],
@@ -296,6 +296,72 @@
         "MEM-06",
         "MEM-07",
         "MEM-08"
+      ],
+      "evidence": [
+        {
+          "caseId": "MEM-01",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; Node 24.22.3; Rust 1.76 MSVC; PostgreSQL 18.1; production Next/Astryx; local Microsoft tokenizer; captured fixture model; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s3-answer-memory.md"
+        },
+        {
+          "caseId": "MEM-02",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; Node 24.22.3; Rust 1.76 MSVC; PostgreSQL 18.1; production Next/Astryx; local Microsoft tokenizer; captured fixture model; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s3-answer-memory.md"
+        },
+        {
+          "caseId": "MEM-03",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; Node 24.22.3; Rust 1.76 MSVC; PostgreSQL 18.1; production Next/Astryx; local Microsoft tokenizer; captured fixture model; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s3-answer-memory.md"
+        },
+        {
+          "caseId": "MEM-04",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; Node 24.22.3; Rust 1.76 MSVC; PostgreSQL 18.1; production Next/Astryx; local Microsoft tokenizer; captured fixture model; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s3-answer-memory.md"
+        },
+        {
+          "caseId": "MEM-05",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; Node 24.22.3; Rust 1.76 MSVC; PostgreSQL 18.1; production Next/Astryx; local Microsoft tokenizer; captured fixture model; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s3-answer-memory.md"
+        },
+        {
+          "caseId": "MEM-06",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; Node 24.22.3; Rust 1.76 MSVC; PostgreSQL 18.1; production Next/Astryx; local Microsoft tokenizer; captured fixture model; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s3-answer-memory.md"
+        },
+        {
+          "caseId": "MEM-07",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; Node 24.22.3; Rust 1.76 MSVC; PostgreSQL 18.1; production Next/Astryx; local Microsoft tokenizer; captured fixture model; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s3-answer-memory.md"
+        },
+        {
+          "caseId": "MEM-08",
+          "result": "passed",
+          "command": "npm --prefix maxim/app test",
+          "environment": "Windows; Node 24.22.3; Rust 1.76 MSVC; PostgreSQL 18.1; production Next/Astryx; local Microsoft tokenizer; captured fixture model; Chromium",
+          "verifiedAt": "2026-11-17",
+          "record": "roadmap/reviews/s3-answer-memory.md"
+        }
       ]
     },
     {

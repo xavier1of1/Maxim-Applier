@@ -34,6 +34,13 @@ These declarations are not a full dependency/license audit. Before vendoring/ins
 
 ## 2. Microsoft Tokenizer: Counting, Not Memory
 
+**Implemented S3, 2026-11-17:** `@microsoft/tiktokenizer@1.0.10` is now pinned in
+the workspace. Official encoding files are checksum-verified by build/setup; runtime
+never downloads them. Full-request BPE/framing/output budgeting, unsupported-profile
+refusal and separate provider usage are tested. This supersedes the earlier conditional
+adoption recommendation, not its caution about memory authority or billing equality.
+See [implementation guide](../docs/maxim/answer-memory.md).
+
 **Sources:** [Repository](https://github.com/microsoft/Tokenizer), [TypeScript guide](https://github.com/microsoft/Tokenizer/blob/main/tokenizer_ts/README.md), [builder/model map](https://github.com/microsoft/Tokenizer/blob/main/tokenizer_ts/src/tokenizerBuilder.ts).
 
 The TypeScript package `@microsoft/tiktokenizer` offers local BPE counting. It can help a context builder decide whether a request packet fits a budget. It does not select evidence, compress memory, guarantee recall, or make facts authoritative.

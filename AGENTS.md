@@ -23,6 +23,11 @@ or directly editing them. Legacy ownership retains the onboarding behavior below
 Only an explicit reviewed cutover activates PostgreSQL candidate authority.
 See `docs/maxim/reviewed-onboarding.md` for operation, disclosure and rollback.
 
+The S3 Answers workspace owns reviewed reusable answer memory. Do not create another
+answer file/profile or treat conversation summaries/old runner defaults as approved
+answers. Scope, source revisions, disclosure and current status must be checked before
+reuse; only the user confirms exact answers/reuses. See `docs/maxim/answer-memory.md`.
+
 There are two layers. Read `DATA_CONTRACT.md` for the full list.
 
 **User Layer (NEVER auto-updated, personalization goes HERE):**

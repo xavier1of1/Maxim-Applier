@@ -71,7 +71,7 @@ Create small decision records for chosen stack, persistence/retention, source re
 | S0 | [Ownership, safety, and architecture baseline](stages/stage-00-ownership-and-baseline.md) | Trace one recoverable record/artifact and approve the minimal stack/cutover boundaries | Accepted direction; bounded audit | Verified |
 | S1 | [Real workspace and contextual agent](stages/stage-01-workspace-and-agent.md) | Add a job/application in UI; ask agent about same ID; restart and read it | S0 | Verified |
 | S2 | [Reviewed candidate onboarding](stages/stage-02-reviewed-onboarding.md) | Upload, review/correct, confirm, restart, retrieve sourced facts | S1 | Verified |
-| S3 | [Reusable answers and bounded context](stages/stage-03-answer-memory.md) | Answer once, recall in scope, correct/revoke, suppress old reuse | S2 | Pending |
+| S3 | [Reusable answers and bounded context](stages/stage-03-answer-memory.md) | Answer once, recall in scope, correct/revoke, suppress old reuse | S2 | Verified |
 | S4 | [Coverage-aware discovery](stages/stage-04-discovery.md) | Ingest a new role; expose unsupported/failed source separately | S2 | Pending |
 | S5 | [Career-Ops evaluation, packet, and tracker cutover](stages/stage-05-evaluation-and-tracker-cutover.md) | Evaluate/prepare one role; prove one lifecycle after migration | S3; S4 only for automated-discovery jobs | Pending |
 | S6 | [Supported browser application assistance](stages/stage-06-browser-assistance.md) | Fill supported controls, ask unknowns, resume, stop at manual review | S5 and approved browser design | Pending |
@@ -249,12 +249,12 @@ This is opt-in reviewed candidate authority, not automatic import/approval of pr
 - Invalidate dependent drafts on fact/answer correction; retain historical submitted versions without rewriting them.
 
 **Acceptance**
-- [ ] Correct lookup order and candidate isolation hold, including no cross-user leakage.
-- [ ] Unknown/ambiguous/withdrawn answers produce a question or review state, never a fabricated fill.
-- [ ] Approval scope and sensitive-answer rules are enforced by services, not only prompts.
-- [ ] Corrections affect future recall and dependent artifacts; old submission evidence remains historical.
-- [ ] Captured synthetic requests meet the approved complete context budget; unsupported tokenization is explicit.
-- [ ] UI and agent can inspect/approve/correct the same answer record and see persistence after restart.
+- [x] Correct lookup order and candidate isolation hold, including no cross-user leakage.
+- [x] Unknown/ambiguous/withdrawn answers produce a question or review state, never a fabricated fill.
+- [x] Approval scope and sensitive-answer rules are enforced by services, not only prompts.
+- [x] Corrections affect future recall and dependent artifacts; old submission evidence remains historical.
+- [x] Captured synthetic requests meet the approved complete context budget; unsupported tokenization is explicit.
+- [x] UI and agent can inspect/approve/correct the same answer record and see persistence after restart.
 
 **Handoff:** S5/S6 receive a reusable answer API and evidence/context contract, not raw conversation dumping.
 

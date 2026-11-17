@@ -1,6 +1,6 @@
 # Shared Stage Contracts
 
-**Status:** Revision 0.4. S1 workspace/auth/commands/conversations/artifact contracts are implemented; later worker/candidate/tracker/integration contracts remain proposed. See [S1 evidence](../reviews/s1-workspace.md) and [ADR 0006](../../docs/maxim/decisions/0006-workspace-implementation.md).
+**Status:** Revision 0.6. S1 workspace/auth/commands/conversations/artifacts, S2 worker/candidate and S3 answer/context contracts are verified. Tracker and later integration contracts remain proposed. See [S1 evidence](../reviews/s1-workspace.md), [S2 evidence](../reviews/s2-onboarding.md), [S3 evidence](../reviews/s3-answer-memory.md) and [ADR 0006](../../docs/maxim/decisions/0006-workspace-implementation.md).
 **Updated:** 2026-11-16.
 **Purpose:** Keep the detailed stages consistent without repeating a full architecture in each file. A changed contract must update its producer, consumers, tests, and the stage registry together.
 

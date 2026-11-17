@@ -1,5 +1,6 @@
 use serde_json::{json, Value};
 use std::io::{self, Read};
+mod memory;
 
 fn failure(code: &str) -> Value {
     json!({"ok":false,"error":{"code":code,"message":"The supplied value does not satisfy the candidate data contract."}})
@@ -97,6 +98,7 @@ fn validate_fact(f: &Value) -> Result<Value, &'static str> {
 }
 pub fn handle(input: &Value) -> Value {
     match input["operation"].as_str() {
+        Some("question_policy") => memory::question_policy(input),
         Some("validate_facts") => {
             let facts = match input["facts"].as_array() {
                 Some(a) if !a.is_empty() && a.len() <= 50 => a,
