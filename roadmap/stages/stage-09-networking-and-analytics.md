@@ -1,7 +1,7 @@
 # S9: Networking and outcome insight
 
-**Status:** Pending implementation. Detailed plan drafted; no acceptance criterion is claimed passed.
-**Updated:** 2026-11-16.
+**Status:** In progress. Implementation integrated; final acceptance gates remain open.
+**Updated:** 2026-11-17.
 **Roadmap:** [Stage index](README.md) | [High-level roadmap](../high-level-roadmap.md) | [Shared contracts](contracts.md)
 **Requires:** [S5](stage-05-evaluation-and-tracker-cutover.md)
 
@@ -87,7 +87,9 @@ S8 may consume these queues only after this contract is available; its early job
 
 ## What Shipped
 
-Pending. Current imported personal contacts/history are not inspected or reinterpreted by the plan.
+Reviewed raw contact/history imports, explained shortlists, human-researched five-part drafts, manual recruiter corrections and cohort metrics are implemented in the workspace. Final mounted regression and deliberate legacy import/reconciliation remain outstanding.
+
+See [measured MVP verification and remaining gates](../reviews/mvp-completion-verification.md). No unrun acceptance checkbox is promoted.
 
 ## Deferred To Later Stages
 

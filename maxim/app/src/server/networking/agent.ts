@@ -1,0 +1,2 @@
+export {networkingAgentRead} from './reads';
+export const networkingReadTool={type:'function' as const,function:{name:'read_networking',description:'Read scoped networking target IDs/manual states or submitted-attempt KPI counts. No contact identity, research text, raw history, candidate claims or sending.',strict:true,parameters:{type:'object',properties:{section:{type:'string',enum:['queue','metrics']}},required:['section'],additionalProperties:false}}};
