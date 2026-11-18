@@ -11,6 +11,12 @@ import {evaluateJob} from './evaluation';
 import {buildPacket} from './packet';
 import {applicationProjectionWork} from '../server/application-projections';
 import {expireApplicationWork} from '../server/private-artifacts';
+import {browserAction,closeBrowserSessions} from './browser';
+import {gmailWork} from './gmail';
+import {expireGmail} from '../server/integrations/gmail/reads';
+import {deliverDiscord,tickDiscord} from './discord';
+import {practiceInterview} from './interview';
+import {expireInterviews} from '../server/interview/service';
 import {setTimeout as wait} from 'node:timers/promises';
 
 config();
@@ -22,6 +28,10 @@ process.on('SIGINT',()=>{stopping=true;});
 process.on('SIGTERM',()=>{stopping=true;});
 const delay=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
 export async function executeWork(item:WorkItem,signal?:AbortSignal){
+ if(item.kind==='gmail_sync'||item.kind==='gmail_revoke')return gmailWork(item,signal||AbortSignal.timeout(35000));
+ if(item.kind==='discord_delivery')return deliverDiscord(item,signal);
+ if(item.kind==='interview_feedback')return practiceInterview(item,signal);
+ if(item.kind==='browser_action')return browserAction(item,signal);
  if(item.kind==='evaluate_job')return evaluateJob(item,signal);
  if(item.kind==='build_packet')return buildPacket(item,signal);
  if(item.kind==='project_applications')return applicationProjectionWork(item);
@@ -32,14 +42,16 @@ export async function executeWork(item:WorkItem,signal?:AbortSignal){
  throw new DomainError('unsupported_work','This worker does not support the requested work type.');
 }
 async function main(){
- let cycles=0;
+ let maintenanceAt=0,tickAt=0;
  while(!stopping){
   let active:WorkItem|null=null,finished=false;
   const renewalStop=new AbortController(),executionStop=new AbortController();
   try{
    await database().query('INSERT INTO worker_heartbeats(worker_id) VALUES($1) ON CONFLICT(worker_id) DO UPDATE SET last_seen=now()',[workerId]);
+   if(Date.now()-tickAt>=1000){tickAt=Date.now();await tickDiscord();}
+   if(Date.now()-maintenanceAt>=30000){maintenanceAt=Date.now();await expireRawSources();await expireAnswers();await expireApplicationWork();await expireGmail();await expireInterviews();}
    active=await claimWork(workerId);
-   if(!active){if(++cycles%30===0){await expireRawSources();await expireAnswers();await expireApplicationWork();}await delay(1000);continue;}
+   if(!active){await delay(1000);continue;}
    const current=active;
    const renewal=(async()=>{for(let attempt=0;attempt<8&&!finished;attempt++){
     await wait(10000,undefined,{signal:renewalStop.signal});if(finished)break;
@@ -54,6 +66,7 @@ async function main(){
    await delay(1000);
   }finally{finished=true;renewalStop.abort();executionStop.abort();}
  }
+ await closeBrowserSessions();
  await database().query('DELETE FROM worker_heartbeats WHERE worker_id=$1',[workerId]).catch(()=>{});
  await database().end();
 }

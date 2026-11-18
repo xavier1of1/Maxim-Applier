@@ -7,6 +7,7 @@ import { createRequire } from 'node:module';
 import { spawn,execFileSync } from 'node:child_process';
 import pg from 'pg';
 import { appDir,freePort,waitDatabase,migrate,delay,sha,snapshotDatabase,restoreDatabase } from '../../scripts/environment.mjs';
+import {closeOwnedBrowsers} from '../../scripts/browser-sessions.mjs';
 
 const require=createRequire(import.meta.url);
 export function assertTestConfig(c) {
@@ -149,7 +150,7 @@ export async function harness() {
   execFileSync('docker',['run','--detach','--rm','--name',container,'-e','POSTGRES_PASSWORD','-e','POSTGRES_USER=maxim','-e','POSTGRES_DB='+database,'-p','127.0.0.1:'+dbPort+':5432','postgres:18.1'],
    {env:{...process.env,POSTGRES_PASSWORD:password},stdio:'pipe',windowsHide:true,timeout:180000});
   await waitDatabase(c.databaseUrl);await migrate(c);await startServer();
- }catch(error){await stopServer().catch(()=>{});execFileSync('docker',['rm','-f',container],{stdio:'ignore',windowsHide:true});modelServer.closeAllConnections();modelServer.close();throw error;}
+ }catch(error){await stopServer().catch(()=>{});try{execFileSync('docker',['rm','-f',container],{stdio:'ignore',windowsHide:true,timeout:15000});}catch{}modelServer.closeAllConnections();modelServer.close();throw error;}
  const other={workspaceId:crypto.randomUUID(),key:crypto.randomBytes(32).toString('hex')};
  await sql('INSERT INTO workspaces(id,name,is_owner) VALUES($1,$2,false)',[other.workspaceId,'Second isolated workspace']);
  await sql('INSERT INTO candidates(id,workspace_id,display_name) VALUES($1,$2,$3)',[crypto.randomUUID(),other.workspaceId,'Other fixture']);
@@ -172,12 +173,13 @@ export async function harness() {
   snapshotDatabase:target=>snapshotDatabase(c,target),restoreDatabase:(dump,name)=>restoreDatabase(c,dump,name),
   async close(){
    for(const child of [...workers.keys()])await stopWorker(child);
+   closeOwnedBrowsers(c);
    await stopServer();for(const t of timers)clearTimeout(t);
    modelServer.closeAllConnections();await new Promise(resolve=>modelServer.close(resolve));
-   execFileSync('docker',['rm','-f',container],{stdio:'ignore',windowsHide:true});
+   execFileSync('docker',['rm','-f',container],{stdio:'ignore',windowsHide:true,timeout:15000});
    const resolved=path.resolve(root),temp=path.resolve(os.tmpdir());
    if(!path.basename(resolved).startsWith('maxim-test-')||!resolved.startsWith(temp+path.sep))throw Error('Unsafe fixture cleanup path');
-   fs.rmSync(resolved,{recursive:true,force:true});
+   fs.rmSync(resolved,{recursive:true,force:true,maxRetries:10,retryDelay:200});
   }
  };
 }

@@ -20,6 +20,12 @@ import {packetCommand} from './packets';
 import {applicationView} from './application-reads';
 import {legacyImportCommand,legacyView} from './legacy-import';
 import {applicationCutoverCommand,applicationAuthorityView} from './application-cutover';
+import {browserCommand,browserView} from './browser/service';
+import {gmailCommand,beginGmailOAuth,completeGmailOAuth} from './integrations/gmail/service';
+import {gmailView} from './integrations/gmail/reads';
+import {discordCommand,discordPlan,discordView} from './integrations/discord';
+import {networkingRoute} from './networking/routes';
+import {interviewHttp} from './interview/http';
 import { DomainError,invariant } from './errors';
 
 const json=(value:unknown,status=200,headers:Record<string,string>={})=>Response.json(value,{status,headers:{'Cache-Control':'no-store',...headers}});
@@ -46,13 +52,18 @@ export async function handle(req:Request) {
   const route=new URL(req.url).pathname.replace(/^\/api\/?/,'').split('/').filter(Boolean);
   const name=route.join('/'),post=req.method==='POST',get=req.method==='GET';
   if(get && name==='health') {
-   const version=await database().query('SELECT version FROM schema_migrations WHERE version=6');
+   const version=await database().query('SELECT version FROM schema_migrations WHERE version=12');
    invariant(version.rowCount,'schema_unavailable','Workspace schema is not initialized.',503);
    return json({ok:true,application:'maxim-apply',installation:digest(config().workspaceId).slice(0,16),database:'available',recordFreshness:'not_assessed'});
   }
   invariant(['GET','POST'].includes(req.method),'method_denied','Method not supported.',405);
   const c=config();
   invariant(req.headers.get('host')===new URL(c.origin).host,'host_denied','Request host denied.',403);
+  if(get&&name==='gmail/callback'){
+   const q=new URL(req.url).searchParams;let failed=false;
+   try{await completeGmailOAuth({state:q.get('state')||'',...(q.has('code')?{code:q.get('code')!}:{}),...(q.has('error')?{error:q.get('error')!}:{})});}catch{failed=true;}
+   return new Response(null,{status:303,headers:{Location:c.origin+'/maxim?view=gmail'+(failed?'&gmail=authorization_failed':''),'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}});
+  }
   if(post&&name==='auth/login') {
    checkOrigin(req);
    const p=z.object({accessKey:z.string().min(1).max(256)}).strict().parse(await body(req));
@@ -69,6 +80,16 @@ export async function handle(req:Request) {
    return json({ok:true},200,{'Set-Cookie':'maxim_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'});
   }
   if(get&&name==='workspace')return json(await snapshot(ctx));
+  if(get&&name==='gmail')return json(await gmailView(ctx,Number(new URL(req.url).searchParams.get('offset')||0)));
+  if(post&&name==='gmail/commands')return json({result:await gmailCommand(ctx,await body(req))});
+  if(post&&name==='gmail/oauth')return json({result:await beginGmailOAuth(ctx,await body(req))});
+  if(get&&name==='discord')return json(await discordView(ctx));
+  if(post&&name==='discord/plan')return json({result:await discordPlan(ctx,await body(req))});
+  if(post&&name==='discord/commands')return json({result:await discordCommand(ctx,await body(req))});
+  if(route[0]==='networking')return (await networkingRoute(req,ctx))!;
+  if(route[0]==='interview')return interviewHttp(req);
+  if(get&&name==='browser')return json(await browserView(ctx));
+  if(post&&name==='browser/commands')return json({result:await browserCommand(ctx,await body(req))});
   if(get&&name==='applications'){const q=new URL(req.url).searchParams;return json(await applicationView(ctx,{applicationId:q.get('application')||undefined,offset:q.has('offset')?Number(q.get('offset')):0}));}
   if(get&&name==='applications/authority')return json(await applicationAuthorityView(ctx));
   if(post&&name==='applications/cutover')return json({result:await applicationCutoverCommand(ctx,await body(req))});

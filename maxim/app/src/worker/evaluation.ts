@@ -11,6 +11,7 @@ import {storeArtifact,cleanUncommitted,invocationDirectory,removeInvocation} fro
 import {jobPolicy} from '../server/application-material';
 import {digest} from '../server/auth';
 import {applicationWritable,queueApplicationProjection} from '../server/application-authority';
+import {enqueueDiscordEvent} from '../server/integrations/discord';
 
 async function active(tx:import('pg').PoolClient,item:WorkItem){
  await candidateLock(tx,item.workspace_id);await applicationWritable(tx,item.workspace_id);await checkLease(tx,item);
@@ -44,6 +45,7 @@ export async function evaluateJob(item:WorkItem,parent?:AbortSignal){
    const manifest={evaluationId:e.id,jobId:e.job_id,invocation:item.lease_token,inputHash:e.input_hash,promptHash:e.prompt_hash,reportArtifactId:artifact.id,reportHash:artifact.content_hash,liveness:'unconfirmed'};
    await tx.query('UPDATE evaluations SET status=$1,score=$2,tier=$3,explanation=$4,archetype=$5,legitimacy=$6,policy=$7,report_artifact_id=$8,output_manifest=$9,error_code=$10,accounting=$11,usage=$12,revision=revision+1,completed_at=now() WHERE workspace_id=$13 AND id=$14',[invalid?'review_required':'completed',parsed?.score??null,parsed?.tier??null,parsed?.explanation??null,parsed?.archetype??null,parsed?.legitimacy??null,JSON.stringify(policy),artifact.id,JSON.stringify(manifest),invalid,JSON.stringify(result.accounting),JSON.stringify(result.usage),item.workspace_id,e.id]);
    await event(tx,{workspaceId:item.workspace_id},e.id,'careerops_evaluation_finished',{status:invalid?'review_required':'completed',score:parsed?.score??null,tier:parsed?.tier??null,reportArtifactId:artifact.id,liveness:'unconfirmed'},e.revision+1);
+   if(!invalid)await enqueueDiscordEvent(tx,item.workspace_id,{kind:'high_fit',entityId:e.job_id});
    await queueApplicationProjection(tx,item.workspace_id);
    await finishWork(tx,item,{evaluationId:e.id,status:invalid?'review_required':'completed',manifest});
   });committed=true;

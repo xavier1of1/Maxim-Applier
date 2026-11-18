@@ -16,6 +16,12 @@ import {CandidateView} from './candidate';
 import {AnswersView} from './answers';
 import {DiscoveryView} from './discovery';
 import {ApplicationsView, ActivityView} from './views';
+import {BrowserView} from './browser';
+import {Monitor,Mail,Bell,Users} from 'lucide-react';
+import {GmailView} from './gmail';
+import {DiscordView} from './discord';
+import {NetworkingView} from './networking';
+import {InterviewView} from './interview';
 import {useAgent} from './use-agent';
 import {Banner, Brand, EmptyState, Glyph, Pill, PrivacyStamp, ToolButton, WorkspaceLoading, formatDate, useMediaQuery, useOnline} from './shared';
 import type {Navigation, Proposal, Session, View, WorkspaceData} from './types';
@@ -26,6 +32,11 @@ const navigation = [
   {view: 'candidate' as const, label: 'Candidate', icon: ShieldCheck},
   {view: 'answers' as const, label: 'Answers', icon: BookOpen},
   {view: 'applications' as const, label: 'Applications', icon: Send},
+  {view: 'browser' as const, label: 'Apply Assistant', icon: Monitor},
+  {view: 'gmail' as const, label: 'Gmail', icon: Mail},
+  {view: 'discord' as const, label: 'Discord', icon: Bell},
+  {view: 'networking' as const, label: 'Networking', icon: Users},
+  {view: 'interview' as const, label: 'Interview practice', icon: MessageSquare},
   {view: 'activity' as const, label: 'Activity', icon: History},
   {view: 'settings' as const, label: 'Settings', icon: Settings2},
 ];
@@ -127,6 +138,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
   const api = useMemo(() => new WorkspaceApi(session.csrfToken, onExpired), [session.csrfToken, onExpired]);
   const rawNavigate = useCallback((selection: Navigation) => {
     const params = new URLSearchParams(query);
+    if ('job' in selection && selection.job !== jobId) params.delete('practice');
     for (const [key, value] of Object.entries(selection)) {
       if (value == null) params.delete(key); else params.set(key, value);
     }
@@ -224,6 +236,11 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
           : view === 'candidate' ? <CandidateView api={api} disabled={disabled} refresh={refresh} navigate={navigate} sourceId={searchParams.get('source')} asOf={data.asOf} isOwner={data.workspace.is_owner}/>
           : view === 'answers' ? <AnswersView api={api} disabled={disabled} refresh={refresh} asOf={data.asOf}/>
           : view === 'discovery' ? <DiscoveryView api={api} disabled={disabled} refresh={refresh} asOf={data.asOf} navigate={navigate}/>
+          : view === 'browser' ? <BrowserView api={api} disabled={disabled} refresh={refresh} navigate={navigate}/>
+          : view === 'gmail' ? <GmailView api={api} disabled={disabled} asOf={data.asOf} navigate={navigate}/>
+          : view === 'discord' ? <DiscordView api={api} disabled={disabled} asOf={data.asOf}/>
+          : view === 'networking' ? <NetworkingView api={api} disabled={disabled} asOf={data.asOf}/>
+          : view === 'interview' ? <InterviewView key={jobId} api={api} disabled={disabled} job={data.jobs.find(j=>j.id===jobId)??null} asOf={data.asOf} refresh={refresh} onDirtyChange={setNoteDirty}/>
           : view === 'applications' ? <ApplicationsView data={data} api={api} disabled={disabled} refresh={refresh} navigate={navigate} filter={filter} selectedId={searchParams.get('application')}/>
           : view === 'activity' ? <ActivityView data={data} navigate={navigate} />
           : <SettingsView data={data} api={api} disabled={disabled} refresh={refresh} onLogout={async () => { await api.post('/api/auth/logout', {}); onSignedOut(); }} />}

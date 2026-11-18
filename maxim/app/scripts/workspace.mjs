@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { spawn, execFileSync } from 'node:child_process';
 import { appDir,defaultConfigFile,readConfig,provision,compose,freePort,delay,sha } from './environment.mjs';
 import { backupWorkspace,restoreWorkspace } from './recovery.mjs';
+import {closeOwnedBrowsers} from './browser-sessions.mjs';
 
 const require=createRequire(import.meta.url),action=process.argv[2]||'start';
 const workerPath=path.join(appDir,'src','worker','main.ts');
@@ -66,6 +67,7 @@ async function main(){
   throw Error('Workspace did not become ready; inspect the private server log.');
  }
  if(action==='stop'){
+  closeOwnedBrowsers(c);
   stopOwned(path.join(c.privateRoot,'worker.json'),cmd=>cmd.includes(workerPath)&&cmd.includes(defaultConfigFile));
   stopOwned(pidFile,(cmd,owned)=>cmd.includes(require.resolve('next/dist/bin/next'))&&cmd.includes('--port '+new URL(owned.origin).port));
   compose(c,['stop','database']);console.log('Workspace stopped; data retained.');return;

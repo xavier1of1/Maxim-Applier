@@ -13,6 +13,11 @@ import {validRefs,renderFactEvidence} from './answer-validity';
 import {discoveryView,discoveryCommand} from './discovery';
 import {applicationView} from './application-reads';
 import {evaluationCommand} from './evaluations';
+import {browserTool} from './browser/agent';
+import {interviewTool} from './interview/agent';
+import {gmailAgentView} from './integrations/gmail/reads';
+import {networkingAgentRead} from './networking/reads';
+import {discordView} from './integrations/discord';
 
 const controllers=new Map<string,AbortController>();
 const toolSchemas = {
@@ -43,6 +48,14 @@ async function invoke(ctx:Context,cid:string,rid:string,call:ToolCall) {
  await live(ctx,cid,rid);
  let args:unknown;
  try { args=JSON.parse(call.function.arguments); } catch { return {error:'invalid_arguments'}; }
+ if(['read_application_assistance','fill_approved_application_fields'].includes(call.function.name))return browserTool(ctx,rid,call.function.name,args);
+ if(['start_interview_practice','read_interview_practice'].includes(call.function.name))return interviewTool(ctx,rid,call.function.name,args);
+ if(call.function.name==='read_gmail_evidence'){toolSchemas.read_workspace.parse(args);return gmailAgentView(ctx);}
+ if(call.function.name==='read_networking')return networkingAgentRead(ctx,args);
+ if(call.function.name==='read_notification_status'){
+  toolSchemas.read_workspace.parse(args);const d=await discordView(ctx);
+  return {enabled:d.settings.enabled,deliveries:d.notifications.map(n=>({id:n.id,kind:n.kind,status:n.status})).slice(0,10),view:'discord'};
+ }
  if(call.function.name==='read_applications'){
   toolSchemas.read_workspace.parse(args);const d=await applicationView(ctx);
   return {asOf:d.asOf,partial:d.partial||d.applications.length>6,authority:d.authority.owner,applications:d.applications.slice(0,6).map(a=>{

@@ -1,4 +1,4 @@
-export type View = 'jobs' | 'applications' | 'activity' | 'settings' | 'candidate' | 'answers' | 'discovery';
+export type View = 'jobs' | 'applications' | 'activity' | 'settings' | 'candidate' | 'answers' | 'discovery' | 'browser' | 'gmail' | 'discord' | 'networking' | 'interview';
 export type RecordFilter = 'active' | 'archived';
 export type Navigation = Partial<Record<'view' | 'job' | 'conversation' | 'filter' | 'source' | 'application', string | null>>;
 

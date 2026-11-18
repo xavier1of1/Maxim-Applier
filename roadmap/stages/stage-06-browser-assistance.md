@@ -1,7 +1,7 @@
 # S6: Supported browser application assistance
 
-**Status:** Pending implementation. Detailed plan drafted; no acceptance criterion is claimed passed.
-**Updated:** 2026-11-16.
+**Status:** In progress. Implementation integrated; final acceptance gates remain open.
+**Updated:** 2026-11-17.
 **Roadmap:** [Stage index](README.md) | [High-level roadmap](../high-level-roadmap.md) | [Shared contracts](contracts.md)
 **Requires:** [S5](stage-05-evaluation-and-tracker-cutover.md)
 
@@ -87,7 +87,9 @@ Live login/site access requires the user's authorized session. No platform bypas
 
 ## What Shipped
 
-Pending. No executor is installed, browser opened, application filled or submitted by this plan.
+Pinned agent-browser, dedicated visible sessions, approved facts/answers/PDF, pause/resume, explicit manual handoff and isolated tests are implemented. Final combined regression and permitted live form-variant certification remain outstanding.
+
+See [measured MVP verification and remaining gates](../reviews/mvp-completion-verification.md). No unrun acceptance checkbox is promoted.
 
 ## Deferred To Later Stages
 

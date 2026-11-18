@@ -22,3 +22,21 @@ Run with:
 ```powershell
 npm run maxim:safety
 ```
+
+## Integrated Workspace Coverage
+
+The primary application executor is pinned agent-browser 0.43.0, not Playwright.
+Real native-Chrome fixture tests verify stale controls/other-opening denial,
+hidden resume selection/exact PDF bytes, network containment before manual review
+and release only on explicit handoff. API tests bind current candidate, approved
+packet and exact answer-use revisions; agent tools cannot approve or submit.
+Final changed integration/UI reruns await Docker recovery and are not counted
+as passing. No live employer submission is a safety test.
+
+Gmail and Discord response reads have byte/chunk/deadline ceilings; delivery has
+persistent accepted/uncertain states and bounded retries. Local status refreshes
+are sequential, visible-only and ninety-second bounded. The existing scanner's
+rules were not weakened or exempted to accommodate the new code. Static scanning
+is a heuristic, not a proof of all browser or dependency behavior. Consult the
+[measured record](../../../roadmap/reviews/mvp-completion-verification.md) and
+[browser support matrix](../browser-assistance.md).
