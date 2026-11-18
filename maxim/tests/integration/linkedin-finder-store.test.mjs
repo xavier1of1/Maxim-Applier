@@ -1,4 +1,5 @@
 import test from "node:test";
+import {fixtureDirectory} from "../../lib/test-resources.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -20,8 +21,8 @@ function testEventLog() {
   };
 }
 
-test("parsed LinkedIn people results can feed the store-backed networking queue", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-linkedin-finder-store-"));
+test("parsed LinkedIn people results can feed the store-backed networking queue", (t) => {
+  const tmp = fixtureDirectory(t, "maxim-linkedin-finder-store-");
   const store = new SQLiteMaximStore({ dbPath: path.join(tmp, "maxim.db"), eventLog: testEventLog() });
   store.upsertEvaluation({
     id: "eval_linkedin_finder",

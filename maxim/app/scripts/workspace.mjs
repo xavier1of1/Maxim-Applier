@@ -5,6 +5,7 @@ import { spawn, execFileSync } from 'node:child_process';
 import { appDir,defaultConfigFile,readConfig,provision,compose,freePort,delay,sha } from './environment.mjs';
 import { backupWorkspace,restoreWorkspace } from './recovery.mjs';
 import {closeOwnedBrowsers} from './browser-sessions.mjs';
+import {browserStorageEnv} from '../../lib/test-resources.mjs';
 
 const require=createRequire(import.meta.url),action=process.argv[2]||'start';
 const workerPath=path.join(appDir,'src','worker','main.ts');
@@ -33,7 +34,7 @@ async function ensureWorker(c){
  }
  const log=fs.openSync(path.join(c.privateRoot,'worker.log'),'a',0o600);
  const child=spawn(process.execPath,['--import','tsx',workerPath,'--runtime-file',defaultConfigFile],
-  {cwd:appDir,env:{...process.env,MAXIM_RUNTIME_FILE:defaultConfigFile},detached:true,stdio:['ignore',log,log],windowsHide:true});
+  {cwd:appDir,env:{...process.env,...browserStorageEnv(),MAXIM_RUNTIME_FILE:defaultConfigFile},detached:true,stdio:['ignore',log,log],windowsHide:true});
  child.unref();fs.closeSync(log);
  fs.writeFileSync(file,JSON.stringify({pid:child.pid,startedAt:new Date().toISOString()}),{mode:0o600});
  await delay(1500);
@@ -56,7 +57,7 @@ async function main(){
   if(!fs.existsSync(path.join(appDir,'.next','BUILD_ID')))throw Error('Build the workspace first: npm --prefix maxim/app run build');
   const log=fs.openSync(path.join(c.privateRoot,'server.log'),'a',0o600);
   const child=spawn(process.execPath,[require.resolve('next/dist/bin/next'),'start','--hostname','127.0.0.1','--port',String(port)],
-   {cwd:appDir,env:{...process.env,MAXIM_RUNTIME_FILE:defaultConfigFile,NEXT_TELEMETRY_DISABLED:'1'},detached:true,stdio:['ignore',log,log],windowsHide:true});
+   {cwd:appDir,env:{...process.env,...browserStorageEnv(),MAXIM_RUNTIME_FILE:defaultConfigFile,NEXT_TELEMETRY_DISABLED:'1'},detached:true,stdio:['ignore',log,log],windowsHide:true});
   child.unref();fs.closeSync(log);
   fs.writeFileSync(pidFile,JSON.stringify({pid:child.pid,origin:c.origin,startedAt:new Date().toISOString()}),{mode:0o600});
   for(let i=0;i<90;i++){

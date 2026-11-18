@@ -1,4 +1,5 @@
 import test from "node:test";
+import {fixtureDirectory} from "../../lib/test-resources.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -20,8 +21,8 @@ function testEventLog() {
   };
 }
 
-test("dashboard snapshot exports store-backed command-center DTOs", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-dashboard-state-"));
+test("dashboard snapshot exports store-backed command-center DTOs", (t) => {
+  const tmp = fixtureDirectory(t, "maxim-dashboard-state-");
   const store = new SQLiteMaximStore({ dbPath: path.join(tmp, "maxim.db"), eventLog: testEventLog() });
   store.upsertJob({
     id: "job_t3",

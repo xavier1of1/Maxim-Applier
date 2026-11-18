@@ -3,6 +3,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 
 import { fromRoot } from "../lib/path-utils.mjs";
+import {testStorageEnv} from '../lib/test-resources.mjs';
 
 function collectTests(dir) {
   if (!fs.existsSync(dir)) {
@@ -23,7 +24,8 @@ if (files.length === 0) {
   process.exit(1);
 }
 
-const result = spawnSync("node", ["--test", ...files], {
+const result = spawnSync(process.execPath, ["--test", ...files], {
   stdio: "inherit",
+  env:testStorageEnv(),
 });
 process.exit(result.status ?? 1);

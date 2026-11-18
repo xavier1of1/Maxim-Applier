@@ -74,6 +74,10 @@ records. See [verification](../../roadmap/reviews/mvp-completion-verification.md
 
 ## Backup, Restore And Problems
 
+For disk usage, safe cleanup and test/browser locations, see
+[Storage maintenance](storage-maintenance.md). Docker recovery and host-side
+cleanup are implemented; this does not promote the remaining MVP acceptance gates.
+
 ~~~powershell
 npm run maxim:workspace:backup
 npm run maxim:workspace:restore -- workspace-REPLACE_WITH_BACKUP_ID

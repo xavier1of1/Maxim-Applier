@@ -1,4 +1,5 @@
 import test from "node:test";
+import {fixtureDirectory} from "../../lib/test-resources.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -51,8 +52,8 @@ test("historical CSV import preserves raw rows and derives interview signal", ()
   assert.equal(rows[1].normalized.interviewSignal, false);
 });
 
-test("historical XLSX import reads first worksheet and derives interview signal", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-xlsx-"));
+test("historical XLSX import reads first worksheet and derives interview signal", (t) => {
+  const tmp = fixtureDirectory(t, "maxim-xlsx-");
   const workbookPath = path.join(tmp, "history.xlsx");
   writeMinimalXlsx(workbookPath);
 
@@ -63,8 +64,8 @@ test("historical XLSX import reads first worksheet and derives interview signal"
   assert.equal(rows[0].normalized.interviewSignal, true);
 });
 
-test("historical import preserves raw file and writes separate normalized output", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-history-"));
+test("historical import preserves raw file and writes separate normalized output", (t) => {
+  const tmp = fixtureDirectory(t, "maxim-history-");
   const sourcePath = fromRoot("maxim/tests/fixtures/history-sample.csv");
   const result = importHistoryFile(sourcePath, {
     rawDir: path.join(tmp, "raw"),

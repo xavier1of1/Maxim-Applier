@@ -6,11 +6,12 @@ import crypto from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import pg from 'pg';
 import {appDir,repo,freePort,waitDatabase,sha,delay} from '../../scripts/environment.mjs';
+import {createFixture,removeFixture,startTestDatabase,stopTestDatabase,cleanupTasks} from '../../../lib/test-resources.mjs';
 
 // No default runtime, existing database, .env, access key or provider is consulted.
 export async function interviewHarness(){
  if(process.env.MAXIM_RUNTIME_FILE)throw Error('Interview fixture refuses an inherited runtime selector.');
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'maxim-test-interview-'));
+ const root=createFixture('maxim-test-interview-');
  const suffix=crypto.randomUUID(),container='maxim-test-'+suffix,name='maxim_test_'+suffix.replaceAll('-','');
  const password=crypto.randomBytes(24).toString('hex'),port=await freePort(),dbPort=await freePort();
  const timers=new Set(),captured=[];
@@ -57,16 +58,15 @@ export async function interviewHarness(){
  }
  async function stopServer(){if(app){app.closeAllConnections();await new Promise(resolve=>app.close(resolve));app=undefined;}}
  async function close(){
-  if(closed)return;closed=true;await stopServer();for(const t of timers)clearTimeout(t);
-  provider.closeAllConnections();await new Promise(resolve=>provider.close(resolve));
-  if(modules)await modules.database().end();delete process.env.MAXIM_RUNTIME_FILE;
-  execFileSync('docker',['rm','-f',container],{stdio:'ignore',windowsHide:true});
-  const actual=path.resolve(root),temp=path.resolve(os.tmpdir());
-  if(!actual.startsWith(temp+path.sep)||!path.basename(actual).startsWith('maxim-test-interview-'))throw Error('Unsafe interview cleanup');
-  fs.rmSync(actual,{recursive:true,force:true});
+  if(closed)return;closed=true;
+  await cleanupTasks([stopServer,
+   async()=>{for(const t of timers)clearTimeout(t);provider.closeAllConnections();await new Promise(resolve=>provider.close(resolve));},
+   async()=>{if(modules)await modules.database().end();},()=>{delete process.env.MAXIM_RUNTIME_FILE;},
+   ()=>stopTestDatabase(container),()=>removeFixture(root,{allowCurrent:true}),
+  ]);
  }
  try{
-  execFileSync('docker',['run','--detach','--rm','--name',container,'-e','POSTGRES_PASSWORD','-e','POSTGRES_USER=maxim','-e','POSTGRES_DB='+name,'-p','127.0.0.1:'+dbPort+':5432','postgres:18.1'],{env:{...process.env,POSTGRES_PASSWORD:password},stdio:'pipe',windowsHide:true,timeout:180000});
+  startTestDatabase({...c,testContainer:container});
   await waitDatabase(c.databaseUrl);
   await sql('CREATE TABLE schema_migrations(version integer PRIMARY KEY,applied_at timestamptz NOT NULL DEFAULT now())');
   const directory=path.join(repo,'maxim/db/postgres');

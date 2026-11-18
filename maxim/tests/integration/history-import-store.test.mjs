@@ -1,4 +1,5 @@
 import test from "node:test";
+import {fixtureDirectory} from "../../lib/test-resources.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -20,8 +21,8 @@ function testEventLog() {
   };
 }
 
-test("historical imports are stored idempotently with raw and normalized rows split", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-history-store-"));
+test("historical imports are stored idempotently with raw and normalized rows split", (t) => {
+  const tmp = fixtureDirectory(t, "maxim-history-store-");
   const sourcePath = fromRoot("maxim/tests/fixtures/history-sample.csv");
   const result = importHistoryFile(sourcePath, {
     rawDir: path.join(tmp, "raw"),

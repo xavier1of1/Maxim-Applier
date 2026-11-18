@@ -1,6 +1,6 @@
 # Maxim Apply Implementation Status
 
-Updated: 2026-11-17. Canonical repository: `D:\VSC Programs\maxim-apply`.
+Updated: 2026-11-18. Canonical repository: `D:\VSC Programs\maxim-apply`.
 S0-S5 are verified for their bounded scopes and are recorded as separate stage
 commits. S6-S10 implementation and S11 acceptance infrastructure are now integrated
 but remain In progress until final combined/live gates pass. No production
@@ -10,9 +10,12 @@ The prior June implementation record is retained in
 
 ## Available Workflow
 
-Current use/setup: [Start and use Maxim](setup.md). Final combined testing and
-production restart are blocked by C: disk exhaustion/unresponsive Docker; the
-stack remains stopped, with private data and backup retained. See
+Current use/setup: [Start and use Maxim](setup.md). The November 18 storage follow-up
+recovered Docker, fixed fixture/volume cleanup, relocated required browser binaries,
+cleared separately approved unused build cache and verified fresh backup/restore.
+The web stack remains stopped as before;
+full MVP acceptance still requires its remaining complete-suite/UI/live gates. See
+[storage results and safe commands](storage-maintenance.md) and
 [measured verification and exact next steps](../../roadmap/reviews/mvp-completion-verification.md).
 
 - Local Next/React/Astryx dashboard, authenticated API, PostgreSQL and durable worker.
@@ -94,17 +97,16 @@ source failures are not treated as empty successful searches or fit evaluations.
 
 ## Current Verification And Manual Gates
 
-Final current checks: 35 app unit, 29 Rust, 57 retained Maxim and 146 sanitized
+Final current checks: 35 app unit, 29 Rust, 70 retained Maxim and 146 sanitized
 native checks pass; Go, safety, privacy, typecheck/build pass. The native suite has
 one expected missing-CV warning and Windows shell-path warnings in its legacy
 privacy probes, covered separately by the Maxim public-tree privacy check.
-Initial S6 mounted integration passed three TAP cases; final changed combined
-integration/UI and two new S11 rehearsals are not counted as passed. Docker became
-unresponsive after C: filled. No live mail, webhook, model or employer application
+The November 18 targeted S6/S8/S10 integration passed 33 TAP cases; the final full
+integration/UI suite and two new S11 rehearsals are not counted as passed. Docker
+recovered after the disk-related outage. No live mail, webhook, model or employer application
 action ran. Keep stages In progress and do not merge on partial evidence.
 
-Remaining: recover at least 10 GB on Docker's drive, restore engine health, rerun
-the complete app tests/UI screenshots, certify permitted live form variants,
+Remaining: rerun the complete app tests/UI screenshots, certify permitted live form variants,
 approve the proposed demo profile, then review separate personal authority/model/
 Gmail/Discord configuration. [Setup](setup.md) supplies the exact workflows;
 [verification](../../roadmap/reviews/mvp-completion-verification.md) lists commands

@@ -7,9 +7,10 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 import {BrowserExecutor} from '../../src/server/browser/executor.ts';
 import {destination} from '../../src/server/browser/policy.ts';
+import {createFixture,removeFixture} from '../../../lib/test-resources.mjs';
 
 test('real agent-browser observes, fills, refuses stale values and blocks final effects before manual handoff',async()=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'maxim-test-browser-')),previous=process.env.MAXIM_RUNTIME_FILE;
+ const root=createFixture('maxim-test-browser-'),previous=process.env.MAXIM_RUNTIME_FILE;
  let submissions=0,submittedBytes=Buffer.alloc(0);const server=http.createServer(async(req,res)=>{
   if(req.method==='POST'){const chunks=[];for await(const chunk of req)chunks.push(chunk);submittedBytes=Buffer.concat(chunks);submissions++;res.end('accepted');return;}
   res.setHeader('Content-Type','text/html');res.end('<!doctype html><form action="/submit" method="POST" enctype="multipart/form-data"><label>Full name<input name="name" required></label><label>Email<input name="email" type="email"></label><label hidden>Resume<input type="file" name="resume"></label><input type="hidden" name="csrf" value="fixture-token"><label>Team<select name="team"><option value="backend">Backend</option><option value="frontend">Frontend</option></select></label><label>Reason<textarea name="reason"></textarea></label><button type="submit">Submit application</button></form>');
@@ -43,6 +44,6 @@ test('real agent-browser observes, fills, refuses stale values and blocks final 
  }finally{
   await executor.close().catch(()=>{});server.closeAllConnections();await new Promise(r=>server.close(r));
   if(previous===undefined)delete process.env.MAXIM_RUNTIME_FILE;else process.env.MAXIM_RUNTIME_FILE=previous;
-  const target=path.resolve(root);assert.ok(target.startsWith(path.resolve(os.tmpdir())+path.sep)&&path.basename(target).startsWith('maxim-test-browser-'));fs.rmSync(target,{recursive:true,force:true});
+  removeFixture(root,{allowCurrent:true});
  }
 });

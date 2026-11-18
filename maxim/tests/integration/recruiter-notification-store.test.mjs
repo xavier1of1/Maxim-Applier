@@ -1,4 +1,5 @@
 import test from "node:test";
+import {fixtureDirectory} from "../../lib/test-resources.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -20,8 +21,8 @@ function testEventLog() {
   };
 }
 
-test("recruiter needs-response state persists and clears when responded", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-recruiter-store-"));
+test("recruiter needs-response state persists and clears when responded", (t) => {
+  const tmp = fixtureDirectory(t, "maxim-recruiter-store-");
   const store = new SQLiteMaximStore({ dbPath: path.join(tmp, "maxim.db"), eventLog: testEventLog() });
   const created = store.upsertRecruiterThread(
     createRecruiterThread({ subject: "Follow up from recruiter", company: "Acme Systems", tags: ["Needs Response"] }),
@@ -33,8 +34,8 @@ test("recruiter needs-response state persists and clears when responded", () => 
   assert.equal(store.getRecruiterThread(created.id).status, "Responded");
 });
 
-test("notification planner uses persisted high-conviction jobs, drafts, and recruiter reminders", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-notify-store-"));
+test("notification planner uses persisted high-conviction jobs, drafts, and recruiter reminders", (t) => {
+  const tmp = fixtureDirectory(t, "maxim-notify-store-");
   const store = new SQLiteMaximStore({ dbPath: path.join(tmp, "maxim.db"), eventLog: testEventLog() });
   store.upsertJob({
     id: "job_t3",

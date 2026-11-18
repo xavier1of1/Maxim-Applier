@@ -76,9 +76,20 @@ Docker/disk recovery. Its private data and pre-change backup were retained.
 
 ## Resume Verification
 
-1. Free at least 10 GB on Docker's actual drive and restore Docker Desktop health.
-   Do not delete the live volume or run broad prune. Review only Maxim-owned
-   `maxim-test-*` containers left by the interrupted run before removing them.
+**November 18 storage follow-up:** Docker is responsive again. Fixture lifecycle,
+volume cleanup and disk headroom checks are implemented. Final targeted S6/S8/S10
+integration passed 33 cases; 70 retained Maxim and 35 app unit checks pass. Three
+real database cycles plus an actual interrupted-owner recovery left no new owned
+resources. A fresh private backup/restore passed; user ownership remains legacy.
+Separately approved shared build-cache cleanup reported 21.25 GB reclaimed inside
+Docker, without deleting any application image, container or database volume.
+See [storage evidence](../../docs/maxim/storage-maintenance.md). Full S11/UI/live
+acceptance remains open; the original outage record above is historical.
+
+1. Confirm Docker remains responsive and its actual drive still has at least
+   10 GiB free. Recovery/cache cleanup has run, but the disk remains on C:.
+   Do not delete live/unverified volumes or run broad prune. Use the owned-resource
+   preview/apply command for any new interrupted test leftovers.
 2. From maxim/app, prepend `node_modules/node/bin` to PATH, optionally set
    TEMP/TMP to an external test directory and run `npm test` for Rust, unit,
    production build, full integration and full Playwright checks.

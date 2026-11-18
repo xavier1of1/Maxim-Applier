@@ -6,9 +6,10 @@ import crypto from 'node:crypto';
 import {spawn,execFileSync} from 'node:child_process';
 import pg from 'pg';
 import {appDir,freePort,waitDatabase,migrate} from '../../scripts/environment.mjs';
+import {createFixture,removeFixture,startTestDatabase,stopTestDatabase,cleanupTasks} from '../../../lib/test-resources.mjs';
 
 export async function discordHarness({ui=false}={}) {
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'maxim-test-discord-'));
+ const root=createFixture('maxim-test-discord-');
  const suffix=crypto.randomUUID(),container='maxim-test-'+suffix,databaseName='maxim_test_'+suffix.replaceAll('-','');
  const port=await freePort(),dbPort=await freePort(),password=crypto.randomBytes(24).toString('hex');
  const c={databaseUrl:`postgresql://maxim:${password}@127.0.0.1:${dbPort}/${databaseName}`,origin:`http://127.0.0.1:${port}`,privateRoot:root,
@@ -17,8 +18,20 @@ export async function discordHarness({ui=false}={}) {
  const runtime=path.join(root,'runtime.json');fs.writeFileSync(runtime,JSON.stringify(c),{mode:0o600});
  let created=false,pool,server,remote,db,prior=process.env.MAXIM_RUNTIME_FILE;
  const children=new Set(),requests=[];let route;
+ let closed=false;
+ const release=async()=>{
+  if(closed)return;closed=true;
+  await cleanupTasks([
+   ...[...children].map(child=>async()=>{child.kill();await Promise.race([new Promise(resolve=>child.once('exit',resolve)),new Promise(resolve=>setTimeout(resolve,3000))]);}),
+   async()=>{if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}},
+   async()=>{if(remote){remote.closeAllConnections();await new Promise(r=>remote.close(r));}},
+   async()=>{if(pool)await pool.end();},async()=>{if(db)await db.database().end();},
+   ()=>{if(prior===undefined)delete process.env.MAXIM_RUNTIME_FILE;else process.env.MAXIM_RUNTIME_FILE=prior;},
+   ()=>stopTestDatabase(container),()=>removeFixture(root,{allowCurrent:true}),
+  ]);
+ };
  try {
-  execFileSync('docker',['run','-d','--name',container,'--label','maxim.discord.fixture=true','-e','POSTGRES_USER=maxim','-e','POSTGRES_PASSWORD='+password,'-e','POSTGRES_DB='+databaseName,'-p',`127.0.0.1:${dbPort}:5432`,'postgres:18.1-alpine'],{stdio:'pipe',windowsHide:true,timeout:90000});created=true;
+  startTestDatabase(c,'postgres:18.1-alpine');created=true;
   await waitDatabase(c.databaseUrl);await migrate(c);
   pool=new pg.Pool({connectionString:c.databaseUrl});
   process.env.MAXIM_RUNTIME_FILE=runtime;
@@ -80,18 +93,9 @@ export async function discordHarness({ui=false}={}) {
    sql:(sql,args)=>pool.query(sql,args),setRoute:r=>{route=r;},
    async request(endpoint,body,headers={}){return fetch(c.origin+endpoint,{method:body===undefined?'GET':'POST',headers:{Cookie:'maxim_session='+sessionToken,Origin:c.origin,'x-csrf-token':csrf,'Content-Type':'application/json',...headers},...(body===undefined?{}:{body:JSON.stringify(body)})});},
    cookie:{name:'maxim_session',value:sessionToken,url:c.origin,httpOnly:true,sameSite:'Strict'},
-   async close(){
-    for(const child of children){child.kill();await new Promise(resolve=>child.once('exit',resolve));}
-    server.closeAllConnections();remote.closeAllConnections();await Promise.all([new Promise(r=>server.close(r)),new Promise(r=>remote.close(r))]);
-    await pool.end();await db.database().end();
-    if(prior===undefined)delete process.env.MAXIM_RUNTIME_FILE;else process.env.MAXIM_RUNTIME_FILE=prior;
-    execFileSync('docker',['rm','-f',container],{stdio:'ignore',windowsHide:true});
-    if(path.dirname(root)!==os.tmpdir()||!path.basename(root).startsWith('maxim-test-discord-'))throw Error('Unsafe fixture cleanup');
-    fs.rmSync(root,{recursive:true,force:true});
-   }};
+   close:release};
  }catch(e){
-  if(server)server.close();if(remote)remote.close();if(pool)await pool.end();
-  if(created)execFileSync('docker',['rm','-f',container],{stdio:'ignore',windowsHide:true});
+  try{await release();}catch(cleanup){throw new AggregateError([e,cleanup],'Discord fixture setup and cleanup failed');}
   throw e;
  }
 }

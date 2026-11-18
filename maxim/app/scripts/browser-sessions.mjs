@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
-import {appDir} from './environment.mjs';
+import {repoRoot} from '../../lib/path-utils.mjs';
+const appDir=path.join(repoRoot,'maxim','app');
 
 export function closeOwnedBrowsers(c){
  const root=path.join(c.privateRoot,'browser-sessions');if(!fs.existsSync(root))return;

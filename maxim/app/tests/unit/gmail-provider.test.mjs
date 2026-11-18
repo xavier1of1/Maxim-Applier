@@ -6,9 +6,10 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {GoogleGmail,READ_SCOPE,pkce} from '../../src/server/integrations/gmail/provider.ts';
 import {writePrivate} from '../../src/server/integrations/gmail/private.ts';
+import {createFixture,removeFixture} from '../../../lib/test-resources.mjs';
 
 test('S7 actual Google adapter is read-only, PKCE-bound and transport-bounded',async t=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'maxim-test-gmail-')),runtime=path.join(root,'runtime.json'),oldEnv=process.env.MAXIM_RUNTIME_FILE,oldFetch=globalThis.fetch;
+ const root=createFixture('maxim-test-gmail-'),runtime=path.join(root,'runtime.json'),oldEnv=process.env.MAXIM_RUNTIME_FILE,oldFetch=globalThis.fetch;
  fs.writeFileSync(runtime,JSON.stringify({databaseUrl:'postgresql://maxim@127.0.0.1:1/maxim_test_gmail',origin:'http://127.0.0.1:3010',privateRoot:root,workspaceId:crypto.randomUUID(),bootstrapKey:'x'.repeat(32),model:{model:'fixture',apiKey:'fixture',baseUrl:'http://127.0.0.1:1/v1'},testMode:true}));
  process.env.MAXIM_RUNTIME_FILE=runtime;
  const calls=[],responses=[];
@@ -47,6 +48,6 @@ test('S7 actual Google adapter is read-only, PKCE-bound and transport-bounded',a
   assert.ok(calls.filter(c=>c.url.includes('gmail.googleapis.com')).every(c=>!c.init.method||c.init.method==='GET'));
  }finally{
   globalThis.fetch=oldFetch;if(oldEnv===undefined)delete process.env.MAXIM_RUNTIME_FILE;else process.env.MAXIM_RUNTIME_FILE=oldEnv;
-  const resolved=path.resolve(root);assert.ok(resolved.startsWith(path.resolve(os.tmpdir())+path.sep)&&path.basename(resolved).startsWith('maxim-test-gmail-'));fs.rmSync(resolved,{recursive:true,force:true});
+  removeFixture(root,{allowCurrent:true});
  }
 });

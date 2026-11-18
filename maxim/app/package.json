@@ -21,10 +21,10 @@
     "backup": "node scripts/workspace.mjs backup",
     "restore": "node scripts/workspace.mjs restore",
     "key": "node scripts/workspace.mjs key",
-    "test:integration": "node tests/run-integration.mjs",
-    "test:unit": "node --import tsx --test tests/unit/*.test.mjs",
+    "test:integration": "node ../scripts/with-test-storage.mjs tests/run-integration.mjs",
+    "test:unit": "node ../scripts/with-test-storage.mjs --import tsx --test tests/unit/*.test.mjs",
     "pretest:unit": "npm run prepare:tokenizers && npm run build:rust",
-    "test:e2e": "playwright test",
+    "test:e2e": "node ../scripts/with-test-storage.mjs node_modules/@playwright/test/cli.js test",
     "test": "npm run typecheck && npm run test:rust && npm run test:unit && npm run build && npm run test:integration && npm run test:e2e"
   },
   "dependencies": {

@@ -1,4 +1,5 @@
 import test from "node:test";
+import {fixtureDirectory} from "../../lib/test-resources.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -26,8 +27,8 @@ function testEventLog() {
   };
 }
 
-test("networking shortlist and manual message drafts persist to the Maxim store", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-networking-store-"));
+test("networking shortlist and manual message drafts persist to the Maxim store", (t) => {
+  const tmp = fixtureDirectory(t, "maxim-networking-store-");
   const store = new SQLiteMaximStore({ dbPath: path.join(tmp, "maxim.db"), eventLog: testEventLog() });
   const job = { id: "job_demo", company: "Acme Systems", role: "Software Engineer" };
   const [ranked] = rankContactsForJob(job, [
@@ -77,8 +78,8 @@ test("networking shortlist and manual message drafts persist to the Maxim store"
   assert.equal(store.query("SELECT COUNT(*) AS count FROM audit_events")[0].count, 1);
 });
 
-test("store-backed networking queue creates manual drafts and preserves sent status on rerun", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-networking-workflow-"));
+test("store-backed networking queue creates manual drafts and preserves sent status on rerun", (t) => {
+  const tmp = fixtureDirectory(t, "maxim-networking-workflow-");
   const store = new SQLiteMaximStore({ dbPath: path.join(tmp, "maxim.db"), eventLog: testEventLog() });
   store.upsertEvaluation({
     id: "eval_federal_platform_labs",
@@ -132,8 +133,8 @@ test("store-backed networking queue creates manual drafts and preserves sent sta
   assert.equal(store.listNetworkingQueue()[0].status, "sent_manually");
 });
 
-test("approved research notes feed target-specific manual draft creation", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-networking-research-"));
+test("approved research notes feed target-specific manual draft creation", (t) => {
+  const tmp = fixtureDirectory(t, "maxim-networking-research-");
   const store = new SQLiteMaximStore({ dbPath: path.join(tmp, "maxim.db"), eventLog: testEventLog() });
   store.upsertEvaluation({
     id: "eval_research_context",

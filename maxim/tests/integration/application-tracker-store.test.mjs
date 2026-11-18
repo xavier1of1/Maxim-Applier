@@ -1,4 +1,5 @@
 import test from "node:test";
+import {fixtureDirectory} from "../../lib/test-resources.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -24,8 +25,8 @@ function testEventLog() {
   };
 }
 
-test("application records preserve Career-Ops score/tier and manual status transitions", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-application-store-"));
+test("application records preserve Career-Ops score/tier and manual status transitions", (t) => {
+  const tmp = fixtureDirectory(t, "maxim-application-store-");
   const store = new SQLiteMaximStore({ dbPath: path.join(tmp, "maxim.db"), eventLog: testEventLog() });
   const evaluation = store.upsertEvaluation({
     id: "eval_app",
@@ -88,8 +89,8 @@ test("application records surface duplicate risk for same company role or URL", 
   assert.equal(record.tier, "T2");
 });
 
-test("apply workflow queues only default eligible synced evaluations", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-application-queue-"));
+test("apply workflow queues only default eligible synced evaluations", (t) => {
+  const tmp = fixtureDirectory(t, "maxim-application-queue-");
   const store = new SQLiteMaximStore({ dbPath: path.join(tmp, "maxim.db"), eventLog: testEventLog() });
   const t3 = store.upsertEvaluation({
     id: "eval_ready",
@@ -141,8 +142,8 @@ test("apply workflow queues only default eligible synced evaluations", () => {
   assert.equal(second.skipped.some((item) => item.reason === "already_queued"), true);
 });
 
-test("apply workflow promotes existing tracker rows when synced evaluation data is ready", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-application-promote-"));
+test("apply workflow promotes existing tracker rows when synced evaluation data is ready", (t) => {
+  const tmp = fixtureDirectory(t, "maxim-application-promote-");
   const store = new SQLiteMaximStore({ dbPath: path.join(tmp, "maxim.db"), eventLog: testEventLog() });
   const evaluation = store.upsertEvaluation({
     id: "eval_promote",

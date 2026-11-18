@@ -1,4 +1,5 @@
 import test from "node:test";
+import {fixtureDirectory} from "../../lib/test-resources.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
@@ -10,8 +11,8 @@ import { syncCareerOpsArtifacts } from "../../lib/tracker-sync.mjs";
 import { SQLiteMaximStore } from "../../lib/sqlite-store.mjs";
 import { fromRoot } from "../../lib/path-utils.mjs";
 
-function copyFixtureTree() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "maxim-sync-"));
+function copyFixtureTree(t) {
+  const root = fixtureDirectory(t, "maxim-sync-");
   fs.mkdirSync(path.join(root, "reports"), { recursive: true });
   fs.mkdirSync(path.join(root, "output"), { recursive: true });
   fs.mkdirSync(path.join(root, "data"), { recursive: true });
@@ -31,8 +32,8 @@ function copyFixtureTree() {
   return root;
 }
 
-test("sync stores reports and tracker rows idempotently", () => {
-  const root = copyFixtureTree();
+test("sync stores reports and tracker rows idempotently", (t) => {
+  const root = copyFixtureTree(t);
   const dbPath = path.join(root, "maxim.db");
   const store = new SQLiteMaximStore({ dbPath, eventLog: { append: (event) => ({ event_id: crypto.randomUUID(), timestamp: new Date().toISOString(), actor: "system", ...event }) } });
 
@@ -53,8 +54,8 @@ test("sync stores reports and tracker rows idempotently", () => {
   assert.match(application.pdf_path, /federal-platform-labs-software-engineer\.pdf$/);
 });
 
-test("sync applies local job URL overrides without rewriting reports", () => {
-  const root = copyFixtureTree();
+test("sync applies local job URL overrides without rewriting reports", (t) => {
+  const root = copyFixtureTree(t);
   fs.writeFileSync(
     path.join(root, "data", "maxim", "job_url_overrides.json"),
     JSON.stringify(

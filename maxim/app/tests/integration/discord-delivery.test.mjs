@@ -142,7 +142,10 @@ test('S8 real PostgreSQL durable Discord delivery, privacy, consent and crash re
    assert.equal((await tickDiscord(fake)).scheduled,0);assert.equal((await h.sql('SELECT * FROM discord_notifications')).rowCount,3);
    assert.equal(h.requests.length,0);await h.sql('UPDATE discord_schedules SET enabled=false');
   });
-  await t.test('optional producer contracts are absent by default; resolution is checked again before delivery',async()=>{
+  await t.test('absent optional producers are explicit; resolution is checked again before delivery',async()=>{
+   const views=(await h.sql("SELECT viewname,definition FROM pg_views WHERE schemaname='public' AND viewname IN ('discord_s7_ready_tasks','discord_s9_ready_tasks')")).rows;
+   for(const v of views)await h.sql('DROP VIEW public.'+v.viewname);
+   try{
    await clear();assert.equal((await h.service.discordPlan(h.ctx,{kind:'needs_response'})).reason,'producer_unavailable');
    await h.sql(`CREATE TABLE discord_s7_ready_tasks(workspace_id uuid,task_id uuid,revision integer,kind text,status text,due_at timestamptz,private_body text)`);
    await h.sql(`INSERT INTO discord_s7_ready_tasks VALUES($1,$2,1,'needs_response','pending',now(),'private_fixture_mail_body')`,[w,crypto.randomUUID()]);
@@ -156,6 +159,10 @@ test('S8 real PostgreSQL durable Discord delivery, privacy, consent and crash re
    const task=crypto.randomUUID();await h.sql(`INSERT INTO discord_s9_ready_tasks VALUES($1,$2,1,'recruiter_reminder','pending',now()),($1,$2,1,'recruiter_reminder','pending',now())`,[w,task]);
    assert.equal((await h.service.discordPlan(h.ctx,{kind:'recruiter_reminder'})).counts.recruiterReminder,1);
    const reminder=await enqueue('recruiter_reminder');await h.sql(`UPDATE discord_s9_ready_tasks SET status='resolved'`);await due();await run();assert.equal((await status(reminder.id)).status,'cancelled');
+   }finally{
+    await h.sql('DROP TABLE IF EXISTS discord_s7_ready_tasks,discord_s9_ready_tasks');
+    for(const v of views)await h.sql('CREATE VIEW public.'+v.viewname+' AS '+v.definition);
+   }
   });
   await t.test('fresh high-fit needs current retained evaluation and trustworthy S4 posted evidence',async()=>{
    await clear();const j=await seedJob(),source=crypto.randomUUID(),query=crypto.randomUUID(),runId=crypto.randomUUID(),attempt=crypto.randomUUID(),page=crypto.randomUUID(),evaluation=crypto.randomUUID(),posted=new Date(Date.now()-3600000);

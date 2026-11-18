@@ -78,6 +78,11 @@ This repository is Xavier Kubancik's controlled Maxim Apply fork of Career-Ops. 
 
 ### November 2026 Planning And Development
 
+- Storage/test maintenance: read `docs/maxim/storage-maintenance.md`. New disposable
+  fixtures use `maxim/lib/test-resources.mjs`; retain ownership records and fail
+  closed on unknown paths/volumes. `maxim:clean` is preview-only unless applying an
+  exact managed plan. Never replace scoped cleanup with global Docker pruning.
+
 - The new local workspace is implemented under `maxim/app/`; read `docs/maxim/workspace.md` and ADR 0006 before changing it. Use its pinned local Node/dependency lock, real PostgreSQL migrations and isolated acceptance harness. Run `npm run maxim:workspace:test`; do not use production credentials or add sample fallback data.
 - Candidate/application ownership remains explicitly gated by S2/S5; S9 contact/history imports do not silently migrate native data. S6 now uses pinned native agent-browser; read `docs/maxim/browser-assistance.md` and ADR 0011. Playwright remains PDF/test infrastructure, not the new application executor. Gmail/Discord are opt-in; never reuse assistant credentials or import legacy .env secrets automatically. Final combined acceptance is recorded in `roadmap/reviews/mvp-completion-verification.md`.
 

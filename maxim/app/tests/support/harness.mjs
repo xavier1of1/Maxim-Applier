@@ -8,6 +8,7 @@ import { spawn,execFileSync } from 'node:child_process';
 import pg from 'pg';
 import { appDir,freePort,waitDatabase,migrate,delay,sha,snapshotDatabase,restoreDatabase } from '../../scripts/environment.mjs';
 import {closeOwnedBrowsers} from '../../scripts/browser-sessions.mjs';
+import {createFixture,removeFixture,startTestDatabase,stopTestDatabase,cleanupTasks} from '../../../lib/test-resources.mjs';
 
 const require=createRequire(import.meta.url);
 export function assertTestConfig(c) {
@@ -16,7 +17,7 @@ export function assertTestConfig(c) {
  if(fs.realpathSync(c.privateRoot)===fs.realpathSync(appDir))throw Error('Unsafe test path');
 }
 export async function harness() {
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'maxim-test-'));
+ const root=createFixture('maxim-test-');
  const suffix=crypto.randomUUID(),container='maxim-test-'+suffix,database='maxim_test_'+suffix.replaceAll('-','');
  const dbPort=await freePort(),port=await freePort(),password=crypto.randomBytes(24).toString('hex');
  const captured=[],timers=new Set(),providerRequests=[],providerRoutes=new Map();
@@ -101,7 +102,7 @@ export async function harness() {
  assertTestConfig(c);
  let server,logFd;
  const workers=new Map();
- const cleanEnv=()=>Object.fromEntries(Object.entries(process.env).filter(([k])=>['PATH','Path','SystemRoot','SYSTEMROOT','WINDIR','TEMP','TMP','LOCALAPPDATA','USERPROFILE','COMSPEC','PATHEXT','NUMBER_OF_PROCESSORS'].includes(k)));
+ const cleanEnv=()=>Object.fromEntries(Object.entries(process.env).filter(([k])=>['PATH','Path','SystemRoot','SYSTEMROOT','WINDIR','TEMP','TMP','TMPDIR','LOCALAPPDATA','USERPROFILE','COMSPEC','PATHEXT','NUMBER_OF_PROCESSORS','MAXIM_TEST_TEMP_ROOT','PLAYWRIGHT_BROWSERS_PATH','NODE_COMPILE_CACHE'].includes(k)));
  const sql=async(text,params=[],name=database)=>{
   if(!/^maxim_test_[a-z0-9_]+$/.test(name))throw Error('Unsafe SQL target');
   const u=new URL(c.databaseUrl);u.pathname='/'+name;
@@ -146,11 +147,18 @@ export async function harness() {
   }
   if(logFd!==undefined){fs.closeSync(logFd);logFd=undefined;}
  }
+ let closed=false,browserShutdownComplete=false;
+ const release=async()=>{
+  if(closed)return;closed=true;
+  await cleanupTasks([
+   ...[...workers.keys()].map(child=>()=>stopWorker(child)),()=>{closeOwnedBrowsers(c);browserShutdownComplete=true;},stopServer,
+   async()=>{for(const t of timers)clearTimeout(t);modelServer.closeAllConnections();await new Promise(resolve=>modelServer.close(resolve));},
+   ()=>stopTestDatabase(container),()=>{if(!browserShutdownComplete)throw Error('Browser shutdown failed; fixture retained for owned recovery');return removeFixture(root,{allowCurrent:true});},
+  ]);
+ };
  try{
-  execFileSync('docker',['run','--detach','--rm','--name',container,'-e','POSTGRES_PASSWORD','-e','POSTGRES_USER=maxim','-e','POSTGRES_DB='+database,'-p','127.0.0.1:'+dbPort+':5432','postgres:18.1'],
-   {env:{...process.env,POSTGRES_PASSWORD:password},stdio:'pipe',windowsHide:true,timeout:180000});
+  startTestDatabase(c);
   await waitDatabase(c.databaseUrl);await migrate(c);await startServer();
- }catch(error){await stopServer().catch(()=>{});try{execFileSync('docker',['rm','-f',container],{stdio:'ignore',windowsHide:true,timeout:15000});}catch{}modelServer.closeAllConnections();modelServer.close();throw error;}
  const other={workspaceId:crypto.randomUUID(),key:crypto.randomBytes(32).toString('hex')};
  await sql('INSERT INTO workspaces(id,name,is_owner) VALUES($1,$2,false)',[other.workspaceId,'Second isolated workspace']);
  await sql('INSERT INTO candidates(id,workspace_id,display_name) VALUES($1,$2,$3)',[crypto.randomUUID(),other.workspaceId,'Other fixture']);
@@ -171,17 +179,9 @@ export async function harness() {
  const a=await login(c.bootstrapKey),b=await login(other.key);
  return {root,c,runtime,container,database,captured,providerRequests,providerRoutes,a,b,other,sql,login,request,startServer,stopServer,startWorker,stopWorker,
   snapshotDatabase:target=>snapshotDatabase(c,target),restoreDatabase:(dump,name)=>restoreDatabase(c,dump,name),
-  async close(){
-   for(const child of [...workers.keys()])await stopWorker(child);
-   closeOwnedBrowsers(c);
-   await stopServer();for(const t of timers)clearTimeout(t);
-   modelServer.closeAllConnections();await new Promise(resolve=>modelServer.close(resolve));
-   execFileSync('docker',['rm','-f',container],{stdio:'ignore',windowsHide:true,timeout:15000});
-   const resolved=path.resolve(root),temp=path.resolve(os.tmpdir());
-   if(!path.basename(resolved).startsWith('maxim-test-')||!resolved.startsWith(temp+path.sep))throw Error('Unsafe fixture cleanup path');
-   fs.rmSync(resolved,{recursive:true,force:true,maxRetries:10,retryDelay:200});
-  }
+  close:release,
  };
+ }catch(error){try{await release();}catch(cleanup){throw new AggregateError([error,cleanup],'Fixture setup and cleanup failed');}throw error;}
 }
 export async function streamResult(response){
  const events=[];

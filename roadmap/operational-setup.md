@@ -9,8 +9,9 @@
 
 Use [Start and use Maxim](../docs/maxim/setup.md) and
 [current verification](reviews/mvp-completion-verification.md). S6-S10 are now
-integrated but final acceptance is outstanding. Docker/disk recovery is required
-before the final combined tests and production restart. No account was connected
+integrated but final acceptance is outstanding. Docker recovered on November 18;
+review [storage results and headroom](../docs/maxim/storage-maintenance.md) before
+the final combined tests and production restart. No account was connected
 and no candidate/application authority was silently activated.
 
 | Capability | Exact input and location | Action |
