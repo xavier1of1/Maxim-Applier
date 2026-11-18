@@ -1,7 +1,7 @@
 # S7: Gmail evidence and response tasks
 
-**Status:** Pending implementation. Detailed plan drafted; no acceptance criterion is claimed passed.
-**Updated:** 2026-11-16.
+**Status:** In progress. Implementation integrated; final acceptance gates remain open.
+**Updated:** 2026-11-17.
 **Roadmap:** [Stage index](README.md) | [High-level roadmap](../high-level-roadmap.md) | [Shared contracts](contracts.md)
 **Requires:** [S5](stage-05-evaluation-and-tracker-cutover.md)
 
@@ -82,7 +82,9 @@ Requires S5. Produces **mail-evidence** and **response-tasks**. S8 needs this st
 
 ## What Shipped
 
-Pending. No account authorization or message access occurs during planning.
+Read-only Google OAuth/PKCE, selected-thread evidence and corrections, response tasks, retention/revocation, worker, UI and agent read are implemented. Final mounted regression and explicit live account setup remain outstanding.
+
+See [measured MVP verification and remaining gates](../reviews/mvp-completion-verification.md). No unrun acceptance checkbox is promoted.
 
 ## Deferred To Later Stages
 
