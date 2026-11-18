@@ -190,21 +190,19 @@ pub fn evaluate(input: &Value) -> Value {
     }
     let mut active_required = false;
     let mut clearance_present = false;
+    // Compile once per posting, not once per sentence in long public-board descriptions.
+    let clearance_pattern = Regex::new(r"(?i)\b(?:clearance|ts/sci|ts sci|top secret)\b").unwrap();
+    let active_pattern = Regex::new(r"(?i)\b(?:active|current|possess|hold|maintain)\b").unwrap();
+    let required_pattern = Regex::new(r"(?i)\b(?:required|requires|must|possess|hold|maintain)\b").unwrap();
+    let not_required_pattern = Regex::new(
+        r"(?i)\bno active (?:security )?clearance (?:is )?required\b|\bactive (?:security )?clearance (?:is )?not required\b|\bnot required to (?:hold|possess)\b",
+    ).unwrap();
     for sentence in description.split(&['.', ';', '\n'][..]) {
-        let clearance = matches(r"(?i)\b(?:clearance|ts/sci|ts sci|top secret)\b", sentence);
+        let clearance = clearance_pattern.is_match(sentence);
         clearance_present |= clearance;
-        let active = matches(
-            r"(?i)\b(?:active|current|possess|hold|maintain)\b",
-            sentence,
-        );
-        let required = matches(
-            r"(?i)\b(?:required|requires|must|possess|hold|maintain)\b",
-            sentence,
-        );
-        let explicitly_not_required = matches(
-            r"(?i)\bno active (?:security )?clearance (?:is )?required\b|\bactive (?:security )?clearance (?:is )?not required\b|\bnot required to (?:hold|possess)\b",
-            sentence,
-        );
+        let active = active_pattern.is_match(sentence);
+        let required = required_pattern.is_match(sentence);
+        let explicitly_not_required = not_required_pattern.is_match(sentence);
         if clearance && active && required && !explicitly_not_required {
             active_required = true;
         }

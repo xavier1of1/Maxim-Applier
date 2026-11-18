@@ -66,6 +66,16 @@ one expected missing-CV warning. Go, safety, privacy and roadmap checks pass.
 Use `npm run maxim:native:test` for the safe native full-suite wrapper and
 `npm run maxim:privacy` for the separate public-tree privacy audit.
 
+Post-S5 discovery reliability follow-up (2026-11-17): long public descriptions
+could exhaust the five-second Rust adapter deadline because clearance patterns
+were compiled for every sentence. They now compile once per posting with
+unchanged policy semantics, input limits and network bounds. A synthetic
+43,233-character case reproduced the timeout before the fix. The real adapter
+regression covers a required clearance at the end, a non-required clearance,
+and oversized-input rejection. All 29 Rust and 17 app unit tests pass.
+Live discovery still reports oversized feeds and bounded-page coverage explicitly;
+source failures are not treated as empty successful searches or fit evaluations.
+
 ## Deliberate Limits And Setup
 
 - S6 browser fill/session/handoff, S7 Gmail, S8 durable Discord, S9 contact/history
