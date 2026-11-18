@@ -568,7 +568,7 @@
       "id": "S6",
       "title": "Supported browser application assistance",
       "file": "stage-06-browser-assistance.md",
-      "status": "Pending",
+      "status": "In progress",
       "requires": [
         "S5"
       ],
@@ -599,7 +599,7 @@
       "id": "S7",
       "title": "Gmail evidence and response tasks",
       "file": "stage-07-gmail-evidence.md",
-      "status": "Pending",
+      "status": "In progress",
       "requires": [
         "S5"
       ],
@@ -629,7 +629,7 @@
       "id": "S8",
       "title": "Durable existing-Discord delivery",
       "file": "stage-08-discord-delivery.md",
-      "status": "Pending",
+      "status": "In progress",
       "requires": [
         "S5"
       ],
@@ -672,7 +672,7 @@
       "id": "S9",
       "title": "Networking and outcome insight",
       "file": "stage-09-networking-and-analytics.md",
-      "status": "Pending",
+      "status": "In progress",
       "requires": [
         "S5"
       ],
@@ -707,7 +707,7 @@
       "id": "S10",
       "title": "Evidence-grounded interview preparation",
       "file": "stage-10-interview-preparation.md",
-      "status": "Pending",
+      "status": "In progress",
       "requires": [
         "S5"
       ],
@@ -733,7 +733,7 @@
       "id": "S11",
       "title": "Product and demonstration acceptance",
       "file": "stage-11-product-acceptance.md",
-      "status": "Pending",
+      "status": "In progress",
       "requires": [
         "S6"
       ],

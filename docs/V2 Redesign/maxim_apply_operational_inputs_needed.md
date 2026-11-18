@@ -8,6 +8,18 @@ See [the current planning index](../../roadmap/README.md) for accepted direction
 
 ## November Workspace Inputs
 
+**Current implementation update (2026-11-17):** Follow
+[the actual start/use guide](../maxim/setup.md),
+[implemented configuration inventory](../../roadmap/operational-setup.md) and
+[verification record](../../roadmap/reviews/mvp-completion-verification.md).
+Native agent-browser, opt-in Gmail/Discord, networking/analytics and interview
+practice are integrated. Final combined verification and restart await Docker/disk
+recovery. Required personal inputs are reviewed authority activation, model access
+if desired, permitted form examples, optional private Gmail Desktop OAuth client
+and existing Discord destination/contents. Do not paste keys here or treat older
+COMPLETE labels as live authorization. No new bot, LinkedIn account or wearable
+credential is required for the implemented pilot.
+
 - S2: Upload personal PDF/DOCX/MD/TXT sources in Candidate, review facts/disclosure,
   and explicitly activate candidate authority. Existing private files are not automatically approved.
 - S3: Record/review application answers and exact reuse permissions in Answers.

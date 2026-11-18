@@ -66,7 +66,9 @@ ownership activation, recovery, rollback and native/Go compatibility.
 
 Starting the workspace never imports personal information, approves facts/packets,
 clears the pipeline or activates application ownership. The rejected runner is
-retired; the new S6 browser executor is not implemented yet.
+retired. The new [S6 assistant](browser-assistance.md) uses native agent-browser,
+approved evidence and an explicit manual handoff. Live form certification and
+final combined acceptance remain open; see the [setup guide](setup.md).
 
 ## Model Configuration And Privacy
 
@@ -154,4 +156,10 @@ Ignored screenshots/traces/reports contain synthetic fixtures only. Do not enabl
 
 ## Boundaries
 
-Candidate onboarding/extraction, reusable answers, discovery, Career-Ops evaluation/tracker cutover, application-browser execution, Gmail and Discord delivery are later stages. Integration controls are disabled, not simulated. The native Career-Ops engine/Go dashboard remain available; no legacy records are automatically imported or replaced.
+Candidate intake, answer memory, discovery, retained evaluation and tracker cutover
+are delivered. Browser assistance, Gmail, Discord, networking/analytics and practice
+are integrated with explicit consent/configuration and remaining acceptance gates.
+They are not sample fallbacks or automatic account enablement. The native engine/Go
+dashboard remain available; no legacy records are silently imported or replaced.
+
+See [the complete operating journey](setup.md) and [current measured verification](../../roadmap/reviews/mvp-completion-verification.md).

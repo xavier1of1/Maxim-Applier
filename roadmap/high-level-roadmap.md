@@ -2,7 +2,7 @@
 
 **Status:** Revision 0.3 refined target plan with detailed stage specifications. Implementation and unresolved design choices remain unapproved until their gates pass.
 **Updated:** 2026-11-17. **Demo target: 2026-11-19, scope not yet frozen.
-**Implementation standing:** S0-S5 verified for their bounded scopes; S6-S11 Pending. The [workspace evidence](reviews/s1-workspace.md) records the actual Astryx/Next/PostgreSQL delivery. Reviewed candidate/application cutover is implemented and fixture-tested; production activation stays explicit. No new browser executor is claimed.
+**Implementation standing:** S0-S5 verified; S6-S11 In progress. Native agent-browser and optional Gmail/Discord/networking/practice are integrated; final combined acceptance is blocked by disk/Docker recovery. See [measured verification](reviews/mvp-completion-verification.md). Reviewed candidate/application cutover and account enablement remain explicit user actions.
 **Companions:** [Index](README.md), [manifesto](MANIFESTO.md), [component assessment](external-components-assessment.md), [setup](operational-setup.md), [development workflow](development-workflow.md).
 
 ## 1. Outcome And Planning Discipline
@@ -74,12 +74,12 @@ Create small decision records for chosen stack, persistence/retention, source re
 | S3 | [Reusable answers and bounded context](stages/stage-03-answer-memory.md) | Answer once, recall in scope, correct/revoke, suppress old reuse | S2 | Verified |
 | S4 | [Coverage-aware discovery](stages/stage-04-discovery.md) | Ingest a new role; expose unsupported/failed source separately | S2 | Verified |
 | S5 | [Career-Ops evaluation, packet, and tracker cutover](stages/stage-05-evaluation-and-tracker-cutover.md) | Evaluate/prepare one role; prove one lifecycle after migration | S3; S4 only for automated-discovery jobs | Verified |
-| S6 | [Supported browser application assistance](stages/stage-06-browser-assistance.md) | Fill supported controls, ask unknowns, resume, stop at manual review | S5 and approved browser design | Pending |
-| S7 | [Gmail evidence and response tasks](stages/stage-07-gmail-evidence.md) | Link a consented thread; hold ambiguous match; handle revoked access | S5 | Pending |
-| S8 | [Durable existing-Discord delivery](stages/stage-08-discord-delivery.md) | Accept alert once; fail/retry visibly; digest matches confirmed state | S5; S4 automated freshness; S7 Gmail; S9 networking/manual recruiter alerts | Pending |
-| S9 | [Networking and outcome insight](stages/stage-09-networking-and-analytics.md) | Rank contacts/draft manual outreach; show correct limited analytics | S5 (includes S3) | Pending |
-| S10 | [Evidence-grounded interview preparation](stages/stage-10-interview-preparation.md) | Evidence-grounded project/behavioral/system-design practice saved in workspace | S5 (includes S3); optional | Pending |
-| S11 | [Product and demonstration acceptance](stages/stage-11-product-acceptance.md) | Rehearse exactly the approved delivery slice with recovery evidence | S6; selected optional stage proofs | Pending |
+| S6 | [Supported browser application assistance](stages/stage-06-browser-assistance.md) | Fill supported controls, ask unknowns, resume, stop at manual review | S5 and approved browser design | In progress |
+| S7 | [Gmail evidence and response tasks](stages/stage-07-gmail-evidence.md) | Link a consented thread; hold ambiguous match; handle revoked access | S5 | In progress |
+| S8 | [Durable existing-Discord delivery](stages/stage-08-discord-delivery.md) | Accept alert once; fail/retry visibly; digest matches confirmed state | S5; S4 automated freshness; S7 Gmail; S9 networking/manual recruiter alerts | In progress |
+| S9 | [Networking and outcome insight](stages/stage-09-networking-and-analytics.md) | Rank contacts/draft manual outreach; show correct limited analytics | S5 (includes S3) | In progress |
+| S10 | [Evidence-grounded interview preparation](stages/stage-10-interview-preparation.md) | Evidence-grounded project/behavioral/system-design practice saved in workspace | S5 (includes S3); optional | In progress |
+| S11 | [Product and demonstration acceptance](stages/stage-11-product-acceptance.md) | Rehearse exactly the approved delivery slice with recovery evidence | S6; selected optional stage proofs | In progress |
 
 This revision renumbers/reorders earlier draft stages. In particular, old S7 conversation/views becomes early S1; onboarding becomes S2. Old runner retirement is a bounded S0 inventory and S5 cutover obligation, not a prerequisite to seeing any useful UI. Older v1.1 phase numbers are a separate scheme.
 

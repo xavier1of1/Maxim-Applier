@@ -1,7 +1,7 @@
 # S11: Product and demonstration acceptance
 
-**Status:** Pending implementation. Detailed plan drafted; no acceptance criterion is claimed passed.
-**Updated:** 2026-11-16.
+**Status:** In progress. Implementation integrated; final acceptance gates remain open.
+**Updated:** 2026-11-17.
 **Roadmap:** [Stage index](README.md) | [High-level roadmap](../high-level-roadmap.md) | [Shared contracts](contracts.md)
 **Requires:** [S6](stage-06-browser-assistance.md)
 
@@ -95,7 +95,9 @@ Produces **accepted-delivery-profile** for daily use and recruiter explanation. 
 
 ## What Shipped
 
-Pending. Detailed documents and a passing roadmap validator are not a completed MVP or a promise of November 19 readiness.
+Two mounted-product rehearsal tests, all-view desktop/mobile acceptance, setup guide and proposed demo script are implemented. The new tests and final full suite await Docker recovery; the demo profile is not owner-approved.
+
+See [measured MVP verification and remaining gates](../reviews/mvp-completion-verification.md). No unrun acceptance checkbox is promoted.
 
 ## Deferred To Later Stages
 

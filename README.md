@@ -1,9 +1,12 @@
 # Career-Ops
 
-> **Maxim Apply workspace:** Start with the [workspace guide](docs/maxim/workspace.md).
+> **Maxim Apply workspace:** Start with the [complete operating guide](docs/maxim/setup.md).
 > Run `npm run maxim:workspace`; preferred dashboard: http://127.0.0.1:3010/maxim.
 > [Roadmap](roadmap/README.md) and [verified S5 evaluation/cutover evidence](roadmap/reviews/s5-evaluation-and-cutover.md).
 > Native Career-Ops instructions below remain applicable to the retained engine.
+> [Application assistance](docs/maxim/browser-assistance.md), [Gmail](docs/maxim/gmail.md),
+> [Discord](docs/maxim/discord.md), [networking](docs/maxim/networking-workspace.md)
+> and [current verification limits](roadmap/reviews/mvp-completion-verification.md).
 
 [English](README.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [한국어](README.ko-KR.md) | [日本語](README.ja.md) | [Українська](README.ua.md) | [Русский](README.ru.md) | [繁體中文](README.zh-TW.md)
 

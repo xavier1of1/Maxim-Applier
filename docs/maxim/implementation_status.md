@@ -2,11 +2,18 @@
 
 Updated: 2026-11-17. Canonical repository: `D:\VSC Programs\maxim-apply`.
 S0-S5 are verified for their bounded scopes and are recorded as separate stage
-commits. S6-S11 remain pending. No production personal-data migration was automatic.
+commits. S6-S10 implementation and S11 acceptance infrastructure are now integrated
+but remain In progress until final combined/live gates pass. No production
+personal-data migration, disclosure or account enablement was automatic.
 The prior June implementation record is retained in
 [the historical archive](archive/pre-s5/implementation_status.md), not current guidance.
 
 ## Available Workflow
+
+Current use/setup: [Start and use Maxim](setup.md). Final combined testing and
+production restart are blocked by C: disk exhaustion/unresponsive Docker; the
+stack remains stopped, with private data and backup retained. See
+[measured verification and exact next steps](../../roadmap/reviews/mvp-completion-verification.md).
 
 - Local Next/React/Astryx dashboard, authenticated API, PostgreSQL and durable worker.
 - Reviewed PDF/DOCX/Markdown/text candidate intake, per-fact correction/disclosure,
@@ -22,6 +29,15 @@ The prior June implementation record is retained in
 - Owner-reviewed lossless legacy import, paginated reconciliation, controlled
   application cutover, hash-checked native/Go reads, recovery and latest-state rollback.
 - Shared agent evaluation/read tools and canonical CLI commands.
+- Native agent-browser application preparation, exact approved facts/answer reuse/
+  PDF, durable local progress, pause/resume and explicit manual handoff.
+- Opt-in read-only Gmail selected-thread evidence, corrections and response tasks.
+- Opt-in existing Discord destination, previews, accepted/uncertain durable
+  delivery, bounded retries and calendar schedules.
+- Reviewed raw contact/history import, researched manual networking drafts,
+  recruiter corrections and sample-aware outcome analytics.
+- Role-linked private interview practice, whole approved evidence and separately
+  consented optional model feedback, never promoted to candidate truth.
 
 ## Start And Use
 
@@ -76,10 +92,28 @@ and oversized-input rejection. All 29 Rust and 17 app unit tests pass.
 Live discovery still reports oversized feeds and bounded-page coverage explicitly;
 source failures are not treated as empty successful searches or fit evaluations.
 
+## Current Verification And Manual Gates
+
+Final current checks: 35 app unit, 29 Rust, 57 retained Maxim and 146 sanitized
+native checks pass; Go, safety, privacy, typecheck/build pass. The native suite has
+one expected missing-CV warning and Windows shell-path warnings in its legacy
+privacy probes, covered separately by the Maxim public-tree privacy check.
+Initial S6 mounted integration passed three TAP cases; final changed combined
+integration/UI and two new S11 rehearsals are not counted as passed. Docker became
+unresponsive after C: filled. No live mail, webhook, model or employer application
+action ran. Keep stages In progress and do not merge on partial evidence.
+
+Remaining: recover at least 10 GB on Docker's drive, restore engine health, rerun
+the complete app tests/UI screenshots, certify permitted live form variants,
+approve the proposed demo profile, then review separate personal authority/model/
+Gmail/Discord configuration. [Setup](setup.md) supplies the exact workflows;
+[verification](../../roadmap/reviews/mvp-completion-verification.md) lists commands
+and source boundaries. This is not a claim of full MVP acceptance.
+
 ## Deliberate Limits And Setup
 
-- S6 browser fill/session/handoff, S7 Gmail, S8 durable Discord, S9 contact/history
-  feature adaptation/analytics and S10 interview preparation are not delivered by S5.
+- S6-S10 are implemented extensions, not live setup or universal site certification.
+  S11 final acceptance remains incomplete until the blocked tests and manual gates pass.
 - No final application submission, LinkedIn sending, evasion or fabricated claims.
 - The rejected planner/mapper/runner is retired, not an alternate executor.
 - Existing network/recruiter/history bytes remain private; unadapted canonical

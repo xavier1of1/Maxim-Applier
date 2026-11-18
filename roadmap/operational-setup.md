@@ -5,6 +5,35 @@
 **Purpose:** What Xavier needs to provide, choose, authorize or install. The local workspace, reviewed intake, answer memory, public-feed discovery and S5 evaluation/manual tracking now exist; browser/mail/delivery/networking adaptations remain separately gated. See [current application workflow](../docs/maxim/application-lifecycle.md).
 **Legacy checklist:** [Earlier operational inputs](../docs/V2%20Redesign/maxim_apply_operational_inputs_needed.md). Historical COMPLETE labels there are not newly verified credentials.
 
+## Current Implemented Configuration (Takes Precedence Over Proposed Rows Below)
+
+Use [Start and use Maxim](../docs/maxim/setup.md) and
+[current verification](reviews/mvp-completion-verification.md). S6-S10 are now
+integrated but final acceptance is outstanding. Docker/disk recovery is required
+before the final combined tests and production restart. No account was connected
+and no candidate/application authority was silently activated.
+
+| Capability | Exact input and location | Action |
+| --- | --- | --- |
+| Local workspace | Windows/npm, pinned Node 24, Rust/MSVC, Docker Linux engine with free disk | Run root workspace install/build/start scripts; use printed loopback URL |
+| CSV/XLSX/ZIP imports | Python 3 and user-authorized private exports | Networking import; review normalized mappings/raw fields |
+| Model | OpenAI model ID/key through Settings -> Model connection | Server-held runtime settings; no new OPENAI_API_KEY env parser |
+| Browser | agent-browser 0.43.0 dependency and its Chrome install | Follow browser guide; fresh dedicated sessions, separate private-field consent; permitted live form examples still needed |
+| Gmail | Desktop OAuth client ID/optional secret in protected `<privateRoot>/gmail/client.json` | Follow Gmail guide; exact expected account, 1-5 thread IDs, read-only consent and retention; no send/calendar scope |
+| Discord | Existing private webhook and channel ID entered in Discord workspace | Confirm destination, preview categories, explicitly enable and set schedules; legacy .env webhook is not auto-imported |
+| Candidate/application ownership | Reviewed projection/reconciliation and explicit activation | Existing approval of resume facts is not cutover consent |
+| Demo | Approved live/fixture claim and duration | Review proposed demo-script.md; finish two actual rehearsals |
+
+Normal private root is `%LOCALAPPDATA%/MaximApply/private/workspace`. Secrets
+remain outside Git; DB backups exclude runtime/Gmail/Discord credential files.
+`MAXIM_RUNTIME_FILE` is the implemented server selector. `MAXIM_BROWSER_HEADED_TEST`
+is fixture-only. Do not set test mode on a personal installation or invent env
+names from the older proposal tables. No LinkedIn account/API, new Discord bot,
+paid broad-search account or Meta glasses is required for this implemented pilot.
+
+The remaining sections preserve planning history and input rationale; rows marked
+Proposed are not instructions to add working environment variables.
+
 ## 1. Numbered Input Checklist
 
 1. **Sanitized candidate sources and approval:** Current resume/CV, contact details, portfolio/GitHub links, supported experience/metrics, restrictions and sample novel answers. Keep private files local; do not paste secrets or employer-proprietary evidence into public docs.

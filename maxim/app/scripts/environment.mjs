@@ -89,16 +89,16 @@ export function snapshotDatabase(c,target){
  if(!container)throw Error('Workspace database is not running.');
  const database=new URL(c.databaseUrl).pathname.slice(1);
  const dump=execFileSync('docker',['exec',container,'pg_dump','-U','maxim','-d',database,'--no-owner','--no-privileges'],
-  {maxBuffer:128*1024*1024,windowsHide:true});
+  {maxBuffer:128*1024*1024,windowsHide:true,timeout:120000});
  fs.writeFileSync(target,dump,{flag:'wx',mode:0o600});
  return sha(dump);
 }
 export async function restoreDatabase(c,dump,targetName){
  if(!(c.testMode?/^maxim_test_restore_\d+$/:/^maxim_restore_\d+$/).test(targetName))throw Error('Only a new recovery database is allowed.');
  const container=databaseContainer(c);
- execFileSync('docker',['exec',container,'createdb','-U','maxim',targetName],{stdio:'pipe',windowsHide:true});
+ execFileSync('docker',['exec',container,'createdb','-U','maxim',targetName],{stdio:'pipe',windowsHide:true,timeout:30000});
  const result=spawnSync('docker',['exec','-i',container,'psql','-X','--set','ON_ERROR_STOP=1','-U','maxim','-d',targetName],
-  {input:dump,maxBuffer:16*1024*1024,windowsHide:true});
+  {input:dump,maxBuffer:16*1024*1024,windowsHide:true,timeout:120000});
  if(result.status!==0)throw Error('Restore failed; the isolated recovery database was left for inspection.');
  const url=new URL(c.databaseUrl);url.pathname='/'+targetName;
  const client=new pg.Client({connectionString:url.toString()});await client.connect();

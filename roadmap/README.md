@@ -1,6 +1,6 @@
 # Maxim Apply Roadmap Index
 
-**Status:** Revision 0.4. S0-S5 are verified for their bounded scopes; S6-S11 remain Pending. See [S1 evidence](reviews/s1-workspace.md) and [workspace guide](../docs/maxim/workspace.md).
+**Status:** Revision 0.5. S0-S5 verified; S6-S11 In progress with integrated code and outstanding final/live gates. See [current verification](reviews/mvp-completion-verification.md) and [operating guide](../docs/maxim/setup.md).
 **Updated:** 2026-11-17.
 **Demo target:** 2026-11-19. No claim that this entire roadmap fits before that date.
 
@@ -23,8 +23,8 @@ The refinement adds detailed stage plans, a code/design drift report and executa
 | Document | Read it for | Standing |
 | --- | --- | --- |
 | [System manifesto](MANIFESTO.md) | Product journey, authority, memory, architecture, boundaries | Revised target proposal with accepted decisions marked |
-| [High-level roadmap](high-level-roadmap.md) | Refined early UI stages, dependencies and optional lanes | S0-S5 verified; S6-S11 Pending |
-| [Detailed stage plans](stages/README.md) | Twelve Vantage-style plans with 92 acceptance cases | S0-S5 verified, S6-S11 pending |
+| [High-level roadmap](high-level-roadmap.md) | Refined early UI stages, dependencies and optional lanes | S0-S5 verified; S6-S11 In progress |
+| [Detailed stage plans](stages/README.md) | Twelve Vantage-style plans with 92 acceptance cases | S0-S5 verified; S6-S11 In progress |
 | [Shared stage contracts](stages/contracts.md) | Runtime binding, commands, identity, storage, worker and consumer contracts | Proposed implementation detail with S0 gates |
 | [Refinement and validation](reviews/roadmap-refinement.md) | Changes, executed tests, remaining runtime gaps | Actual evidence scope recorded |
 | [External component assessment](external-components-assessment.md) | All ten suggestions, deep Dossier review, licensing, adoption gates | Primary-source research, not a benchmark or integration claim |
@@ -73,12 +73,12 @@ Blank comments in the original workflow remain unanswered. No candidate claims o
 | S3 | [Answer once; recall safely through UI and agent](stages/stage-03-answer-memory.md) | S2 | Verified |
 | S4 | [Search/scan jobs with visible coverage and provider failures](stages/stage-04-discovery.md) | S2 | Verified |
 | S5 | [Career-Ops evaluation, approved packet, one tracker after proven cutover](stages/stage-05-evaluation-and-tracker-cutover.md) | S3; S4 only for automated-discovery jobs | Pending |
-| S6 | [Fill a supported form, ask unknowns, pause/resume, hand off for manual submission](stages/stage-06-browser-assistance.md) | S5 and browser design gate | Pending |
-| S7 | [Read job-related Gmail evidence and review uncertain matches](stages/stage-07-gmail-evidence.md) | S5 | Pending |
-| S8 | [Reliable notifications to the existing Discord](stages/stage-08-discord-delivery.md) | S5; S4 automated freshness; S7 Gmail; S9 networking/manual recruiter | Pending |
-| S9 | [Store-backed networking and honest outcome analytics in the same workspace](stages/stage-09-networking-and-analytics.md) | S5 (includes S3) | Pending |
-| S10 | [Optional interview practice grounded in the candidate's real evidence](stages/stage-10-interview-preparation.md) | S5 (includes S3); optional | Pending |
-| S11 | [Rehearsed acceptance of the explicitly selected delivery slice](stages/stage-11-product-acceptance.md) | S6 plus claimed optional stages | Pending |
+| S6 | [Fill a supported form, ask unknowns, pause/resume, hand off for manual submission](stages/stage-06-browser-assistance.md) | S5 and browser design gate | In progress |
+| S7 | [Read job-related Gmail evidence and review uncertain matches](stages/stage-07-gmail-evidence.md) | S5 | In progress |
+| S8 | [Reliable notifications to the existing Discord](stages/stage-08-discord-delivery.md) | S5; S4 automated freshness; S7 Gmail; S9 networking/manual recruiter | In progress |
+| S9 | [Store-backed networking and honest outcome analytics in the same workspace](stages/stage-09-networking-and-analytics.md) | S5 (includes S3) | In progress |
+| S10 | [Optional interview practice grounded in the candidate's real evidence](stages/stage-10-interview-preparation.md) | S5 (includes S3); optional | In progress |
+| S11 | [Rehearsed acceptance of the explicitly selected delivery slice](stages/stage-11-product-acceptance.md) | S6 plus claimed optional stages | In progress |
 
 Core path: S0 -> S1 -> S2 -> S3 -> S5 -> S6 -> S11. S2 creates the consumed durable worker; S4 follows S2 but does not block manual job intake/evaluation. S11 requires supported browser assistance, not just foundation screens.
 
