@@ -1,7 +1,7 @@
 # S10: Evidence-grounded interview preparation
 
-**Status:** Pending implementation. Detailed plan drafted; no acceptance criterion is claimed passed.
-**Updated:** 2026-11-16.
+**Status:** In progress. Implementation integrated; final acceptance gates remain open.
+**Updated:** 2026-11-17.
 **Roadmap:** [Stage index](README.md) | [High-level roadmap](../high-level-roadmap.md) | [Shared contracts](contracts.md)
 **Requires:** [S5](stage-05-evaluation-and-tracker-cutover.md)
 
@@ -82,7 +82,9 @@ Optional parallel lane: no dependence on Gmail, Discord or S9. It cannot delay t
 
 ## What Shipped
 
-Pending. No practice answers are created or approved by this planning stage.
+Role-linked private practice, bounded approved evidence, local checks, explicitly consented optional feedback, cancellation and retention are implemented. Final regression after shared wiring and context changes remains outstanding; live model quality is untested.
+
+See [measured MVP verification and remaining gates](../reviews/mvp-completion-verification.md). No unrun acceptance checkbox is promoted.
 
 ## Deferred To Later Stages
 

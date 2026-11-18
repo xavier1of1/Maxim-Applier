@@ -1,0 +1,63 @@
+import path from 'node:path';
+import {test,expect} from '@playwright/test';
+import {build} from 'esbuild';
+import {appDir} from '../../scripts/environment.mjs';
+import {interviewHarness} from '../support/interview-harness.mjs';
+
+test('S10 actual component: private persisted practice, keyboard, mobile and truthful failure states',async({page,context},info)=>{
+ test.setTimeout(180000);
+ const h=await interviewHarness();
+ try{
+  const result=await build({entryPoints:[path.join(appDir,'tests/support/interview-fixture.tsx'),path.join(appDir,'src/app/globals.css')],bundle:true,platform:'browser',format:'iife',write:false,outdir:path.join(h.root,'bundle'),jsx:'automatic',define:{__INTERVIEW_FIXTURE__:JSON.stringify({csrf:h.a.csrf,job:null}),'process.env.NODE_ENV':'"production"'},logLevel:'silent'});
+  h.c.bundle=result.outputFiles.find(f=>f.path.endsWith('.js')).text;
+  h.c.css=result.outputFiles.find(f=>f.path.endsWith('.css')).text;
+  await context.addCookies([{name:'maxim_session',value:h.a.cookie.split('=')[1],url:h.c.origin,httpOnly:true,sameSite:'Strict'}]);
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.goto(h.c.origin);await expect(page.getByRole('heading',{name:'Interview practice'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Start practice',exact:true})).toBeDisabled();
+  await page.getByRole('combobox',{name:'Role',exact:true}).click();
+  await page.getByRole('option',{name:'Synthetic Labs / Platform Engineer',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Start practice',exact:true})).toBeEnabled();
+  await page.getByRole('button',{name:'Start practice',exact:true}).click();
+  await expect(page.getByRole('textbox',{name:'Practice response'})).toBeVisible();
+  const url=page.url();expect(url).toContain('practice=');
+  await page.getByText('Approved evidence (1)',{exact:true}).click();
+  await expect(page.getByText(h.fact.value,{exact:true})).toBeVisible();
+  await page.getByRole('textbox',{name:'Practice response'}).fill('Hypothetically I would serve 99 million users.');
+  await page.getByRole('checkbox',{name:'Hypothetical / mock answer, not approved experience',exact:true}).check();
+  await page.getByRole('checkbox',{name:/Send this attempt/}).check();
+  await page.getByRole('button',{name:'Save and request feedback',exact:true}).click();
+  await expect(page.getByText('queued',{exact:true})).toBeVisible();
+  await h.work();await expect(page.getByRole('heading',{name:'Unapproved model coaching; not candidate facts or reusable answers'})).toBeVisible();
+  await expect(page.getByText('hypothetical: 99 million users',{exact:false})).toBeVisible();
+  expect(h.captured).toHaveLength(1);
+  await page.reload();await expect(page.getByText('Hypothetically I would serve 99 million users.',{exact:true})).toBeVisible();expect(page.url()).toBe(url);
+  const root=page.locator('.knowledge-view');
+  await page.screenshot({path:info.outputPath('interview-desktop.png'),fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  await expect(page.getByRole('textbox',{name:'Practice response'})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+  const hit=await page.getByRole('button',{name:'Save attempt',exact:true}).boundingBox();expect(hit.width).toBeGreaterThan(60);expect(hit.x+hit.width).toBeLessThanOrEqual(391);
+  await page.screenshot({path:info.outputPath('interview-mobile.png'),fullPage:true});
+  await page.getByRole('textbox',{name:'Practice response'}).focus();await page.keyboard.press('Tab');await expect(page.getByRole('checkbox',{name:'Hypothetical / mock answer, not approved experience',exact:true})).toBeFocused();
+  h.setProviderMode('slow');await page.getByRole('textbox',{name:'Practice response'}).fill('Synthetic response to cancel.');await page.getByRole('checkbox',{name:/Send this attempt/}).check();
+  await page.getByRole('button',{name:'Save and request feedback',exact:true}).click();await expect(page.getByRole('button',{name:'Stop feedback',exact:true})).toBeVisible();
+  const work=h.work();await expect.poll(()=>h.captured.length).toBe(2);await page.getByRole('button',{name:'Stop feedback',exact:true}).click();await work;
+  await expect(root.getByText('cancelled',{exact:true}).first()).toBeVisible();
+  h.configure({model:{...h.c.model,apiKey:''}});await page.getByRole('button',{name:'Refresh practice',exact:true}).click();await expect(page.getByText(/Model not configured/)).toBeVisible();
+  await page.getByRole('textbox',{name:'Practice response'}).fill('Useful practice without a model key.');
+  // Consent remains an explicit user choice even when the provider is unconfigured.
+  await page.getByRole('checkbox',{name:/Send this attempt/}).check();await page.getByRole('button',{name:'Save and request feedback',exact:true}).click();
+  await expect(root.getByText('model unconfigured',{exact:true}).first()).toBeVisible();expect(h.captured).toHaveLength(2);
+  await page.route('**/api/interview?*',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'fixture_outage',message:'Synthetic practice outage'}})}));
+  await page.getByRole('button',{name:'Refresh practice',exact:true}).click();
+  await expect(page.getByText('Synthetic practice outage Showing last loaded practice.',{exact:true})).toBeVisible();
+  await expect(page.getByRole('textbox',{name:'Practice response'})).toBeDisabled();
+  await page.unroute('**/api/interview?*');await page.getByRole('button',{name:'Refresh practice',exact:true}).click();
+  await expect(page.getByRole('textbox',{name:'Practice response'})).toBeEnabled();
+  page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Delete practice session',exact:true}).click();
+  await expect(page.getByText('This session is no longer reusable. Start a new practice with current evidence.',{exact:true})).toBeVisible();
+  await expect(page.getByText('Useful practice without a model key.',{exact:true})).toHaveCount(0);
+  expect(errors).toEqual([]);expect(await page.evaluate(()=>Object.keys(localStorage).length)).toBe(0);
+ }finally{await h.close();}
+});

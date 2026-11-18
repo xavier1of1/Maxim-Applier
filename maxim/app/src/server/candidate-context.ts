@@ -11,7 +11,8 @@ export function assertDisclosureText(text:string){
  invariant(!/\b(?:internal use only|trade secret|confidential internal)\b|wabtec.{0,40}\b(?:confidential|proprietary|internal-only)\b/i.test(text),'restricted_source','Restricted employer content cannot be sent to the model.');
  invariant(!/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY|(?:sk-|ghp_)[A-Za-z0-9_-]{24,}/.test(text),'credential_forbidden','Credentials belong in protected Settings, not conversation or candidate sources.');
 }
-export async function candidateContext(ctx:Context,runId?:string){
+export async function candidateContext(ctx:Context,runId?:string,valueLimit=600){
+ invariant(Number.isInteger(valueLimit)&&valueLimit>=600&&valueLimit<=8000,'context_bound','Candidate value budget is invalid.');
  return transaction(async tx=>{
   await reauthorize(tx,ctx);await candidateLock(tx,ctx.workspaceId);
   const candidate=(await tx.query('SELECT revision,ownership FROM candidates WHERE workspace_id=$1',[ctx.workspaceId])).rows[0];
@@ -19,9 +20,10 @@ export async function candidateContext(ctx:Context,runId?:string){
   if(runId)await tx.query("UPDATE runs SET candidate_revision=$1 WHERE workspace_id=$2 AND id=$3 AND status='running'",[candidate.revision,ctx.workspaceId,runId]);
   const rows=(await tx.query("SELECT f.id,f.field_key,f.value,f.revision,f.source_id,f.source_revision FROM candidate_facts f JOIN candidate_sources s ON s.workspace_id=f.workspace_id AND s.id=f.source_id WHERE f.workspace_id=$1 AND f.status='current' AND f.sensitivity='standard' AND s.model_consent=true AND s.classification<>'restricted' AND s.deleted_at IS NULL AND f.source_revision=s.revision ORDER BY f.field_key LIMIT 21",[ctx.workspaceId])).rows;
   const selected=rows.slice(0,20);
-  const facts=selected.map(f=>({...f,value:JSON.stringify(f.value).length<=600?f.value:null,valueOmitted:JSON.stringify(f.value).length>600}));
+  const facts=selected.map(f=>({...f,value:Buffer.byteLength(JSON.stringify(f.value))<=valueLimit?f.value:null,valueOmitted:Buffer.byteLength(JSON.stringify(f.value))>valueLimit}));
   for(const f of facts)if(typeof f.value==='string')assertDisclosureText(f.value);
-  const id=crypto.randomUUID(),content={id,revision:candidate.revision,sourceStatus:rows.length>20?'partial':facts.length?'fresh':'empty',facts,warnings:rows.length>20?['Context is bounded to 20 fields.']:[]};
+  const omitted=facts.some(f=>f.valueOmitted);
+  const id=crypto.randomUUID(),content={id,revision:candidate.revision,sourceStatus:rows.length>20||omitted?'partial':facts.length?'fresh':'empty',facts,warnings:[...(rows.length>20?['Context is bounded to 20 fields.']:[]),...(omitted?['Whole fact values exceeding the byte budget are withheld, not summarized as approved evidence.']:[])]};
   await tx.query('INSERT INTO candidate_contexts(id,workspace_id,candidate_revision,content) VALUES($1,$2,$3,$4)',[id,ctx.workspaceId,candidate.revision,JSON.stringify(content)]);
   for(const f of selected)for(const entityId of [id,...(runId?[runId]:[])])await tx.query("INSERT INTO fact_dependencies(workspace_id,fact_id,fact_revision,kind,entity_id) VALUES($1,$2,$3,'context',$4) ON CONFLICT DO NOTHING",[ctx.workspaceId,f.id,f.revision,entityId]);
   return content;
