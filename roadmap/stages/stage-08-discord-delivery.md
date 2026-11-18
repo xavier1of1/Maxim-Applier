@@ -1,7 +1,7 @@
 # S8: Durable existing-Discord delivery
 
-**Status:** Pending implementation. Detailed plan drafted; no acceptance criterion is claimed passed.
-**Updated:** 2026-11-16.
+**Status:** In progress. Implementation integrated; final acceptance gates remain open.
+**Updated:** 2026-11-17.
 **Roadmap:** [Stage index](README.md) | [High-level roadmap](../high-level-roadmap.md) | [Shared contracts](contracts.md)
 **Requires:** [S5](stage-05-evaluation-and-tracker-cutover.md)
 
@@ -88,7 +88,9 @@ No new account is necessary; confirm existing destination/config privately. An i
 
 ## What Shipped
 
-Pending. Existing configured webhook history does not pass the new acceptance/retry/schedule gate.
+Protected destination/contents approval, previews, durable accepted/uncertain delivery, bounded retry, schedules and current domain/task producers are implemented. Final combined regression and a consented live acceptance smoke remain outstanding.
+
+See [measured MVP verification and remaining gates](../reviews/mvp-completion-verification.md). No unrun acceptance checkbox is promoted.
 
 ## Deferred To Later Stages
 

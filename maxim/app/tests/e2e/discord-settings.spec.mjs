@@ -1,0 +1,50 @@
+import {test,expect} from '@playwright/test';
+import {discordHarness} from '../support/discord.mjs';
+
+let h;
+test.beforeAll(async()=>{h=await discordHarness({ui:true});});
+test.afterAll(async()=>{if(h)await h.close();});
+for(const width of [1600,390]){
+ test('real Discord component, scoped services and PostgreSQL delivery at '+width,async({page},info)=>{
+  const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.error('Discord fixture page error: '+e.message);});
+  await page.setViewportSize({width,height:1000});await page.context().addCookies([h.cookie]);
+  await page.goto(h.c.origin);await expect(page.getByRole('heading',{name:'Discord delivery',exact:true})).toBeVisible();
+  await page.getByLabel('Private webhook',{exact:true}).fill(h.webhook);
+  await page.getByLabel('Existing channel ID',{exact:true}).fill('123456789012345678');
+  await page.getByRole('checkbox',{name:'I confirmed this is the existing private destination'}).check();
+  await page.getByRole('button',{name:/^(Save|Replace) destination$/}).click();
+  await expect(page.getByLabel('Private webhook',{exact:true})).toHaveValue('');
+  await expect(page.getByRole('button',{name:'Queue this notification'})).toBeDisabled();
+  await page.getByRole('checkbox',{name:'Weekly review',exact:true}).check();
+  await page.getByRole('checkbox',{name:'Enable delivery',exact:true}).check();
+  await expect(page.getByRole('button',{name:'Save consent'})).toBeDisabled();
+  await page.getByRole('checkbox',{name:'I approve these contents for the confirmed destination'}).check();
+  await page.getByRole('button',{name:'Save consent'}).click();
+  const initialRequests=h.requests.length;
+  await page.getByRole('button',{name:'Preview only'}).click();
+  await expect(page.getByRole('region',{name:'Delivery plan'})).toContainText('0 confirmed submissions');
+  expect(h.requests.length).toBe(initialRequests);
+  const before=(await h.sql('SELECT count(*) FROM discord_notifications')).rows[0].count;
+  await page.getByRole('button',{name:'Preview only'}).click();expect((await h.sql('SELECT count(*) FROM discord_notifications')).rows[0].count).toBe(before);
+  let calls=0;h.setRoute((_req,res)=>{if(++calls===1){res.writeHead(429,{'Retry-After':'120'});res.end('{"retry_after":120}');}else{res.writeHead(200,{'Content-Type':'application/json'});res.end('{"id":"123456789012345679","channel_id":"123456789012345678"}');}});
+  await h.sql('DELETE FROM discord_attempts');await h.sql('DELETE FROM discord_notifications');await h.sql(`DELETE FROM work_items WHERE kind='discord_delivery'`);
+  await page.getByRole('button',{name:'Queue this notification'}).click();
+  await expect(page.getByRole('region',{name:'Delivery history'})).toContainText('pending');
+  await h.sql('UPDATE discord_settings SET next_send_at=null');await h.worker().done;
+  await page.getByRole('button',{name:'Refresh Discord'}).click();await expect(page.getByRole('region',{name:'Delivery history'})).toContainText('retry after');
+  await h.sql(`UPDATE discord_notifications SET available_at=now()-interval '1 second'`);await h.sql(`UPDATE work_items SET available_at=now()-interval '1 second' WHERE kind='discord_delivery'`);await h.sql('UPDATE discord_settings SET next_send_at=null');await h.worker().done;
+  await page.getByRole('button',{name:'Refresh Discord'}).click();await expect(page.getByRole('region',{name:'Delivery history'})).toContainText('HTTP accepted');
+  await page.getByLabel('Anchor date',{exact:true}).fill('2026-11-21');await page.getByRole('checkbox',{name:'Schedule enabled',exact:true}).check();
+  await page.getByRole('button',{name:'Save schedule'}).click();await expect(page.getByRole('region',{name:'Durable schedules'})).toContainText('Weekly review: enabled');
+  await page.reload();await expect(page.getByRole('region',{name:'Delivery history'})).toContainText('HTTP accepted');
+  await expect(page.getByRole('region',{name:'Durable schedules'})).toContainText('Weekly review: enabled');
+  await expect(page.getByRole('checkbox',{name:'Needs Response (S7 unavailable)',exact:true})).toBeDisabled();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)).toBe(false);
+  expect(await page.evaluate(()=>localStorage.length+sessionStorage.length)).toBe(0);
+  await page.keyboard.press('Tab');expect(await page.evaluate(()=>document.activeElement!==document.body)).toBe(true);
+  await page.screenshot({path:info.outputPath('discord-'+width+'.png'),fullPage:true});
+  await page.route('**/api/discord',route=>route.fulfill({status:503,contentType:'application/json',body:'{"error":{"message":"Fixture unavailable"}}'}));
+  await page.getByRole('button',{name:'Refresh Discord'}).click();await expect(page.getByRole('alert')).toContainText('Showing last loaded delivery state');
+  await expect(page.getByRole('button',{name:'Preview only'})).toBeDisabled();expect(errors).toEqual([]);
+ });
+}
