@@ -5,6 +5,7 @@ import {config} from './config';
 import {domain} from './domain';
 import {candidateLock} from './sources';
 import {applicationWritable} from './application-authority';
+import {compact} from './intelligence-retention';
 import {policyFor,intelligenceLock,activeLead} from './intelligence-policy';
 import {budgetView,reserveEvaluation,reconcileReservations} from './intelligence-budget';
 import {jobFitJoin} from './job-fit';
@@ -36,9 +37,10 @@ export async function enqueueCycle(tx:PoolClient,w:string,kind='manual'){
 }
 export async function tickIntelligence(){
  await transaction(async tx=>{
-  const rows=(await tx.query("SELECT * FROM discovery_policies WHERE (value->>'autoScan'='true' AND next_scan_at<=now()) OR (value->>'autoScore'='true' AND next_score_at<=now()) ORDER BY updated_at LIMIT 10")).rows;
+  const rows=(await tx.query("SELECT * FROM discovery_policies WHERE (value->>'autoScan'='true' AND next_scan_at<=now()) OR (value->>'autoScore'='true' AND next_score_at<=now()) OR (value->>'cleanupEnabled'='true' AND next_cleanup_at<=now()) ORDER BY updated_at LIMIT 10")).rows;
   for(const row of rows){await reconcileReservations(tx,row.workspace_id);await enqueueCycle(tx,row.workspace_id,'scheduled');const p=await policyFor(tx,row.workspace_id);
    await tx.query("UPDATE discovery_policies SET next_scan_at=CASE WHEN next_scan_at<=now() THEN now()+$1*interval '1 minute' ELSE next_scan_at END,next_score_at=CASE WHEN next_score_at<=now() THEN now()+$2*interval '1 minute' ELSE next_score_at END WHERE workspace_id=$3",[p.value.scanIntervalMinutes,p.value.scoreIntervalMinutes,row.workspace_id]);
+   await tx.query("UPDATE discovery_policies SET next_cleanup_at=CASE WHEN next_cleanup_at<=now() THEN now()+interval '1 day' ELSE next_cleanup_at END WHERE workspace_id=$1",[row.workspace_id]);
   }
  });
 }
@@ -51,6 +53,7 @@ export async function runIntelligenceCycle(item:WorkItem){
   invariant(cycle&&cycle.work_id===item.id,'cycle_changed','Cycle does not belong to this work item.',409);
   const receipt:Record<string,any>={selected:[],holds:[],runIds:[]};
   const c=(await tx.query('SELECT revision,ownership FROM candidates WHERE workspace_id=$1',[w])).rows[0];
+  if(p.value.cleanupEnabled)receipt.cleanup=await compact(tx,w);
   if(p.value.autoScan){
    const recent=(await tx.query("SELECT 1 FROM discovery_runs r JOIN work_items x ON x.id=r.work_id AND x.workspace_id=r.workspace_id WHERE r.workspace_id=$1 AND (x.status IN ('queued','leased') OR r.created_at>now()-$2*interval '1 minute') LIMIT 1",[w,p.value.scanIntervalMinutes])).rowCount;
    if(!recent&&p.value.sourceIds.length){try{const run=await queueDiscoverySearch(tx,{workspaceId:w},{sourceIds:p.value.sourceIds,terms:p.value.terms,matchIn:'title'},{cycleId:cycle.id,policyRevision:p.revision,maxMatches:p.value.maxMatches});receipt.runIds.push(run.id);}catch(e){if(e instanceof DomainError)receipt.holds.push(e.code);else throw e;}}

@@ -10,6 +10,17 @@ See the [roadmap](../README.md) for defaults, interfaces and authority. Extend o
 the existing service boundaries; preserve Career-Ops and approved data contracts.
 
 ## Acceptance And Handoff
+Implemented owner-previewed compaction (50 records / 20 old runs per batch),
+an opt-in daily sweep, protected-note/save/reference/application exclusions and
+active-work fencing. Stable opening stubs prevent automatic rehydration. Compact
+history is paginated and restorable; restored descriptions/scores require fresh
+evidence. Manual creation and scanner ingestion respect the saved capacity policy.
+Submitted application history is protected outside the lead limit.
+
+Evidence: production build and isolated retention integration passed, including
+save-after-preview invalidation, cross-workspace isolation, compact qualifications,
+identity-preserving restore and active-work hold. No production cleanup was run.
+
 Prove cap backpressure, protected survival, actual payload reduction, idempotent cleanup, exact history and restore/dedupe.
 
 Commit each stage after checks. Update standing from actual evidence, not planned

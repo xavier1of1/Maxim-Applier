@@ -39,7 +39,7 @@ async function publishJob(tx:PoolClient,item:WorkItem,source:Source,page:{id:str
  await intelligenceLock(tx,w);
  await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[w+':opening:'+job.openingKey]);
  const existing=(await tx.query('SELECT * FROM jobs WHERE workspace_id=$1 AND opening_key=$2 FOR UPDATE',[w,job.openingKey])).rows[0];
- if(existing?.compacted_at){await tx.query('UPDATE jobs SET last_seen_at=$1 WHERE workspace_id=$2 AND id=$3',[page.captured_at,w,existing.id]);return {created:false,identityConflict:false,eligibility:'archived_compact'};}
+ if(existing?.compacted_at){await tx.query('UPDATE jobs SET last_seen_at=$1 WHERE workspace_id=$2 AND id=$3',[page.captured_at,w,existing.id]);await tx.query('UPDATE job_archive SET last_seen_at=$1 WHERE workspace_id=$2 AND job_id=$3',[page.captured_at,w,existing.id]);return {created:false,identityConflict:false,eligibility:'archived_compact'};}
  if(!existing&&!(await capacity(tx,w)).available)return {created:false,identityConflict:false,eligibility:'capacity_hold'};
  const id=existing?.id||crypto.randomUUID(),identityConflict=Boolean(existing&&(existing.title!==job.title||existing.company!==job.company));
  const age=job.postedAt?(Date.now()-Date.parse(job.postedAt))/3600000:null;

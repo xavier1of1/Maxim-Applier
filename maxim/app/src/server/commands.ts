@@ -5,6 +5,7 @@ import { transaction } from './db';
 import { reauthorize, digest, type Context } from './auth';
 import { invariant, notFound } from './errors';
 import {applicationWritable,queueApplicationProjection} from './application-authority';
+import {capacity} from './intelligence-policy';
 
 export const uuid = z.string().uuid();
 const note = z.string().max(8000);
@@ -58,6 +59,7 @@ export async function executeCommand(ctx: Context, raw: unknown) {
   await applicationWritable(tx,ctx.workspaceId);
   await queueApplicationProjection(tx,ctx.workspaceId);
   if (c.action === 'create_job') {
+   invariant((await capacity(tx,ctx.workspaceId)).available,'job_capacity_reached','Active lead capacity reached. Review archive/retention or raise the limit in Settings.',409);
    const p = c.payload;
    if (p.url) {
     let url: URL; try { url = new URL(p.url); } catch { invariant(false,'invalid_job_url','Posting URL must be a valid HTTPS address.'); }
@@ -91,6 +93,10 @@ export async function executeCommand(ctx: Context, raw: unknown) {
    return r.rows[0];
   }
   invariant(job.revision === c.payload.expectedRevision,'revision_conflict','This role changed. Refresh before saving.',409);
+  if(c.action==='archive_job'&&!c.payload.archived){
+   invariant(!job.compacted_at,'archive_restore_required','Restore compact history from Archive before fetching current posting details.',409);
+   if(job.archived)invariant((await capacity(tx,ctx.workspaceId)).available,'job_capacity_reached','Active lead capacity reached.',409);
+  }
   const r = c.action === 'update_note'
    ? await tx.query('UPDATE jobs SET note=$1,revision=revision+1,updated_at=now() WHERE id=$2 AND workspace_id=$3 RETURNING *',[c.payload.note,job.id,ctx.workspaceId])
    : await tx.query('UPDATE jobs SET archived=$1,revision=revision+1,updated_at=now() WHERE id=$2 AND workspace_id=$3 RETURNING *',[c.payload.archived,job.id,ctx.workspaceId]);

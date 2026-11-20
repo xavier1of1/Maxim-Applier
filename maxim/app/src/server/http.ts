@@ -16,6 +16,7 @@ import {recallAnswers} from './answer-recall';
 import {discoveryCommand,discoveryView} from './discovery';
 import {evaluationCommand} from './evaluations';
 import {intelligenceCommand,intelligenceView} from './intelligence';
+import {retentionCommand,retentionPreview,archiveView} from './intelligence-retention';
 import {applicationCommand} from './applications';
 import {packetCommand} from './packets';
 import {applicationView} from './application-reads';
@@ -106,6 +107,9 @@ export async function handle(req:Request) {
   if(post&&name==='evaluations/commands')return json({result:await evaluationCommand(ctx,await body(req))});
   if(get&&name==='intelligence')return json(await intelligenceView(ctx));
   if(post&&name==='intelligence/commands')return json({result:await intelligenceCommand(ctx,await body(req))});
+  if(get&&name==='intelligence/cleanup')return json(await retentionPreview(ctx));
+  if(post&&name==='intelligence/retention')return json({result:await retentionCommand(ctx,await body(req))});
+  if(get&&name==='archive')return json(await archiveView(ctx,new URL(req.url).searchParams));
   if(post&&name==='packets/commands')return json({result:await packetCommand(ctx,await body(req))});
   if(get&&name==='discovery')return json(await discoveryView(ctx,new URL(req.url).searchParams.get('sort')));
   if(post&&name==='discovery/commands')return json({result:await discoveryCommand(ctx,await body(req))});

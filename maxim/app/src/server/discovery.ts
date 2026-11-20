@@ -10,6 +10,7 @@ import {applicationWritable} from './application-authority';
 import {engineSnapshot} from './evaluation-native';
 import {jobFitJoin,jobFitOrder} from './job-fit';
 import type {PoolClient} from 'pg';
+import {capacity} from './intelligence-policy';
 
 const schema=z.discriminatedUnion('action',[
  z.object({commandId:uuid,action:z.literal('add_source'),payload:z.object({name:z.string().trim().min(1).max(180),provider:z.enum(['greenhouse','lever','ashby','manual']),board:z.string().max(100).default(''),careersUrl:z.string().url().max(2048).optional()}).strict()}).strict(),
@@ -44,6 +45,8 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
    const old=(await tx.query('SELECT state FROM job_discovery_states WHERE workspace_id=$1 AND job_id=$2',[w,j.id])).rows[0];
    await tx.query('INSERT INTO job_discovery_states(workspace_id,job_id,state) VALUES($1,$2,$3) ON CONFLICT(workspace_id,job_id) DO UPDATE SET state=EXCLUDED.state,updated_at=now()',[w,j.id,p.state]);
    const archived=p.state==='dismissed'||j.archived&&old?.state!=='dismissed';
+   invariant(!j.compacted_at||p.state==='dismissed','archive_restore_required','Restore compact history through Archive first.',409);
+   if(j.archived&&!archived)invariant((await capacity(tx,w)).available,'job_capacity_reached','Active lead capacity reached.',409);
    const revision=j.revision+Number(j.archived!==archived);
    if(revision!==j.revision)await tx.query('UPDATE jobs SET archived=$1,revision=$2,updated_at=now() WHERE workspace_id=$3 AND id=$4',[archived,revision,w,j.id]);
    await event(tx,ctx,j.id,'discovery_state_changed',{state:p.state},revision);return {id:j.id,state:p.state,revision};
