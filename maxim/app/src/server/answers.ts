@@ -123,10 +123,11 @@ export async function answerCommand(ctx:Context,raw:unknown,originRun?:string,or
   await snapshotAnswer(tx,saved,refs);await event(tx,ctx,a.id,c.action==='approve_answer'?'answer_approved':'answer_revoked',{questionId:a.question_id,permission:a.permission},saved.revision);return saved;
  });
 }
-export async function answerLibrary(ctx:Context){
+export async function answerLibrary(ctx:Context,selectedQuestion:string|null=null){
+ if(selectedQuestion!==null)uuid.parse(selectedQuestion);
  return transaction(async tx=>{
   await tx.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
-  const questions=(await tx.query("SELECT * FROM answer_questions WHERE workspace_id=$1 AND normalized_text<>'' ORDER BY created_at DESC LIMIT 201",[ctx.workspaceId])).rows;
+  const questions=(await tx.query("SELECT * FROM answer_questions WHERE workspace_id=$1 AND normalized_text<>'' ORDER BY coalesce(id=$2::uuid,false) DESC,created_at DESC,id LIMIT 201",[ctx.workspaceId,selectedQuestion])).rows;
   const answers=(await tx.query("SELECT a.*,q.exact_text AS question,q.company,q.context,q.kind FROM answer_memory a JOIN answer_questions q ON q.id=a.question_id AND q.workspace_id=a.workspace_id WHERE a.workspace_id=$1 ORDER BY a.updated_at DESC LIMIT 201",[ctx.workspaceId])).rows;
   const enriched=[];for(const a of answers.slice(0,200))enriched.push({...a,facts:await refsFor(tx,ctx.workspaceId,a.id,a.revision),expired:new Date(a.expires_at).getTime()<=Date.now()});
   const uses=(await tx.query('SELECT * FROM answer_uses WHERE workspace_id=$1 ORDER BY created_at DESC LIMIT 100',[ctx.workspaceId])).rows;

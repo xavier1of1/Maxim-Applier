@@ -17,6 +17,39 @@ scanner. The native scanner remains independently usable before application cuto
 6. Past searches retains query/source/policy revisions. Source health distinguishes
    never checked, disabled, stale, successful, empty, partial and failures.
 
+## NoVA/DC Setup
+
+From the running installation, preview and apply the verified public-board catalog:
+
+~~~powershell
+npm run maxim:discovery:setup
+npm run maxim:discovery:setup -- --apply
+~~~
+
+The command adds missing boards only; it neither starts a search nor re-enables a
+user-disabled source. A superseded empty board is disabled only after a replacement
+has returned usable coverage. It never removes job or application records.
+[Catalog and dated board evidence](../../maxim/config/nova-dc-boards.json).
+
+Select up to three public boards at a time; Appian, Alarm.com and Turning Point
+Global Solutions are one verified starting group. Discovery **Search** and **Past
+searches** show only the selected run. New UI searches match titles by default;
+titles plus descriptions is explicit. **Local + tracked** keeps NoVA/DC matches
+and deliberately saved/intent/manual roles. **NoVA/DC only**, **Location needs
+review**, **Outside target area** and **All locations** are available without
+deleting anything. Browse order alternates employers, not fit scores. A local
+role may still need salary/clearance review and is not an evaluation.
+
+If an expanded [Greenhouse Job Board API](https://docs.greenhouse.io/job-board)
+response exceeds the cap, the worker can request the documented list without
+descriptions inside the same pacing and request budget. It publishes partial
+coverage and clearly marked summaries. In Jobs, **Fetch full posting** uses the
+stored board and numeric posting ID for that role only. Mismatched identities
+and stale revisions are refused. One successful detail fetch does not make the
+board complete. [Ashby](https://developers.ashbyhq.com/docs/public-job-posting-api)
+direct-link-only openings are excluded from list results. Oversized Ashby feeds
+remain explicit failures; there is no whole-web or authenticated fallback.
+
 No API account is required for these public boards. No LinkedIn, Indeed, Workday,
 company-wide or destination-form support is implied. No application is filled or sent.
 No production source or personal candidate data is activated automatically.

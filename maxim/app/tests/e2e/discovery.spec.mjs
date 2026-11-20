@@ -15,12 +15,22 @@ for(const width of [1600,390]){
   const dialog=page.getByRole('dialog',{name:'Add discovery source'}),board='ui'+width;
   await dialog.getByRole('textbox',{name:/^Company name/}).fill('UI Discovery '+width);
   await dialog.getByRole('textbox',{name:/^Board slug/}).fill(board);
-  h.providerRoutes.set('/v1/boards/'+board+'/jobs',{body:{jobs:[{id:width,title:'Software Engineer '+width,absolute_url:'https://job-boards.greenhouse.io/'+board+'/jobs/'+width,location:{name:'Manassas, VA'},content:'<p>Build customer software.</p>'}]}});
+  h.providerRoutes.set('/v1/boards/'+board+'/jobs',{body:{jobs:[
+   {id:width,title:'Software Engineer '+width,absolute_url:'https://job-boards.greenhouse.io/'+board+'/jobs/'+width,location:{name:'Manassas, VA'},content:'<p>Build customer software.</p>'},
+   {id:width+1,title:'Software Engineer outside '+width,absolute_url:'https://job-boards.greenhouse.io/'+board+'/jobs/'+(width+1),location:{name:'London, United Kingdom'},content:'<p>Build software.</p>'},
+   {id:width+2,title:'Accounting job '+width,absolute_url:'https://job-boards.greenhouse.io/'+board+'/jobs/'+(width+2),location:{name:'Reston, VA'},content:'<p>Work with a software engineer.</p>'},
+  ]}});
   await dialog.getByRole('button',{name:'Add source',exact:true}).click();await expect(dialog).toBeHidden();
   await page.getByRole('textbox',{name:/^Role terms/}).fill('Software');
   await page.getByRole('checkbox',{name:'UI Discovery '+width+' greenhouse'}).check();
   await page.getByRole('button',{name:'Search jobs',exact:true}).click();
   const jobs=page.getByRole('region',{name:'Discovered jobs'});await expect(jobs).toContainText('Software Engineer '+width,{timeout:30000});
+  await expect(jobs).not.toContainText('Software Engineer outside '+width);
+  await choose(page,'Filter discovery by location','All locations');
+  await expect(jobs).toContainText('Software Engineer outside '+width);
+  await expect(jobs).toContainText('Policy blocked');
+  await expect(jobs).not.toContainText('Accounting job '+width);
+  await choose(page,'Filter discovery by location','Local + tracked');
   const row=page.locator('.discovery-job').filter({hasText:'Software Engineer '+width});
   await expect(row).toContainText('Posted unknown');await row.getByRole('button',{name:'Save opening',exact:true}).click();
   await choose(page,'Discovery view','Saved');await expect(row).toBeVisible();

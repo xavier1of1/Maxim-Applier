@@ -1,6 +1,8 @@
+import type {PostingPolicy} from './role-triage';
+
 export type View = 'jobs' | 'applications' | 'activity' | 'settings' | 'candidate' | 'answers' | 'discovery' | 'browser' | 'gmail' | 'discord' | 'networking' | 'interview';
 export type RecordFilter = 'active' | 'archived';
-export type Navigation = Partial<Record<'view' | 'job' | 'conversation' | 'filter' | 'source' | 'application', string | null>>;
+export type Navigation = Partial<Record<'view' | 'job' | 'conversation' | 'filter' | 'source' | 'application' | 'knowledge' | 'question', string | null>>;
 
 export interface WorkspaceIdentity {
   id: string;
@@ -28,6 +30,11 @@ export interface Job {
   created_at: string;
   updated_at: string;
   application_id: string | null;
+  opening_key?:string|null;
+  discovery_state?:string;
+  discovery_policy?:PostingPolicy;
+  source_platform?:string|null;
+  posting_detail_work?:{status:string;error_code:string|null}|null;
 }
 
 export interface Application {
@@ -101,6 +108,7 @@ export interface WorkspaceData {
     ownership: 'new_workspace';
   };
   asOf: string;
+  sourceStatus?:'empty'|'fresh'|'partial';
 }
 
 export interface Message {

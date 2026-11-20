@@ -2,7 +2,7 @@
 
 **Status:** Revision 0.3 refined target plan with detailed stage specifications. Implementation and unresolved design choices remain unapproved until their gates pass.
 **Updated:** 2026-11-17. **Demo target: 2026-11-19, scope not yet frozen.
-**Implementation standing:** S0-S5 verified; S6-S11 In progress. Native agent-browser and optional Gmail/Discord/networking/practice are integrated; final combined acceptance is blocked by disk/Docker recovery. See [measured verification](reviews/mvp-completion-verification.md). Reviewed candidate/application cutover and account enablement remain explicit user actions.
+**Implementation standing:** S0-S5 verified; S6-S11 In progress. Native agent-browser and optional Gmail/Discord/networking/practice are integrated. Docker has recovered; separate [measured verification](reviews/mvp-completion-verification.md) and [journey audit](reviews/2026-11-19_DRIFT_REPORT.md) track regressions and any unexecuted live gates. Reviewed candidate/application cutover and account enablement remain explicit user actions.
 **Companions:** [Index](README.md), [manifesto](MANIFESTO.md), [component assessment](external-components-assessment.md), [setup](operational-setup.md), [development workflow](development-workflow.md).
 
 ## 1. Outcome And Planning Discipline

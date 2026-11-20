@@ -87,7 +87,7 @@ Live login/site access requires the user's authorized session. No platform bypas
 
 ## What Shipped
 
-Pinned agent-browser, dedicated visible sessions, approved facts/answers/PDF, pause/resume, explicit manual handoff and isolated tests are implemented. Final combined regression and permitted live form-variant certification remain outstanding.
+Pinned agent-browser, dedicated visible sessions, approved facts/answers/PDF, pause/resume, explicit manual handoff and isolated tests are implemented. Final combined regression passed November 19; permitted live form-variant certification remains outstanding.
 
 See [measured MVP verification and remaining gates](../reviews/mvp-completion-verification.md). No unrun acceptance checkbox is promoted.
 

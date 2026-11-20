@@ -45,6 +45,7 @@
     "maxim:storage": "node maxim/scripts/storage.mjs report",
     "maxim:clean": "node maxim/scripts/storage.mjs clean",
     "maxim:storage:test": "node maxim/scripts/with-test-storage.mjs --test maxim/tests/integration/storage-docker.mjs",
+    "maxim:discovery:setup": "node maxim/scripts/discovery-setup.mjs",
     "maxim:workspace:install": "npm --prefix maxim/app ci",
     "maxim:workspace:build": "npm --prefix maxim/app run build",
     "maxim:workspace:setup": "npm --prefix maxim/app run setup",

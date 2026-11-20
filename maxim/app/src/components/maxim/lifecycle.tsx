@@ -2,15 +2,16 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {Button} from '@astryxdesign/core/Button';
 import {Selector} from '@astryxdesign/core/Selector';
-import {Check,Download,FileCheck2,Play,RefreshCw,Send,ShieldCheck,Undo2,X,ArrowLeft,ArrowRight,ExternalLink} from 'lucide-react';
+import {Check,Download,FileCheck2,Play,RefreshCw,Send,ShieldCheck,Undo2,X,ArrowLeft,ArrowRight,ExternalLink,Monitor,KeyRound} from 'lucide-react';
 import {type WorkspaceApi,errorMessage} from './api';
 import {Banner,EmptyState,Glyph,Pill,ToolButton,formatDate} from './shared';
 import {LifecycleActionDialog} from './lifecycle-action';
 import {PacketEvidenceForm,PostingPolicyForm,PostingDetailsForm} from './lifecycle-forms';
 import type {Fact,LifecycleAction,LifecycleData,Packet} from './lifecycle-types';
 import {LegacyMigrationView} from './migration';
+import type {Navigation} from './types';
 
-export function ApplicationWorkbench({api,disabled,refresh,asOf,selectedId,onSelect,hasModel,isOwner}:{api:WorkspaceApi;disabled:boolean;refresh:()=>Promise<void>;asOf:string;selectedId:string|null;onSelect:(id:string)=>void;hasModel:boolean;isOwner:boolean}){
+export function ApplicationWorkbench({api,disabled,refresh,asOf,selectedId,onSelect,hasModel,isOwner,navigate}:{api:WorkspaceApi;disabled:boolean;refresh:()=>Promise<void>;asOf:string;selectedId:string|null;onSelect:(id:string,job?:string)=>void;hasModel:boolean;isOwner:boolean;navigate:(value:Navigation)=>void}){
  const [data,setData]=useState<LifecycleData|null>(null),[facts,setFacts]=useState<Fact[]>([]),[error,setError]=useState(''),[readError,setReadError]=useState(''),[busy,setBusy]=useState(false),[tab,setTab]=useState('lifecycle');
  const [action,setAction]=useState<LifecycleAction|null>(null),[inspected,setInspected]=useState<Packet|null>(null);
  const [offset,setOffset]=useState(0);
@@ -47,7 +48,7 @@ export function ApplicationWorkbench({api,disabled,refresh,asOf,selectedId,onSel
   <div className="inline-actions"><ToolButton label="Previous applications" icon={ArrowLeft} disabled={blocked||offset===0} onClick={()=>{setOffset(Math.max(0,offset-50));onSelect('');}}/><span className="small muted">{data.applications.length?'Applications '+(offset+1)+'-'+(offset+Math.min(50,data.applications.length)):'No applications'}</span><ToolButton label="Next applications" icon={ArrowRight} disabled={blocked||data.nextOffset===null} onClick={()=>{setOffset(data.nextOffset!);onSelect('');}}/></div>
   {data.partial&&<Banner tone="warning">Application pages contain 50 records; history is limited to the recent 200 selected-page records.</Banner>}
   {tab==='migration'?<LegacyMigrationView api={api} disabled={blocked} refresh={refresh} asOf={asOf}/>:!app?<EmptyState icon={Send} title="No application intents" detail="No submission is recorded."/>:<>
-   <div className="lifecycle-selector"><Selector label="Application" value={app.id} onChange={id=>{setAction(null);onSelect(id);}} width="100%" options={data.applications.map(a=>({value:a.id,label:a.company+' / '+a.title}))}/></div>
+   <div className="lifecycle-selector"><Selector label="Application" value={app.id} onChange={id=>{setAction(null);onSelect(id,data.applications.find(a=>a.id===id)?.job_id);}} width="100%" options={data.applications.map(a=>({value:a.id,label:a.company+' / '+a.title}))}/></div>
    {frozen&&<Banner tone="warning">{data.authority.owner==='staging'?'Application ownership is staged. Finish or recover the reviewed migration.':'Legacy writers own applications after rollback. Review a new migration before editing here.'}</Banner>}
    {data.authority.owner==='legacy'&&!data.authority.transition_id&&<Banner tone="info">This workspace is isolated from the legacy tracker. Application authority has not been switched.</Banner>}
    <div className="knowledge-summary lifecycle-summary"><div><span>Career-Ops score</span><strong>{current?.score?current.score+'/5':'Unknown'}</strong></div><div><span>Maxim tier</span><strong>{current?.tier||'Unknown'}</strong></div><div><span>Workflow</span><strong>{app.workflow.replaceAll('_',' ')}</strong></div><div><span>Outcome</span><strong>{app.outcome.replaceAll('_',' ')}</strong></div></div>
@@ -55,7 +56,15 @@ export function ApplicationWorkbench({api,disabled,refresh,asOf,selectedId,onSel
     <div className="fact-title"><h3>Career-Ops evaluation</h3><Pill tone={current?'green':'amber'}>{current?'Current':latest?latest.status.replaceAll('_',' '):'Not evaluated'}</Pill></div>
     {data.candidate.ownership!=='canonical'&&<Banner tone="warning">Review and activate Candidate knowledge before evaluation.</Banner>}
     {!hasModel&&<Banner tone="info">Evaluation model is not configured in Settings.</Banner>}
+    {(!hasModel||data.candidate.ownership!=='canonical')&&<div className="inline-actions evaluation-setup">
+     {data.candidate.ownership!=='canonical'&&<Button label={facts.length?'Review candidate knowledge':'Add candidate knowledge'} size="sm" icon={<Glyph icon={ShieldCheck}/>}
+      onClick={()=>navigate({view:'candidate',knowledge:facts.length?'facts':'sources',application:app.id,job:app.job_id})}/>}
+     {!hasModel&&<Button label="Configure evaluation model" size="sm" icon={<Glyph icon={KeyRound}/>}
+      onClick={()=>navigate({view:'settings',application:app.id,job:app.job_id})}/>}
+    </div>}
     {!app.description||app.description.length<50?<Banner tone="warning">A full job description is required before evaluation.</Banner>:<details className="lifecycle-details"><summary>Posting evidence</summary><pre className="posting-evidence">{app.description}</pre></details>}
+    {app.opening_key&&app.description.trim().length<50&&<Button label="View job posting details" size="sm" icon={<Glyph icon={FileCheck2}/>}
+     onClick={()=>navigate({view:'jobs',job:app.job_id,filter:'active'})}/>}
     <div className="inline-actions"><Button label="Evaluate with Career-Ops" variant="primary" icon={<Glyph icon={FileCheck2}/>} isDisabled={locked||pending||!hasModel||data.candidate.ownership!=='canonical'||app.description.length<50||app.status==='archived'} onClick={()=>void mutate('evaluations','start_evaluation',{jobId:app.job_id,expectedJobRevision:app.job_revision,expectedCandidateRevision:data.candidate.revision})}/>
      {latest&&['queued','running'].includes(latest.status)&&<ToolButton label="Cancel evaluation" icon={X} disabled={locked} onClick={()=>void mutate('evaluations','cancel_evaluation',{evaluationId:latest.id,expectedRevision:latest.revision})}/>}
      {latest?.report_artifact_id&&<a className="text-link" href={'/api/artifacts/'+latest.report_artifact_id} target="_blank" rel="noreferrer"><Download size={14}/> Full report</a>}
@@ -77,6 +86,8 @@ export function ApplicationWorkbench({api,disabled,refresh,asOf,selectedId,onSel
     </div></article>)}
    </section>
    <section className="knowledge-section" aria-label="Manual application progress"><h3>Application progress</h3><div className="inline-actions">
+    {approved&&app.status!=='archived'&&app.outcome==='not_submitted'&&<Button label="Open Apply Assistant" variant="primary" icon={<Glyph icon={Monitor}/>}
+     onClick={()=>navigate({view:'browser',application:app.id,job:app.job_id,conversation:null})} isDisabled={locked}/>}
     {app.url&&<a href={app.url} target="_blank" rel="noreferrer" className="text-link"><ExternalLink size={14}/> Open posting</a>}
     <Button label="Record manual start" icon={<Glyph icon={Play}/>} onClick={()=>open('started')} isDisabled={locked||!approved||app.status==='archived'||app.outcome!=='not_submitted'}/>
     <Button label="Record form review" icon={<Glyph icon={Check}/>} onClick={()=>open('reviewed')} isDisabled={locked||!approved||app.status==='archived'||app.outcome!=='not_submitted'}/>

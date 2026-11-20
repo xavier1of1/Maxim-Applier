@@ -6,6 +6,7 @@ import {candidateLock} from './sources';
 import {enqueue} from './work';
 import {invariant,notFound} from './errors';
 import {config} from './config';
+import {modelProfile} from './context-budget';
 import {render} from './projections';
 import {engineSnapshot,retainedPrompt} from './evaluation-native';
 import {assertDisclosureText} from './candidate-context';
@@ -37,6 +38,7 @@ export async function evaluationCommand(ctx:Context,raw:unknown){
   facts.forEach(f=>assertDisclosureText(JSON.stringify(f.value)));assertDisclosureText(j.description);
   const engine=await engineSnapshot(),projection=render(candidate.revision,facts),prompt=await retainedPrompt(engine,projection),model=config().model;
   invariant(model.model&&model.apiKey,'model_unconfigured','Configure the evaluation model in Settings.',503);
+  modelProfile(model.model,config().testMode);
   const policy=await jobPolicy(tx,ctx.workspaceId,j);
   const snapshot={job:{id:j.id,company:j.company,title:j.title,location:j.location,description:j.description,url:j.url,revision:j.revision},candidateRevision:candidate.revision,
    facts:facts.map(f=>({id:f.id,revision:f.revision,field_key:f.field_key,value:f.value,source_id:f.source_id,source_revision:f.source_revision})),engine,prompt,projection,policy,policyReviewRevision:policy.policyReviewRevision||0,model:model.model,provider:model.baseUrl};

@@ -8,17 +8,19 @@ import {Bookmark,Check,ExternalLink,Plus,RefreshCw,Search,Undo2,X} from 'lucide-
 import {type WorkspaceApi,errorMessage} from './api';
 import {Banner,EmptyState,Glyph,Pill,ToolButton,formatDate} from './shared';
 import type {Navigation} from './types';
+import {companySpread,locationFilters,locationMatches,rolePolicyLabel,runResultIds} from './role-triage';
 
 type Source={id:string;name:string;provider:string;board:string;careers_url:string;revision:number;enabled:boolean;status:string;status_reason:string|null;checked_at:string|null;next_retry_at:string|null;stale:boolean};
 type Run={id:string;revision:number;status:string;work_status:string;work_error:string|null;counts:Record<string,number>;terms:string[];created_at:string;filters:Record<string,unknown>;candidate_revision:number;preference_provenance:unknown[];source_snapshots:Source[]};
 type Attempt={id:string;run_id:string;run_revision:number;source_id:string;status:string;error_code:string|null;fallback:string|null;page_count:number;record_count:number};
-type Job={id:string;company:string;title:string;location:string;revision:number;url:string;source_platform:string;application_url:string;discovery_state:string;posted_at:string|null;first_seen_at:string;last_seen_at:string;discovery_policy:{eligibility:string;flags:{flagType:string;reason:string;severity:string}[]}};
+type Job={id:string;company:string;title:string;location:string;revision:number;url:string;source_platform:string;application_url:string;opening_key:string;archived:boolean;discovery_state:string;posted_at:string|null;first_seen_at:string;last_seen_at:string;discovery_policy:{eligibility:string;flags:{flagType:string;reason:string;severity:string}[]}};
 type Observation={job_id:string;run_id:string;source_id:string;identity_conflict:boolean;observed_at:string;date_basis:string};
 type Data={sources:Source[];runs:Run[];attempts:Attempt[];jobs:Job[];observations:Observation[];partial:Record<string,boolean>;asOf:string};
 const readable=(s:string)=>s.replaceAll('_',' ');
 export function DiscoveryView({api,disabled,refresh,asOf,navigate}:{api:WorkspaceApi;disabled:boolean;refresh:()=>Promise<void>;asOf:string;navigate:(n:Navigation)=>void}){
  const [data,setData]=useState<Data|null>(null),[error,setError]=useState(''),[readError,setReadError]=useState(''),[busy,setBusy]=useState(false);
  const [tab,setTab]=useState('search'),[terms,setTerms]=useState(''),[selected,setSelected]=useState<string[]>([]),[open,setOpen]=useState(false),[runId,setRunId]=useState('');
+ const [location,setLocation]=useState('focus'),[matchIn,setMatchIn]=useState('title');
  const [source,setSource]=useState({name:'',provider:'greenhouse',board:'',careersUrl:''});
  const active=useRef(false),sequence=useRef(0),attempts=useRef(new Map<string,string>());
  const load=useCallback(async()=>{const n=++sequence.current;try{const r=await api.get<Data>('/api/discovery');if(n===sequence.current){setData(r);setReadError('');}}catch(e){if(n===sequence.current)setReadError(errorMessage(e));}},[api]);
@@ -36,22 +38,31 @@ export function DiscoveryView({api,disabled,refresh,asOf,navigate}:{api:Workspac
  async function act(action:string,payload:unknown){
   if(blocked||active.current)return;active.current=true;setBusy(true);setError('');
   const key=JSON.stringify({action,payload}),commandId=attempts.current.get(key)||crypto.randomUUID();attempts.current.set(key,commandId);
-  try{await api.post('/api/discovery/commands',{commandId,action,payload});attempts.current.delete(key);await load();await refresh();return true;}
+  try{const response=await api.post<{result:{id?:string}}>('/api/discovery/commands',{commandId,action,payload});attempts.current.delete(key);
+   if(action==='start_search'&&response.result.id)setRunId(response.result.id);
+   await load();await refresh();return true;}
   catch(e){setError(errorMessage(e));await load();return false;}finally{active.current=false;setBusy(false);}
  }
  async function add(e:FormEvent){e.preventDefault();if(await act('add_source',{name:source.name,provider:source.provider,board:source.board,...(source.provider==='manual'?{careersUrl:source.careersUrl}:{})})){setOpen(false);setSource({name:'',provider:'greenhouse',board:'',careersUrl:''});}}
  if(!data)return <div className="knowledge-view">{readError?<EmptyState icon={Search} title="Discovery unavailable" detail={readError} action={<Button label="Retry" icon={<Glyph icon={RefreshCw}/>} onClick={()=>void load()}/>}/>:<p role="status">Loading discovery</p>}</div>;
  const currentRun=data.runs.find(r=>r.id===runId)||data.runs[0];
- const visible=data.jobs.filter(j=>tab==='saved'?j.discovery_state==='saved':tab==='dismissed'?j.discovery_state==='dismissed':tab==='history'&&currentRun?data.observations.some(o=>o.job_id===j.id&&o.run_id===currentRun.id):j.discovery_state!=='dismissed');
+ const selectedRunIds=runResultIds(data.observations,currentRun?.id);
+ const runView=tab==='search'||tab==='history';
+ const scoped=data.jobs.filter(j=>tab==='saved'?j.discovery_state==='saved':tab==='dismissed'?j.discovery_state==='dismissed':selectedRunIds.has(j.id)&&!j.archived);
+ const visible=companySpread(runView?scoped.filter(j=>locationMatches(j,location)):scoped);
+ const employerCount=new Set(visible.map(j=>j.company)).size;
+ const enabled=data.sources.filter(s=>s.enabled&&s.provider!=='manual');
+ const ready=selected.filter(id=>enabled.some(s=>s.id===id));
  return <div className="knowledge-view">
   {readError&&<Banner>{readError} Showing last loaded discovery.</Banner>}{error&&<Banner onDismiss={()=>setError('')}>{error}</Banner>}
   {Object.values(data.partial).some(Boolean)&&<Banner tone="warning">This view is limited to recent records. Earlier history remains stored.</Banner>}
   <div className="knowledge-toolbar"><Selector label="Discovery view" isLabelHidden value={tab} onChange={setTab} width={200} options={[{value:'search',label:'Search'},{value:'history',label:'Past searches'},{value:'saved',label:'Saved'},{value:'dismissed',label:'Dismissed'},{value:'sources',label:'Source health'}]}/>
    <div className="inline-actions"><Button label="Add source" size="sm" icon={<Glyph icon={Plus}/>} onClick={()=>setOpen(true)} isDisabled={blocked}/><ToolButton label="Refresh discovery" icon={RefreshCw} onClick={()=>void load()} disabled={disabled}/></div></div>
-  {tab==='search'&&<section className="knowledge-section" aria-label="Start job search"><form className="answer-lookup" onSubmit={e=>{e.preventDefault();void act('start_search',{sourceIds:selected,terms:terms.split(',').map(t=>t.trim()).filter(Boolean)});}}>
+  {tab==='search'&&<section className="knowledge-section" aria-label="Start job search"><form className="answer-lookup" onSubmit={e=>{e.preventDefault();void act('start_search',{sourceIds:ready,matchIn,terms:terms.split(',').map(t=>t.trim()).filter(Boolean)});}}>
    <TextInput label="Role terms" value={terms} onChange={setTerms} isDisabled={blocked}/>
-   <fieldset className="source-choice"><legend>Selected public boards</legend>{data.sources.filter(s=>s.enabled).map(s=><label className="binary-option" key={s.id}><input type="checkbox" checked={selected.includes(s.id)} disabled={blocked} onChange={e=>setSelected(ids=>e.target.checked?[...ids,s.id]:ids.filter(id=>id!==s.id))}/>{s.name}<span className="muted small">{s.provider}</span></label>)}{!data.sources.some(s=>s.enabled)&&<p className="muted">No enabled sources.</p>}</fieldset>
-   <Button label="Search jobs" type="submit" variant="primary" icon={<Glyph icon={Search}/>} isDisabled={blocked||!selected.length||selected.length>3} isLoading={busy}/>
+   <Selector label="Match role terms in" value={matchIn} onChange={setMatchIn} options={[{value:'title',label:'Titles'},{value:'title_and_description',label:'Titles and descriptions'}]}/>
+   <fieldset className="source-choice"><legend>Selected public boards ({ready.length}/3)</legend>{enabled.map(s=><label className="binary-option" key={s.id}><input type="checkbox" checked={ready.includes(s.id)} disabled={blocked||ready.length>=3&&!ready.includes(s.id)} onChange={e=>setSelected(ids=>e.target.checked?[...ids,s.id]:ids.filter(id=>id!==s.id))}/>{s.name}<span className="muted small">{s.provider}</span></label>)}{!enabled.length&&<p className="muted">No enabled public feeds.</p>}</fieldset>
+   <Button label="Search jobs" type="submit" variant="primary" icon={<Glyph icon={Search}/>} isDisabled={blocked||!ready.length||ready.length>3} isLoading={busy}/>
   </form></section>}
   {(tab==='history'||tab==='search')&&currentRun&&<section className="knowledge-section" aria-label="Search history">
    <div className="knowledge-toolbar"><Selector label="Search run" value={currentRun.id} onChange={setRunId} width="100%" options={data.runs.map(r=>({value:r.id,label:formatDate(r.created_at,true)+' - '+r.terms.join(', ')+' - '+readable(r.status)}))}/></div>
@@ -61,7 +72,10 @@ export function DiscoveryView({api,disabled,refresh,asOf,navigate}:{api:Workspac
    <div className="inline-actions">{['queued','running'].includes(currentRun.status)&&currentRun.work_status!=='failed'?<Button label="Cancel search" icon={<Glyph icon={X}/>} onClick={()=>void act('cancel_search',{runId:currentRun.id,expectedRevision:currentRun.revision})} isDisabled={blocked}/>:['failed','partial','cancelled'].includes(currentRun.status)||currentRun.work_status==='failed'?<Button label="Retry eligible pages" icon={<Glyph icon={RefreshCw}/>} onClick={()=>void act('retry_search',{runId:currentRun.id,expectedRevision:currentRun.revision})} isDisabled={blocked}/>:null}</div>
   </section>}
   {tab==='sources'?<section className="knowledge-section" aria-label="Source health">{!data.sources.length?<EmptyState icon={Search} title="No discovery sources" detail="No public boards have been selected."/>:data.sources.map(s=><article className="discovery-source" key={s.id}><div className="fact-title"><strong>{s.name}</strong><Pill tone={s.status==='success'&&!s.stale?'green':'amber'}>{!s.enabled?'disabled':s.stale?'stale':readable(s.status)}</Pill></div><p className="small">{s.provider} · {s.board||'manual review'} · checked {s.checked_at?formatDate(s.checked_at,true):'never'}</p>{s.status_reason&&<p className="small muted">{readable(s.status_reason)}</p>}{s.next_retry_at&&<p className="small">Retry after {formatDate(s.next_retry_at,true)}</p>}<div className="inline-actions"><a href={s.careers_url} target="_blank" rel="noreferrer" className="text-link">Open source <ExternalLink size={12}/></a><label className="binary-option"><input type="checkbox" checked={s.enabled} disabled={blocked} onChange={e=>void act('set_source_enabled',{sourceId:s.id,expectedRevision:s.revision,enabled:e.target.checked})}/>Enabled</label></div></article>)}</section>:<section className="knowledge-section" aria-label="Discovered jobs">
-   {!visible.length?<EmptyState icon={Search} title="No matching records" detail={tab==='saved'?'No saved openings.':tab==='dismissed'?'No dismissed openings.':'Check the selected sources and run coverage.'}/>:visible.map(j=><article className="discovery-job" key={j.id}><div className="fact-title"><button className="text-link" type="button" onClick={()=>navigate({view:'jobs',job:j.id,filter:j.discovery_state==='dismissed'?'archived':'active'})}>{j.title}</button><Pill tone={j.discovery_policy.eligibility==='eligible'?'green':'amber'}>{j.discovery_policy.eligibility||'review'}</Pill></div>
+   {runView&&currentRun&&<div className="knowledge-toolbar"><Selector label="Filter discovery by location" isLabelHidden value={location} onChange={setLocation} options={locationFilters} width={210}/>
+    <span className="small muted tabular">{visible.length} of {scoped.length} openings / {employerCount} {employerCount===1?'employer':'employers'}</span></div>}
+   {!visible.length?<EmptyState icon={Search} title={scoped.length?'No openings in this location filter':'No matching records'} detail={tab==='saved'?'No saved openings.':tab==='dismissed'?'No dismissed openings.':undefined}
+    action={runView&&scoped.length?<Button label="All locations" onClick={()=>setLocation('all')}/>:undefined}/>:visible.map(j=><article className="discovery-job" key={j.id}><div className="fact-title"><button className="text-link" type="button" onClick={()=>navigate({view:'jobs',job:j.id,filter:j.archived?'archived':'active'})}>{j.title}</button><Pill tone={rolePolicyLabel(j).tone}>{rolePolicyLabel(j).label}</Pill></div>
     <p>{j.company} <span className="muted">· {j.location||'Location unknown'}</span></p><p className="small muted">Posted {j.posted_at?formatDate(j.posted_at):'unknown'} · First seen {formatDate(j.first_seen_at,true)} · Checked {formatDate(j.last_seen_at,true)}</p>
     <details><summary>Policy and source</summary><ul>{j.discovery_policy.flags?.map((f,i)=><li key={i}>{f.reason}</li>)}</ul><p className="small">Discovery: {j.source_platform} · Original: <a className="text-link" href={j.url} target="_blank" rel="noreferrer">posting</a> · Destination: <a className="text-link" href={j.application_url} target="_blank" rel="noreferrer">application</a></p>{data.observations.some(o=>o.job_id===j.id&&o.identity_conflict)&&<Banner tone="warning">Source identity changed. Current role was not overwritten; reconciliation is required.</Banner>}</details>
     <div className="inline-actions"><ToolButton label={j.discovery_state==='saved'?'Unsave opening':'Save opening'} icon={j.discovery_state==='saved'?Check:Bookmark} disabled={blocked} onClick={()=>void act('set_discovery_state',{jobId:j.id,expectedRevision:j.revision,state:j.discovery_state==='saved'?'none':'saved'})}/><ToolButton label={j.discovery_state==='dismissed'?'Restore opening':'Dismiss opening'} icon={j.discovery_state==='dismissed'?Undo2:X} disabled={blocked} onClick={()=>void act('set_discovery_state',{jobId:j.id,expectedRevision:j.revision,state:j.discovery_state==='dismissed'?'none':'dismissed'})}/></div>

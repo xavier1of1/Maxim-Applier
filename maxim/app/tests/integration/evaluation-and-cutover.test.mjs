@@ -131,14 +131,17 @@ test('S5 retained evaluation, approved real PDF and truthful application lifecyc
    await call('applications','update_posting_details',{jobId:entry.job.id,expectedJobRevision:2,description:entry.job.description,location:'Reston, VA',url:'https://example.com/jobs/another-opening',reason:'Must not overwrite opening identity.'},409);
    assert.equal((await view()).applications.find(a=>a.id===entry.app.id).job_revision,2);
   });
-  await t.test('agent queues the retained evaluator only on explicit UUID requests and reads the same IDs',async()=>{
+  await t.test('agent evaluates the selected role only on a direct scoped request and reads the same IDs',async()=>{
    const entry=await create('agent');
-   const c=await(await h.request(h.a,'/api/conversations',{method:'POST',body:{commandId:crypto.randomUUID(),title:'Application proof'}})).json();
+   const c=await(await h.request(h.a,'/api/conversations',{method:'POST',body:{commandId:crypto.randomUUID(),title:'Application proof',jobId:entry.job.id}})).json();
    const chat=async text=>streamResult(await h.request(h.a,'/api/conversations/'+c.conversation.id+'/messages',{method:'POST',body:{commandId:crypto.randomUUID(),text}}));
-   let events=await chat('[case:application-unrequested] '+entry.job.id+' rev 1 candidate '+candidate.revision);
+   const args={jobId:entry.job.id,expectedJobRevision:entry.job.revision,expectedCandidateRevision:candidate.revision,quote:'Evaluate this role'};
+   h.chatTools.set('Do not evaluate this role',{name:'evaluate_job',args:{...args,quote:'evaluate this role'}});
+   let events=await chat('Do not evaluate this role');
    assert.ok(events.filter(e=>e.event==='delta').map(e=>e.data.text).join('').includes('explicit_request_required'));
    assert.equal((await view()).evaluations.some(e=>e.job_id===entry.job.id),false);
-   events=await chat('[case:application-evaluate] evaluate '+entry.job.id+' rev 1 candidate '+candidate.revision);assert.ok(events.some(e=>e.event==='done'));
+   h.chatTools.set('Evaluate this role',{name:'evaluate_job',args});
+   events=await chat('Evaluate this role');assert.ok(events.some(e=>e.event==='done'));
    await until(async()=>(await view()).evaluations.find(e=>e.job_id===entry.job.id)?.status==='completed');
    events=await chat('[case:application-read] Show application progress.');
    const text=events.filter(e=>e.event==='delta').map(e=>e.data.text).join('');

@@ -95,7 +95,10 @@ Produces **accepted-delivery-profile** for daily use and recruiter explanation. 
 
 ## What Shipped
 
-Two mounted-product rehearsal tests, all-view desktop/mobile acceptance, setup guide and proposed demo script are implemented. The new tests and final full suite await Docker recovery; the demo profile is not owner-approved.
+Two mounted-product rehearsals and all-view desktop/mobile checks executed on
+November 19. The isolated rehearsals passed; the setup guide and proposed demo
+script distinguish that fixture proof from live per-variant acceptance. The demo
+profile is not owner-approved.
 
 See [measured MVP verification and remaining gates](../reviews/mvp-completion-verification.md). No unrun acceptance checkbox is promoted.
 

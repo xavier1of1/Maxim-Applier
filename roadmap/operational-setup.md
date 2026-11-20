@@ -9,16 +9,16 @@
 
 Use [Start and use Maxim](../docs/maxim/setup.md) and
 [current verification](reviews/mvp-completion-verification.md). S6-S10 are now
-integrated but final acceptance is outstanding. Docker recovered on November 18;
-review [storage results and headroom](../docs/maxim/storage-maintenance.md) before
-the final combined tests and production restart. No account was connected
+integrated; the November 19 local integration and desktop/mobile runs pass.
+Review [storage results and headroom](../docs/maxim/storage-maintenance.md) before
+large test runs. Live acceptance is separate. No account was connected
 and no candidate/application authority was silently activated.
 
 | Capability | Exact input and location | Action |
 | --- | --- | --- |
 | Local workspace | Windows/npm, pinned Node 24, Rust/MSVC, Docker Linux engine with free disk | Run root workspace install/build/start scripts; use printed loopback URL |
 | CSV/XLSX/ZIP imports | Python 3 and user-authorized private exports | Networking import; review normalized mappings/raw fields |
-| Model | OpenAI model ID/key through Settings -> Model connection | Server-held runtime settings; no new OPENAI_API_KEY env parser |
+| Model | OpenAI model ID/key through Settings -> Model connection | Save connection, then Check model access; no candidate content in the check, no legacy .env key auto-import |
 | Browser | agent-browser 0.43.0 dependency and its Chrome install | Follow browser guide; fresh dedicated sessions, separate private-field consent; permitted live form examples still needed |
 | Gmail | Desktop OAuth client ID/optional secret in protected `<privateRoot>/gmail/client.json` | Follow Gmail guide; exact expected account, 1-5 thread IDs, read-only consent and retention; no send/calendar scope |
 | Discord | Existing private webhook and channel ID entered in Discord workspace | Confirm destination, preview categories, explicitly enable and set schedules; legacy .env webhook is not auto-imported |
@@ -65,7 +65,7 @@ Only the items needed by a stage block it. Gmail, search-provider accounts, Link
 | Model keys in `.env.example` | Gemini evaluator key exists in current config contract; OpenAI/Anthropic entries are comments/placeholders | Do not treat a commented key as a working shared runtime integration |
 | EGM 0.1.1 | Installed/enabled complete Codex plugin | Fresh turn/session discovery; formal review config/human gates still needed |
 | Astryx | Pinned 0.7.16 workspace dependency, production/interaction proof | Maintain browser regressions |
-| Tokenizer / agent-browser | Microsoft tokenizer is pinned and tested in S3; agent-browser is not a product executor | S6 browser acceptance remains |
+| Tokenizer / agent-browser | Microsoft tokenizer is pinned in S3; pinned agent-browser drives the dedicated S6 browser | Isolated execution tested; live form-variant acceptance remains |
 | Dossier/Cracked/Hiring Panel/LinkedIn/Graphify | References reviewed | No source vendored or runtime integration installed |
 | Reported web ports 3000/8000 | Legacy, not the running workspace | Use the launcher URL, normally 3010; no second stack |
 

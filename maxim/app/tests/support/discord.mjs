@@ -25,7 +25,7 @@ export async function discordHarness({ui=false}={}) {
    ...[...children].map(child=>async()=>{child.kill();await Promise.race([new Promise(resolve=>child.once('exit',resolve)),new Promise(resolve=>setTimeout(resolve,3000))]);}),
    async()=>{if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}},
    async()=>{if(remote){remote.closeAllConnections();await new Promise(r=>remote.close(r));}},
-   async()=>{if(pool)await pool.end();},async()=>{if(db)await db.database().end();},
+   async()=>{if(pool)await pool.end();},async()=>{if(db)await db.closeDatabase();},
    ()=>{if(prior===undefined)delete process.env.MAXIM_RUNTIME_FILE;else process.env.MAXIM_RUNTIME_FILE=prior;},
    ()=>stopTestDatabase(container),()=>removeFixture(root,{allowCurrent:true}),
   ]);

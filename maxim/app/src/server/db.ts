@@ -8,6 +8,11 @@ export function database() {
   }
   return pool;
 }
+export async function closeDatabase() {
+  const closing=pool;
+  pool=undefined;
+  await closing?.end();
+}
 export async function transaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await database().connect();
   try { await client.query('BEGIN'); const value = await fn(client); await client.query('COMMIT'); return value; }

@@ -1,6 +1,6 @@
 # Reviewed Application Assistance
 
-Updated: 2026-11-17. Implementation uses **agent-browser 0.43.0**, its native
+Updated: 2026-11-19. Implementation uses **agent-browser 0.43.0**, its native
 Rust/CDP CLI and dedicated Chrome for Testing. Playwright remains the retained
 Career-Ops PDF renderer and automated UI test tool, not this product executor.
 
@@ -8,7 +8,7 @@ Career-Ops PDF renderer and automated UI test tool, not this product executor.
 
 | Destination | Implemented behavior | Acceptance standing |
 | --- | --- | --- |
-| Isolated localhost native form | Text, email, textarea, native select/check, hidden native resume input, exact approved PDF, answer reuse and manual handoff | Real agent-browser unit and initial mounted integration passed; final changed integration/UI rerun outstanding |
+| Isolated localhost native form | Text, email, textarea, native select/check, hidden native resume input, exact approved PDF, answer reuse and manual handoff | Real agent-browser unit, mounted integration and desktop/mobile reviewed-answer flows passed |
 | Greenhouse listed pilot hosts | Specific stored posting, top-level native controls only | Live form variant not certified; no real candidate fill performed |
 | Lever jobs.lever.co | Stored posting opens its /apply URL; top-level native controls only | Live form variant not certified |
 | Workday, LinkedIn, Indeed, arbitrary company domains | Preserve role; explicit unsupported/manual fallback | No universal support claim |
@@ -26,15 +26,17 @@ challenge workaround, account creation or unrestricted model browser tool exists
 2. Save a role and application intent. Applications evaluates with the retained
    Career-Ops engine. Select approved facts, build a packet, inspect its report
    and PDF, and approve the exact hashes. T0 is blocked; T1 needs an override.
-3. Open **Apply Assistant**, select the current approved packet and authorize
-   the dedicated visible session. Private contact/authorization disclosure is a
-   separate choice. No credentials are requested through Maxim.
+3. From the exact application, choose **Open Apply Assistant**. Review the
+   selected approved packet and authorize the dedicated browser. Changing roles
+   or packets requires its own consent. Private contact/authorization disclosure
+   is a separate choice. No credentials are requested through Maxim.
 4. Choose **Fill approved fields and PDF**, or review a field's exact fact.
    Each operation rechecks scope, revisions, observed control identity and value.
    Existing user changes are not silently overwritten. The selected PDF is the
    approved packet's exact bytes, not the newest file in a directory.
-5. For an unknown question, use **Save question** and review an answer in Answers.
-   Choose **Find approved answer**, inspect it, and **Confirm and fill this answer**.
+5. For an unknown question, **Save question** pre-fills the exact Answers form.
+   Record and approve the answer, then **Return to Apply Assistant**. Choose
+   **Find approved answer**, inspect it, and **Confirm and fill this answer**.
    Company, exact question/options, fact/source versions and reuse permission
    apply. Revocation blocks further use and handoff until corrected/refilled.
 6. Pause/resume or re-inspect as necessary. Review the field progress and PDF hash.
@@ -47,8 +49,9 @@ challenge workaround, account creation or unrestricted model browser tool exists
    dedicated browser when finished. Workspace stop closes only owned sessions.
 
 The Agent can read assistance status and fill approved fields in an **already
-user-authorized** session on an exact current request, for example:
-`Fill approved fields in session <session UUID>`. It cannot approve evidence,
+user-authorized** session. In a conversation for the same stored job, ask
+`Fill approved fields`. In an unscoped conversation, use
+`Fill approved fields in <session UUID>`. It cannot approve evidence,
 grant disclosure, attach arbitrary paths, send outreach or submit applications.
 
 ## Containment And Recovery

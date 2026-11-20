@@ -72,7 +72,7 @@ Blank comments in the original workflow remain unanswered. No candidate claims o
 | S2 | [Upload, review, correct, and retain personal knowledge](stages/stage-02-reviewed-onboarding.md) | S1 | Verified |
 | S3 | [Answer once; recall safely through UI and agent](stages/stage-03-answer-memory.md) | S2 | Verified |
 | S4 | [Search/scan jobs with visible coverage and provider failures](stages/stage-04-discovery.md) | S2 | Verified |
-| S5 | [Career-Ops evaluation, approved packet, one tracker after proven cutover](stages/stage-05-evaluation-and-tracker-cutover.md) | S3; S4 only for automated-discovery jobs | Pending |
+| S5 | [Career-Ops evaluation, approved packet, one tracker after proven cutover](stages/stage-05-evaluation-and-tracker-cutover.md) | S3; S4 only for automated-discovery jobs | Verified |
 | S6 | [Fill a supported form, ask unknowns, pause/resume, hand off for manual submission](stages/stage-06-browser-assistance.md) | S5 and browser design gate | In progress |
 | S7 | [Read job-related Gmail evidence and review uncertain matches](stages/stage-07-gmail-evidence.md) | S5 | In progress |
 | S8 | [Reliable notifications to the existing Discord](stages/stage-08-discord-delivery.md) | S5; S4 automated freshness; S7 Gmail; S9 networking/manual recruiter | In progress |
@@ -168,9 +168,9 @@ Stage vocabulary remains Pending, In progress, Blocked with named dependency, Ve
 
 ## 9. Next Execution
 
-1. Review [the detailed stage index](stages/README.md) and [shared contracts](stages/contracts.md); stage files now exist rather than remaining future planning work.
-2. Start [S0](stages/stage-00-ownership-and-baseline.md): resolve only blocking bindings, prove protected restore, inventory every writer and classify known failures.
-3. Implement [S1](stages/stage-01-workspace-and-agent.md) as a real persistent dashboard/agent, not a mock shell.
+1. Review [the current journey audit](reviews/2026-11-19_DRIFT_REPORT.md) and [the detailed stage index](stages/README.md); use the recorded evidence rather than restarting verified stages.
+2. Run the [operating guide](../docs/maxim/setup.md) for a real saved role. Review candidate authority and model access separately from legacy application migration.
+3. Verify the declared [browser assistance](stages/stage-06-browser-assistance.md) form variants and the scoped product rehearsal. Keep unsupported live sites in explicit manual handling.
 4. Continue the core path; add discovery/integrations only for selected claims. Reconcile later plans with actual delivered interfaces before coding.
 5. Record per-case tests and What Shipped before promoting any implementation stage. Formal EGM review remains available with its required human configuration/resolution gates.
 

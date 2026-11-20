@@ -1,6 +1,6 @@
 # Networking, History And Analytics Workspace
 
-Updated: 2026-11-17 (America/New_York).
+Updated: 2026-11-19 (America/New_York).
 
 ## Delivery Boundary
 
@@ -16,9 +16,9 @@ evidence link and exporting are explicit browser actions.
 
 The main authenticated dispatcher, workspace navigation and privacy-minimized
 agent read are now integrated. Open Networking for Contacts, Draft Queue, History,
-Recruiters and Analytics. The combined production build passes; the final mounted
-integration/UI rerun awaits Docker recovery. The standalone module checks are
-not a claim that personal imports have been migrated or live networking performed.
+Recruiters and Analytics. The combined production build, isolated integration and
+desktop/mobile UI reruns pass. This is not a claim that personal imports have been
+migrated or live networking performed.
 
 ## Implementation Wiring (Already Applied)
 
@@ -65,12 +65,11 @@ component also cover its portaled dialogs. No image or marketing page is added.
 
 ### Agent
 
-In `models.ts`, import `networkingReadTool` from `./networking/agent` and insert
-`networkingReadTool` into the existing exported `tools` array.
+The `models.ts` tool list registers the scoped `read_networking` contract.
 In `conversations.ts`, import:
 
 ```ts
-import {networkingAgentRead} from './networking/agent';
+import {networkingAgentRead} from './networking/reads';
 ```
 
 Inside `invoke`, after the existing `live` authorization and argument JSON parse:
@@ -86,7 +85,7 @@ validity. Partial counts are labeled. Metric results contain declared cohort,
 aggregate numerator/denominator/exclusions and caveats. Neither result includes
 contact names/emails, research text, raw rows, arbitrary segment values or candidate
 claims. There is no model-side approval, status mutation or sending tool.
-The registered live agent round-trip remains a shared integration test obligation.
+Live personal-data model use still needs the owner's configuration and consent.
 
 ### Migration, Worker And Config
 

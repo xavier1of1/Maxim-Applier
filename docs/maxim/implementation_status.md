@@ -1,10 +1,11 @@
 # Maxim Apply Implementation Status
 
-Updated: 2026-11-18. Canonical repository: `D:\VSC Programs\maxim-apply`.
+Updated: 2026-11-19. Canonical repository: `D:\VSC Programs\maxim-apply`.
 S0-S5 are verified for their bounded scopes and are recorded as separate stage
-commits. S6-S10 implementation and S11 acceptance infrastructure are now integrated
-but remain In progress until final combined/live gates pass. No production
-personal-data migration, disclosure or account enablement was automatic.
+commits. S6-S10 implementation and S11 acceptance infrastructure are integrated
+and passed the November 19 combined regression. They remain In progress where
+live or owner-approved gates are open. No production personal-data migration,
+disclosure or account enablement was automatic.
 The prior June implementation record is retained in
 [the historical archive](archive/pre-s5/implementation_status.md), not current guidance.
 
@@ -13,10 +14,14 @@ The prior June implementation record is retained in
 Current use/setup: [Start and use Maxim](setup.md). The November 18 storage follow-up
 recovered Docker, fixed fixture/volume cleanup, relocated required browser binaries,
 cleared separately approved unused build cache and verified fresh backup/restore.
-The web stack remains stopped as before;
-full MVP acceptance still requires its remaining complete-suite/UI/live gates. See
+The running workspace includes the November 19 journey fixes. Discovery has
+94 verified NoVA/DC locations across six employers; these are not fit scores.
+Personal candidate authority, evaluation model access and selected integration
+accounts still require owner review/setup. See
 [storage results and safe commands](storage-maintenance.md) and
 [measured verification and exact next steps](../../roadmap/reviews/mvp-completion-verification.md).
+The [journey audit](../../roadmap/reviews/2026-11-19_DRIFT_REPORT.md) lists
+verified bugs, repair order, live search evidence and open acceptance decisions.
 
 - Local Next/React/Astryx dashboard, authenticated API, PostgreSQL and durable worker.
 - Reviewed PDF/DOCX/Markdown/text candidate intake, per-fact correction/disclosure,
@@ -97,17 +102,19 @@ source failures are not treated as empty successful searches or fit evaluations.
 
 ## Current Verification And Manual Gates
 
-Final current checks: 35 app unit, 29 Rust, 70 retained Maxim and 146 sanitized
+Current checks: 40 app unit, 29 Rust, 70 retained Maxim and 146 sanitized
 native checks pass; Go, safety, privacy, typecheck/build pass. The native suite has
 one expected missing-CV warning and Windows shell-path warnings in its legacy
 privacy probes, covered separately by the Maxim public-tree privacy check.
-The November 18 targeted S6/S8/S10 integration passed 33 TAP cases; the final full
-integration/UI suite and two new S11 rehearsals are not counted as passed. Docker
-recovered after the disk-related outage. No live mail, webhook, model or employer application
-action ran. Keep stages In progress and do not merge on partial evidence.
+The complete November 19 isolated integration suite passed 129 cases (including
+parent cases and both S11 rehearsals), and all 27 Chromium UI tests passed.
+See the verification record for tested boundaries and dated live public-feed
+evidence. No live mail, webhook, model or
+employer application action ran. Keep the remaining stages In progress; fixture
+tests do not grant live permissions or sign off a demonstration profile.
 
-Remaining: rerun the complete app tests/UI screenshots, certify permitted live form variants,
-approve the proposed demo profile, then review separate personal authority/model/
+Remaining: certify permitted live form variants, approve the proposed demo profile,
+then review separate personal authority/model/
 Gmail/Discord configuration. [Setup](setup.md) supplies the exact workflows;
 [verification](../../roadmap/reviews/mvp-completion-verification.md) lists commands
 and source boundaries. This is not a claim of full MVP acceptance.

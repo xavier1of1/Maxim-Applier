@@ -18,11 +18,20 @@ export function sourceDefinition(provider:string,board:string,careersUrl?:string
  const host=provider==='greenhouse'?'job-boards.greenhouse.io':provider==='lever'?'jobs.lever.co':'jobs.ashbyhq.com';
  return {provider,board,careers_url:'https://'+host+'/'+board};
 }
-export function feedUrl(source:Source,page=0){
- if(source.provider==='greenhouse')return 'https://boards-api.greenhouse.io/v1/boards/'+source.board+'/jobs?content=true';
+export function feedUrl(source:Source,page=0,compact=false){
+ if(source.provider==='greenhouse')return 'https://boards-api.greenhouse.io/v1/boards/'+source.board+'/jobs'+(compact?'':'?content=true');
  if(source.provider==='lever')return 'https://api.lever.co/v0/postings/'+source.board+'?mode=json&limit=100&skip='+page*100;
  if(source.provider==='ashby')return 'https://api.ashbyhq.com/posting-api/job-board/'+source.board+'?includeCompensation=true';
  throw new DiscoveryError('unsupported','This source requires manual discovery; no automated adapter is enabled.');
+}
+export function greenhousePostingUrl(source:Source,id:string){
+ invariant(source.provider==='greenhouse'&&/^[a-zA-Z0-9_-]{1,100}$/.test(source.board)&&/^[1-9][0-9]{0,18}$/.test(id),'invalid_posting_source','A verified Greenhouse board and posting ID are required.');
+ return feedUrl(source,0,true)+'/'+id;
+}
+export function matchesRoleTerms(job:{title:string;description:string},terms:string[],matchIn:string){
+ const normal=(s:string)=>s.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}+#.]+/gu,' ').trim();
+ const haystack=normal(matchIn==='title'?job.title:job.title+' '+job.description);
+ return terms.some(term=>{const value=normal(term);return value.length>0&&haystack.includes(value);});
 }
 export function pageRecords(provider:string,value:unknown):Record<string,unknown>[]{
  const object=value as {jobs?:unknown;meta?:{total?:unknown}};
@@ -45,7 +54,7 @@ export async function normalizeProvider(source:Source,pages:Record<string,unknow
  invariant(supported.includes(source.provider),'unsupported','No automated adapter is enabled.');
  const native=pathToFileURL(path.resolve(/* turbopackIgnore: true */ process.cwd(),'../../providers',source.provider+'.mjs')).href;
  const provider=(await import(/* webpackIgnore: true */ /* turbopackIgnore: true */ native)).default as {fetch:Function};
- const raw=pages.flat();
+ const raw=pages.flat().filter(row=>source.provider!=='ashby'||row.isListed!==false);
  // Reuse retained mapping only. This injected transport cannot perform HTTP or native writes.
  const payload=source.provider==='lever'?raw:{jobs:raw};
  const mapped=await provider.fetch({name:source.name,careers_url:source.careers_url,api:feedUrl(source)},{fetchJson:async()=>payload});

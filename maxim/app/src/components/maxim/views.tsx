@@ -45,7 +45,7 @@ export function ApplicationsView({data, api, disabled, refresh, navigate, filter
       <thead><tr><th scope="col">Company / role</th><th scope="col">Location</th><th scope="col">Status</th><th scope="col">Created</th><th scope="col"><span className="visually-hidden">Actions</span></th></tr></thead>
       <tbody>{items.map(item => <tr key={item.id}>
         <td><button type="button" className="application-role" onClick={() => {
-          navigate({application:item.id});
+          navigate({application:item.id,job:item.job_id,conversation:null});
         }}><span className="company-monogram" aria-hidden="true">{initials(item.company)}</span>
           <span><strong>{item.title}</strong><span className="muted">{item.company}</span></span><ArrowUpRight size={14} aria-hidden="true" /></button></td>
         <td className="location-cell">{item.location || 'Not specified'}</td>
@@ -59,7 +59,7 @@ export function ApplicationsView({data, api, disabled, refresh, navigate, filter
       title={search ? 'No matching applications' : filter === 'archived' ? 'No archived intents' : 'No application intents'}
       detail={search ? 'Try a different company or title.' : filter === 'active' ? 'No submission is recorded.' : undefined}
       action={<Button label={search ? 'Clear search' : 'View roles'} variant="secondary" onClick={() => search ? setSearch('') : navigate({view: 'jobs', filter: 'active'})} />} />}
-    <ApplicationWorkbench api={api} disabled={disabled} refresh={refresh} asOf={data.asOf} selectedId={selectedId} onSelect={id=>navigate({application:id})} hasModel={Boolean(data.settings.model.configured)} isOwner={data.workspace.is_owner}/>
+    <ApplicationWorkbench api={api} disabled={disabled} refresh={refresh} asOf={data.asOf} selectedId={selectedId} navigate={navigate} onSelect={(id,job)=>navigate({application:id||null,job:job||null,conversation:null})} hasModel={Boolean(data.settings.model.configured)} isOwner={data.workspace.is_owner}/>
   </section>;
 }
 

@@ -1,12 +1,21 @@
 import {test,expect} from '@playwright/test';
+import crypto from 'node:crypto';
 import {harness} from '../support/harness.mjs';
-import {preparedApplication,apiCommand,applicationForm} from '../support/assisted-application.mjs';
+import {preparedApplication,applicationForm} from '../support/assisted-application.mjs';
 let h,fixture;
-test.beforeAll(async()=>{h=await harness();h.providerRoutes.set('/browser-form',(_req,res)=>{res.setHeader('Content-Type','text/html');res.end(applicationForm);});await h.startWorker();fixture=await preparedApplication(h);});
-test.afterAll(async()=>{if(h)await h.close();});
+test.beforeEach(async()=>{h=await harness();h.providerRoutes.set('/browser-form',(_req,res)=>{res.setHeader('Content-Type','text/html');res.end(applicationForm);});await h.startWorker();fixture=await preparedApplication(h);});
+test.afterEach(async()=>{if(h)await h.close();});
 for(const width of [1600,390])test('reviewed agent-browser workflow and remembered unknown at '+width,async({page},info)=>{
+ test.setTimeout(90000);
  await page.setViewportSize({width,height:1000});const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto(h.c.origin+'/maxim?view=browser');await page.getByLabel('Workspace access key').fill(h.c.bootstrapKey);await page.getByRole('button',{name:'Sign in',exact:true}).click();
+ await page.goto(h.c.origin+'/maxim?view=applications&application='+fixture.app.id);await page.getByLabel('Workspace access key').fill(h.c.bootstrapKey);await page.getByRole('button',{name:'Sign in',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Open Apply Assistant',exact:true})).toBeVisible();
+ await page.goto(h.c.origin+'/maxim?view=browser&application='+crypto.randomUUID());
+ await expect(page.getByRole('heading',{name:'Application Assistance',exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Open application browser',exact:true})).toHaveCount(0);
+ await page.goBack();
+ await page.getByRole('button',{name:'Open Apply Assistant',exact:true}).click();
+ await expect(page).toHaveURL(new RegExp('application='+fixture.app.id));
  await expect(page.getByRole('heading',{name:'Application Assistance',exact:true})).toBeVisible();
  await page.getByRole('checkbox',{name:/I authorize this dedicated application session/}).check();
  await page.getByRole('checkbox',{name:/Allow my approved private contact/}).check();
@@ -15,18 +24,25 @@ for(const width of [1600,390])test('reviewed agent-browser workflow and remember
  await expect(page.locator('.pill').filter({hasText:'attachment selected'})).toBeVisible({timeout:30000});
  const project=page.locator('article').filter({has:page.getByText('Describe a customer project?',{exact:true})});
  await expect(project.getByRole('button',{name:'Save question',exact:true})).toBeVisible();
- const q=await apiCommand(h,'answers','save_question',{text:'Describe a customer project?',company:'Assisted Fixture',roleLane:'unspecified',answerType:'text',options:[],tags:[]});
- let library=await(await h.request(h.a,'/api/answers')).json();
- if(!library.answers.some(a=>a.question_id===q.id&&a.status==='approved')){
-  const a=await apiCommand(h,'answers','draft_answer',{questionId:q.id,text:'I built customer integrations using Rust and TypeScript.',facts:[],expectedCandidateRevision:fixture.candidate.revision,permission:'company',modelConsent:false});
-  await apiCommand(h,'answers','approve_answer',{answerId:a.id,expectedRevision:a.revision,contentHash:a.content_hash,declarationConfirmed:true});
- }
+ await project.getByRole('button',{name:'Save question',exact:true}).click();
+ await expect(page.getByRole('textbox',{name:/^Exact application question/})).toHaveValue('Describe a customer project?');
+ await expect(page.getByRole('textbox',{name:/^Company/})).toHaveValue('assisted fixture');
+ await page.getByRole('button',{name:'Record answer',exact:true}).click();
+ await page.getByRole('textbox',{name:/^Exact answer/}).fill('I built customer integrations using Rust and TypeScript.');
+ await page.getByRole('button',{name:'Save answer draft',exact:true}).click();
+ await page.getByRole('button',{name:'Inspect answer',exact:true}).click();
+ await page.getByRole('checkbox',{name:/I confirm this exact answer/}).check();
+ await page.getByRole('button',{name:'Approve answer',exact:true}).click();
+ await expect(page.getByRole('dialog',{name:'Inspect answer'})).toBeHidden();
+ await page.getByRole('button',{name:'Return to Apply Assistant',exact:true}).click();
+ await expect(page).toHaveURL(new RegExp('application='+fixture.app.id));
  await project.getByRole('button',{name:'Find approved answer',exact:true}).click();
  const dialog=page.getByRole('dialog',{name:'Review reusable answer'});await expect(dialog).toContainText('I built customer integrations using Rust and TypeScript.');
  await dialog.getByRole('button',{name:'Confirm and fill this answer',exact:true}).click();await expect(dialog).toBeHidden();
  await expect(project).toContainText('filled locally',{timeout:30000});
  await page.reload();await expect(project).toContainText('filled locally');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)).toBe(false);
+ expect(await page.locator('.browser-pdf-fingerprint').evaluate(p=>p.scrollWidth<=p.clientWidth+1)).toBe(true);
  await page.screenshot({path:info.outputPath('application-review-'+width+'.png'),fullPage:true});
  await page.getByRole('button',{name:'Review and take manual control',exact:true}).click();
  const manual=page.getByRole('dialog',{name:'Manual application review'});await expect(manual).toContainText('Only you submit.');

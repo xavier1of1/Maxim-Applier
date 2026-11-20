@@ -152,6 +152,7 @@ pre { font:inherit; }
 .role-company {font-size:10px;color:var(--ui-muted)}.role-row-copy strong {font-size:12px;line-height:1.55;font-weight:600;overflow-wrap:anywhere}
 .role-location {font-size:10px;color:#6d776f;display:flex;gap:4px;align-items:center}
 .role-row-meta {display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;font-size:9px;color:#7b867e}
+.browser-pdf-fingerprint {overflow-wrap:anywhere}
 .intent-dot {color:#427753}.row-chevron {color:#8c9c90;padding-top:8px}.list-footer {display:flex;align-items:center;gap:7px;padding:12px 16px;border-top:1px solid var(--ui-line);font-size:10px;color:#738077;flex-shrink:0}
 .list-footer .mono {margin-left:auto}
 .job-detail {overflow:auto;min-height:0;min-width:0;padding:20px 30px 0}

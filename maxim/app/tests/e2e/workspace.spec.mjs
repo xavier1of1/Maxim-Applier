@@ -74,7 +74,7 @@ test('desktop real intake, intent, note, artifact, streamed tools and human conf
  await page.locator('.sidebar').getByRole('button',{name:/^Activity/}).click();
  await expect(page.locator('.event-list')).toContainText(/Job note confirmed/i);
  await page.locator('.sidebar').getByRole('button',{name:'Settings',exact:true}).click();
- await expect(page.getByRole('button',{name:'Connect',exact:true}).first()).toBeDisabled();
+ for(const name of ['Open Gmail','Open Discord','Open Apply Assistant'])await expect(page.getByRole('button',{name,exact:true})).toBeEnabled();
  await expect(page.getByLabel('Replace API key')).toHaveValue('');
  await expect(page.locator('body')).not.toContainText('fixture-provider-key');
  await layout(page);await page.screenshot({path:info.outputPath('desktop-settings.png'),fullPage:true});

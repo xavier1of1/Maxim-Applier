@@ -61,7 +61,7 @@ export async function interviewHarness(){
   if(closed)return;closed=true;
   await cleanupTasks([stopServer,
    async()=>{for(const t of timers)clearTimeout(t);provider.closeAllConnections();await new Promise(resolve=>provider.close(resolve));},
-   async()=>{if(modules)await modules.database().end();},()=>{delete process.env.MAXIM_RUNTIME_FILE;},
+   async()=>{if(modules)await modules.closeDatabase();},()=>{delete process.env.MAXIM_RUNTIME_FILE;},
    ()=>stopTestDatabase(container),()=>removeFixture(root,{allowCurrent:true}),
   ]);
  }
@@ -85,8 +85,8 @@ export async function interviewHarness(){
   fact=(await sql("INSERT INTO candidate_facts(id,workspace_id,field_key,value,source_id,source_revision,sensitivity) VALUES($1,$2,'projects.summary',$3,$4,1,'standard') RETURNING *",[crypto.randomUUID(),c.workspaceId,JSON.stringify('Built a synthetic queue processor with Rust.'),source])).rows[0];
   job=(await sql('INSERT INTO jobs(id,workspace_id,company,title,description) VALUES($1,$2,$3,$4,$5) RETURNING *',[crypto.randomUUID(),c.workspaceId,'Synthetic Labs','Platform Engineer','Design reliable queue processing and discuss tradeoffs.'])).rows[0];
   process.env.MAXIM_RUNTIME_FILE=runtime;
-  const [{interviewHttp},{database},{claimWork},{practiceInterview},{login}]=await Promise.all([import('../../src/server/interview/http.ts'),import('../../src/server/db.ts'),import('../../src/server/work.ts'),import('../../src/worker/interview.ts'),import('../../src/server/auth.ts')]);
-  modules={interviewHttp,database,claimWork,practiceInterview};
+  const [{interviewHttp},{closeDatabase},{claimWork},{practiceInterview},{login}]=await Promise.all([import('../../src/server/interview/http.ts'),import('../../src/server/db.ts'),import('../../src/server/work.ts'),import('../../src/worker/interview.ts'),import('../../src/server/auth.ts')]);
+  modules={interviewHttp,closeDatabase,claimWork,practiceInterview};
   const loginAs=async key=>{const r=await login(key);return {cookie:'maxim_session='+r.token,csrf:r.csrfToken};};
   a=await loginAs(c.bootstrapKey);b=await loginAs(other.key);await startServer();
   const request=async(auth,url,options={})=>fetch(c.origin+url,{...options,headers:{Origin:c.origin,...(auth?{Cookie:auth.cookie,'x-csrf-token':auth.csrf}:{}),...(options.body?{'Content-Type':'application/json'}:{}),...options.headers},...(options.body?{body:JSON.stringify(options.body)}:{})});

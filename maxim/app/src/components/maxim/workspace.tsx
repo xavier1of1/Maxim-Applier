@@ -139,6 +139,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
   const rawNavigate = useCallback((selection: Navigation) => {
     const params = new URLSearchParams(query);
     if ('job' in selection && selection.job !== jobId) params.delete('practice');
+    if(selection.view&&selection.view!=='answers')params.delete('question');
     for (const [key, value] of Object.entries(selection)) {
       if (value == null) params.delete(key); else params.set(key, value);
     }
@@ -221,7 +222,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
           {view === 'jobs' && <Button label="New role" variant="primary" icon={<Glyph icon={Plus} />} onClick={() => setCreateOpen(true)} isDisabled={!data || disabled} />}</div>
       </div>
       {data && !['settings','candidate','answers'].includes(view) && <div className="workspace-stats" aria-label="Workspace totals">
-        <div><span className="stat-icon stat-green"><BriefcaseBusiness size={16} aria-hidden="true" /></span><span>Active roles<strong className="tabular">{activeJobs}</strong></span></div>
+        <div><span className="stat-icon stat-green"><BriefcaseBusiness size={16} aria-hidden="true" /></span><span>Unarchived roles<strong className="tabular">{activeJobs}</strong></span></div>
         <div><span className="stat-icon stat-amber"><Send size={16} aria-hidden="true" /></span><span>Applications<strong className="tabular">{activeIntents}</strong></span></div>
         <div><span className="stat-icon stat-coral"><FileCheck2 size={16} aria-hidden="true" /></span><span>Pending reviews<strong className="tabular">{data.proposals.length}</strong></span></div>
         <div><span className="stat-icon"><Activity size={16} aria-hidden="true" /></span><span>Recorded events<strong className="tabular">{data.events.length}</strong></span></div>
@@ -233,17 +234,18 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
           : view === 'jobs' ? <JobsView data={data} api={api} disabled={disabled} refresh={refresh} navigate={navigate}
             selectedId={jobId} filter={filter} onCreate={() => setCreateOpen(true)} onDirtyChange={setNoteDirty}
             onAgent={() => { setAgentOpen(true); if (conversationId && agent.detail && agent.detail.conversation.job_id !== jobId && !agent.isRunning) void agent.newConversation(); }} />
-          : view === 'candidate' ? <CandidateView api={api} disabled={disabled} refresh={refresh} navigate={navigate} sourceId={searchParams.get('source')} asOf={data.asOf} isOwner={data.workspace.is_owner}/>
-          : view === 'answers' ? <AnswersView api={api} disabled={disabled} refresh={refresh} asOf={data.asOf}/>
+          : view === 'candidate' ? <CandidateView key={searchParams.get('knowledge')} api={api} disabled={disabled} refresh={refresh} navigate={navigate} sourceId={searchParams.get('source')} initialTab={searchParams.get('knowledge')} asOf={data.asOf} isOwner={data.workspace.is_owner}/>
+          : view === 'answers' ? <AnswersView key={searchParams.get('question')} api={api} disabled={disabled} refresh={refresh} asOf={data.asOf}
+            requestedQuestion={searchParams.get('question')} returnToAssistant={searchParams.has('application')&&searchParams.has('question')?()=>navigate({view:'browser',question:null}):undefined}/>
           : view === 'discovery' ? <DiscoveryView api={api} disabled={disabled} refresh={refresh} asOf={data.asOf} navigate={navigate}/>
-          : view === 'browser' ? <BrowserView api={api} disabled={disabled} refresh={refresh} navigate={navigate}/>
+          : view === 'browser' ? <BrowserView key={searchParams.get('application')} api={api} disabled={disabled} refresh={refresh} navigate={navigate} requestedApplication={searchParams.get('application')}/>
           : view === 'gmail' ? <GmailView api={api} disabled={disabled} asOf={data.asOf} navigate={navigate}/>
           : view === 'discord' ? <DiscordView api={api} disabled={disabled} asOf={data.asOf}/>
           : view === 'networking' ? <NetworkingView api={api} disabled={disabled} asOf={data.asOf}/>
           : view === 'interview' ? <InterviewView key={jobId} api={api} disabled={disabled} job={data.jobs.find(j=>j.id===jobId)??null} asOf={data.asOf} refresh={refresh} onDirtyChange={setNoteDirty}/>
           : view === 'applications' ? <ApplicationsView data={data} api={api} disabled={disabled} refresh={refresh} navigate={navigate} filter={filter} selectedId={searchParams.get('application')}/>
           : view === 'activity' ? <ActivityView data={data} navigate={navigate} />
-          : <SettingsView data={data} api={api} disabled={disabled} refresh={refresh} onLogout={async () => { await api.post('/api/auth/logout', {}); onSignedOut(); }} />}
+          : <SettingsView data={data} api={api} disabled={disabled} refresh={refresh} navigate={navigate} onLogout={async () => { await api.post('/api/auth/logout', {}); onSignedOut(); }} />}
       </div>
       <nav className="mobile-navigation" aria-label="Mobile workspace navigation">{navItems(true)}
         <button type="button" className="nav-item" onClick={() => setMenuOpen(true)}><Menu size={18} aria-hidden="true" /><span>More</span></button></nav>

@@ -29,12 +29,12 @@ const fields=[
  ['authorization.willing_to_obtain_clearance','Willing to obtain clearance'],['skills.languages','Languages and tools'],['custom','Custom field'],
 ].map(([value,label])=>({value,label}));
 const label=(key:string)=>fields.find(f=>f.value===key)?.label||key;
-export function CandidateView({api,disabled,refresh,navigate,sourceId,asOf,isOwner}:{
- api:WorkspaceApi;disabled:boolean;refresh:()=>Promise<void>;navigate:(value:Navigation)=>void;sourceId:string|null;asOf:string;isOwner:boolean;
+export function CandidateView({api,disabled,refresh,navigate,sourceId,asOf,isOwner,initialTab}:{
+ api:WorkspaceApi;disabled:boolean;refresh:()=>Promise<void>;navigate:(value:Navigation)=>void;sourceId:string|null;asOf:string;isOwner:boolean;initialTab:string|null;
 }){
  const [data,setData]=useState<CandidateData|null>(null),[authority,setAuthority]=useState<Authority|null>(null);
  const [readError,setReadError]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState('');
- const [tab,setTab]=useState('review'),[manual,setManual]=useState<Fact|'new'|null>(null),[review,setReview]=useState<Proposal|null>(null);
+ const [tab,setTab]=useState(initialTab&&['facts','sources','authority'].includes(initialTab)?initialTab:'review'),[manual,setManual]=useState<Fact|'new'|null>(null),[review,setReview]=useState<Proposal|null>(null);
  const [sourceText,setSourceText]=useState(''),[preview,setPreview]=useState<Preview|null>(null),[approved,setApproved]=useState(false);
  const [remove,setRemove]=useState<Source|null>(null),[classification,setClassification]=useState('personal'),[consent,setConsent]=useState(false);
  const [disclose,setDisclose]=useState<Source|null>(null);

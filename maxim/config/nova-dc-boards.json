@@ -1,0 +1,7 @@
+[
+  {"name":"Alarm.com","provider":"greenhouse","board":"alarmcom","evidence":"https://job-boards.greenhouse.io/alarmcom/jobs/8917790002"},
+  {"name":"Appian","provider":"greenhouse","board":"appian","evidence":"https://job-boards.greenhouse.io/appian/jobs/8264454"},
+  {"name":"OpenAI","provider":"ashby","board":"openai","evidence":"https://jobs.ashbyhq.com/openai/db5a708d-1d7a-4aa3-8dd3-0d0423b6b69f"},
+  {"name":"Shield AI","provider":"ashby","board":"shield","evidence":"https://jobs.ashbyhq.com/shield/7e0ae8a3-4872-431c-a04a-2f2b8988b527","replaces":{"provider":"lever","board":"shieldai"}},
+  {"name":"Turning Point Global Solutions","provider":"lever","board":"tpgsi","evidence":"https://jobs.lever.co/tpgsi/1cb2b7f2-506b-4cb2-8d59-bc6e4771363f"}
+]

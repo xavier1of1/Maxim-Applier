@@ -36,6 +36,7 @@ test('S4 discovery shared API, retained adapters, checkpoint recovery and honest
    await request('set_discovery_state',{jobId:j.id,expectedRevision:j.revision,state:'saved'});
    const second=await request('start_search',{sourceIds:[source.id],terms:['Software']});({v,r}=await done(second.id));
    assert.equal(r.status,'completed');assert.equal(r.counts.created,0);assert.equal(v.jobs.length,3);assert.equal(v.jobs.find(x=>x.id===j.id).discovery_state,'saved');
+   assert.equal(v.jobs.find(x=>x.id===j.id).revision,j.revision,'bookmark-only changes do not invalidate a posting');
    const aliases=await h.sql('SELECT * FROM job_source_aliases WHERE workspace_id=$1',[h.c.workspaceId]);assert.equal(aliases.rowCount,3);
    const pages=await h.sql('SELECT * FROM discovery_pages WHERE workspace_id=$1',[h.c.workspaceId]);assert.equal(pages.rowCount,2);
    assert.equal((await view(h.b)).jobs.length,0);
@@ -43,7 +44,10 @@ test('S4 discovery shared API, retained adapters, checkpoint recovery and honest
   });
   await t.test('Ashby destination aliases reuse the opening, timestamps and annual compensation stay explicit',async()=>{
    const s=await request('add_source',{name:'Fixture',provider:'ashby',board:'aliases'});
-   h.providerRoutes.set('/posting-api/job-board/aliases',{body:{jobs:[{id:'alias-one',title:'Software Engineer',jobUrl:gh(1).absolute_url,applyUrl:gh(1).absolute_url+'?apply=true',location:'Reston, VA',descriptionPlain:'Build useful customer software.',publishedAt:new Date(Date.now()-3600000).toISOString(),compensation:{summaryComponents:[{compensationType:'Salary',currencyCode:'USD',interval:'1 YEAR',minValue:90000,maxValue:120000}]}}]}});
+   h.providerRoutes.set('/posting-api/job-board/aliases',{body:{jobs:[
+    {id:'alias-one',title:'Software Engineer',jobUrl:gh(1).absolute_url,applyUrl:gh(1).absolute_url+'?apply=true',location:'Reston, VA',descriptionPlain:'Build useful customer software.',publishedAt:new Date(Date.now()-3600000).toISOString(),compensation:{summaryComponents:[{compensationType:'Salary',currencyCode:'USD',interval:'1 YEAR',minValue:90000,maxValue:120000}]}},
+    {id:'unlisted',title:'Unlisted Software Engineer',jobUrl:'https://jobs.ashbyhq.com/aliases/unlisted',location:'Reston, VA',isListed:false},
+   ]}});
    const run=await request('start_search',{sourceIds:[s.id],terms:['Software']});const {v,r}=await done(run.id);
    assert.equal(r.status,'completed');assert.equal(v.jobs.length,3);
    const j=v.jobs.find(j=>j.url.endsWith('/1'));assert.ok(j.posted_at);assert.equal(j.discovery_policy.eligibility,'eligible');assert.equal(j.discovery_policy.urgent,false);
@@ -127,6 +131,36 @@ test('S4 discovery shared API, retained adapters, checkpoint recovery and honest
    assert.equal((await view()).runs.length,count+1);await done((await view()).runs[0].id);
    await h.sql("UPDATE discovery_sources SET checked_at=now()-interval '2 days' WHERE workspace_id=$1 AND id=$2",[h.c.workspaceId,source.id]);
    assert.equal((await view()).sources.find(s=>s.id===source.id).stale,true);
+  });
+  await t.test('oversized Greenhouse board has compact coverage and exact on-demand details',async()=>{
+   const source=await request('add_source',{name:'Compact Fixture',provider:'greenhouse',board:'compact'}),base='/v1/boards/compact/jobs';
+   const compact={...gh(921),absolute_url:'https://job-boards.greenhouse.io/compact/jobs/921'};
+   delete compact.content;
+   const full={...compact,content:'<p>Build and maintain reliable customer integrations. Work with a small team to ship reviewed software.</p>'};
+   h.providerRoutes.set(base+'?content=true',(_req,res)=>{res.writeHead(200,{'Content-Type':'application/json','Content-Length':6*1024*1024});res.end('{}');});
+   h.providerRoutes.set(base,{body:{jobs:[compact,{...compact,id:922,title:'Marketing coordinator',absolute_url:compact.absolute_url.replace('921','922'),content:full.content}]}});
+   const search=await request('start_search',{sourceIds:[source.id],terms:['Software'],matchIn:'title'});
+   const {r,v}=await done(search.id);
+   assert.equal(r.status,'partial');assert.equal(r.counts.requests,2);assert.equal(r.counts.created,1);
+   assert.equal(v.attempts.find(a=>a.run_id===r.id).error_code,'expanded_feed_too_large');
+   const j=v.jobs.find(x=>x.company==='Compact Fixture');assert.equal(j.discovery_policy.detailStatus,'summary');
+   assert.equal((await h.sql('SELECT description FROM jobs WHERE id=$1',[j.id])).rows[0].description,'');
+   const settle=id=>until(async()=>{const run=(await h.sql('SELECT * FROM discovery_runs WHERE id=$1',[id])).rows[0];return run.completed_at&&run;});
+   h.providerRoutes.set(base+'/921',{body:{...full,id:922}});
+   const rejected=await request('fetch_posting_details',{jobId:j.id,expectedRevision:j.revision});
+   assert.equal((await settle(rejected.id)).error_code,'posting_details_unavailable');
+   assert.equal((await h.sql('SELECT description FROM jobs WHERE id=$1',[j.id])).rows[0].description,'');
+   const denied=await h.request(h.b,'/api/discovery/commands',{method:'POST',body:{commandId:crypto.randomUUID(),action:'fetch_posting_details',payload:{jobId:j.id,expectedRevision:j.revision}}});
+   assert.equal(denied.status,404);
+   h.providerRoutes.set(base+'/921',{body:full});
+   const detail=await request('fetch_posting_details',{jobId:j.id,expectedRevision:j.revision});
+   const completed=await settle(detail.id);assert.equal(completed.status,'completed');assert.equal(completed.counts.requests,1);
+   const hydrated=(await h.sql('SELECT id,description,revision FROM jobs WHERE id=$1',[j.id])).rows[0];
+   assert.equal(hydrated.id,j.id);assert.equal(hydrated.revision,j.revision+1);assert.match(hydrated.description,/reliable customer integrations/);
+   assert.equal((await view()).sources.find(s=>s.id===source.id).status,'partial','one detail does not make the board complete');
+   assert.equal((await view()).runs.some(r=>r.id===detail.id),false,'detail retrieval does not replace the selected search');
+   assert.ok(h.providerRequests.filter(p=>p.url===base+'/921').length===2);
+   assert.ok(h.providerRequests.filter(p=>p.url.startsWith(base)).every(p=>!p.headers.authorization&&!p.headers.cookie));
   });
   await t.test('real killed process resumes a checkpoint with the same attempt and durable request budget',async()=>{
    await h.stopWorker(worker);worker=null;

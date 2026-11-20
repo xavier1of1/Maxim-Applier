@@ -300,6 +300,17 @@ test('S1 actual production HTTP, PostgreSQL, tools and recovery', {timeout:30000
    assert.equal((await h.request(h.b,'/api/settings/model',{method:'POST',body})).status,404);
    const saved=await json(h.a,'/api/settings/model',{method:'POST',body});
    assert.equal(saved.response.status,200);assert.equal(saved.data.model.hasKey,true);
+   const unsupported=await json(h.a,'/api/settings/model',{method:'POST',body:{model:'unmapped-model',apiKey:'unused-fixture-key'}});
+   assert.equal(unsupported.data.error.code,'unsupported_tokenizer');
+   assert.equal(JSON.parse(fs.readFileSync(h.runtime)).model.model,'fixture-model');
+   assert.equal((await h.request(h.b,'/api/settings/model/check',{method:'POST',body:{}})).status,404);
+   h.providerRoutes.set('/v1/models/fixture-model',{status:401,body:{error:'private fixture upstream message'}});
+   const denied=await json(h.a,'/api/settings/model/check',{method:'POST',body:{}});
+   assert.equal(denied.data.error.code,'model_access_denied');
+   assert.ok(!JSON.stringify(denied.data).includes('private fixture upstream message'));
+   h.providerRoutes.set('/v1/models/fixture-model',{body:{id:'fixture-model'}});
+   assert.deepEqual((await json(h.a,'/api/settings/model/check',{method:'POST',body:{}})).data,{accessible:true});
+   h.providerRoutes.delete('/v1/models/fixture-model');
    assert.ok(!JSON.stringify(saved.data).includes(body.apiKey));
    await h.request(h.a,'/api/settings/model',{method:'POST',body:{model:'fixture-model',apiKey:''}});
    assert.equal(JSON.parse(fs.readFileSync(h.runtime)).model.apiKey,body.apiKey);

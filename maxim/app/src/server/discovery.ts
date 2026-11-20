@@ -5,13 +5,14 @@ import {command,event,jobFor,uuid} from './commands';
 import {type Context,reauthorize,digest} from './auth';
 import {invariant,notFound} from './errors';
 import {enqueue} from './work';
-import {sourceDefinition,supported} from './discovery-providers';
+import {greenhousePostingUrl,sourceDefinition,supported} from './discovery-providers';
 import {applicationWritable} from './application-authority';
 
 const schema=z.discriminatedUnion('action',[
  z.object({commandId:uuid,action:z.literal('add_source'),payload:z.object({name:z.string().trim().min(1).max(180),provider:z.enum(['greenhouse','lever','ashby','manual']),board:z.string().max(100).default(''),careersUrl:z.string().url().max(2048).optional()}).strict()}).strict(),
  z.object({commandId:uuid,action:z.literal('set_source_enabled'),payload:z.object({sourceId:uuid,expectedRevision:z.number().int().positive(),enabled:z.boolean()}).strict()}).strict(),
- z.object({commandId:uuid,action:z.literal('start_search'),payload:z.object({sourceIds:z.array(uuid).min(1).max(3),terms:z.array(z.string().trim().min(2).max(120)).max(10).default([])}).strict()}).strict(),
+ z.object({commandId:uuid,action:z.literal('start_search'),payload:z.object({sourceIds:z.array(uuid).min(1).max(3),terms:z.array(z.string().trim().min(2).max(120)).max(10).default([]),matchIn:z.enum(['title','title_and_description']).default('title_and_description')}).strict()}).strict(),
+ z.object({commandId:uuid,action:z.literal('fetch_posting_details'),payload:z.object({jobId:uuid,expectedRevision:z.number().int().positive()}).strict()}).strict(),
  z.object({commandId:uuid,action:z.enum(['cancel_search','retry_search']),payload:z.object({runId:uuid,expectedRevision:z.number().int().positive()}).strict()}).strict(),
  z.object({commandId:uuid,action:z.literal('set_discovery_state'),payload:z.object({jobId:uuid,expectedRevision:z.number().int().positive(),state:z.enum(['none','saved','dismissed'])}).strict()}).strict(),
 ]);
@@ -19,7 +20,7 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
  const c=schema.parse(raw);
  return command(ctx,c.commandId,c,async tx=>{
   const w=ctx.workspaceId;
-  if(['start_search','retry_search','set_discovery_state'].includes(c.action))await applicationWritable(tx,w);
+  if(['start_search','retry_search','set_discovery_state','fetch_posting_details'].includes(c.action))await applicationWritable(tx,w);
   if(c.action==='add_source'){
    const p=c.payload,d=sourceDefinition(p.provider,p.board,p.careersUrl),id=crypto.randomUUID(),hash=digest(JSON.stringify(d));
    const prior=(await tx.query('SELECT * FROM discovery_sources WHERE workspace_id=$1 AND identity_hash=$2',[w,hash])).rows[0];
@@ -30,13 +31,37 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
   if(c.action==='set_source_enabled'){
    const p=c.payload,row=(await tx.query('SELECT * FROM discovery_sources WHERE workspace_id=$1 AND id=$2 FOR UPDATE',[w,p.sourceId])).rows[0];
    if(!row)throw notFound();invariant(row.revision===p.expectedRevision,'revision_conflict','Source changed; refresh before editing.',409);
-   return (await tx.query('UPDATE discovery_sources SET enabled=$1,revision=revision+1,updated_at=now() WHERE workspace_id=$2 AND id=$3 RETURNING *',[p.enabled,w,p.sourceId])).rows[0];
+   if(row.enabled===p.enabled)return row;
+   const changed=(await tx.query('UPDATE discovery_sources SET enabled=$1,revision=revision+1,updated_at=now() WHERE workspace_id=$2 AND id=$3 RETURNING *',[p.enabled,w,p.sourceId])).rows[0];
+   await event(tx,ctx,row.id,p.enabled?'discovery_source_enabled':'discovery_source_disabled',{provider:row.provider},changed.revision);
+   return changed;
   }
   if(c.action==='set_discovery_state'){
    const p=c.payload,j=await jobFor(tx,ctx,p.jobId);invariant(j.revision===p.expectedRevision,'revision_conflict','Role changed; refresh before saving.',409);
+   const old=(await tx.query('SELECT state FROM job_discovery_states WHERE workspace_id=$1 AND job_id=$2',[w,j.id])).rows[0];
    await tx.query('INSERT INTO job_discovery_states(workspace_id,job_id,state) VALUES($1,$2,$3) ON CONFLICT(workspace_id,job_id) DO UPDATE SET state=EXCLUDED.state,updated_at=now()',[w,j.id,p.state]);
-   await tx.query('UPDATE jobs SET archived=$1,revision=revision+1,updated_at=now() WHERE workspace_id=$2 AND id=$3',[p.state==='dismissed',w,j.id]);
-   await event(tx,ctx,j.id,'discovery_state_changed',{state:p.state},j.revision+1);return {id:j.id,state:p.state,revision:j.revision+1};
+   const archived=p.state==='dismissed'||j.archived&&old?.state!=='dismissed';
+   const revision=j.revision+Number(j.archived!==archived);
+   if(revision!==j.revision)await tx.query('UPDATE jobs SET archived=$1,revision=$2,updated_at=now() WHERE workspace_id=$3 AND id=$4',[archived,revision,w,j.id]);
+   await event(tx,ctx,j.id,'discovery_state_changed',{state:p.state},revision);return {id:j.id,state:p.state,revision};
+  }
+  if(c.action==='fetch_posting_details'){
+   const p=c.payload,j=await jobFor(tx,ctx,p.jobId);
+   invariant(j.revision===p.expectedRevision&&!j.archived,'revision_conflict','This role changed; review it again.',409);
+   invariant(j.source_platform==='greenhouse'&&j.opening_key,'posting_details_unavailable','No verified Greenhouse posting source is available.');
+   const row=(await tx.query("SELECT s.*,a.external_id FROM job_source_aliases a JOIN discovery_sources s ON s.workspace_id=a.workspace_id AND s.id=a.source_id WHERE a.workspace_id=$1 AND a.job_id=$2 AND s.provider='greenhouse' AND s.enabled ORDER BY a.created_at,a.id LIMIT 1 FOR SHARE OF s",[w,j.id])).rows[0];
+   invariant(row,'posting_details_unavailable','Enable this role\'s Greenhouse source before fetching details.',409);
+   invariant(!row.next_retry_at||new Date(row.next_retry_at).getTime()<=Date.now(),'source_cooldown','This source is still in its recorded cooldown.',409);
+   const {external_id,...source}=row;
+   greenhousePostingUrl(source,external_id);
+   const prior=(await tx.query("SELECT r.id,r.status FROM discovery_runs r JOIN discovery_queries q ON q.workspace_id=r.workspace_id AND q.id=r.query_id JOIN work_items w ON w.workspace_id=r.workspace_id AND w.id=r.work_id WHERE r.workspace_id=$1 AND q.filters->'posting'->>'jobId'=$2 AND w.status IN ('queued','leased') LIMIT 1",[w,j.id])).rows[0];
+   if(prior)return prior;
+   const queryId=crypto.randomUUID(),runId=crypto.randomUUID(),filters={posting:{jobId:j.id,revision:j.revision,externalId:external_id,openingKey:j.opening_key},maxSources:1,maxRequests:1,maxSeconds:90};
+   await tx.query("INSERT INTO discovery_queries(id,workspace_id,terms,filters,source_snapshots) VALUES($1,$2,'{}',$3,$4)",[queryId,w,JSON.stringify(filters),JSON.stringify([source])]);
+   const work=await enqueue(tx,w,'discover_jobs',runId+':1',{runId,revision:1});
+   const run=(await tx.query('INSERT INTO discovery_runs(id,workspace_id,query_id,work_id) VALUES($1,$2,$3,$4) RETURNING id,status',[runId,w,queryId,work.id])).rows[0];
+   await event(tx,ctx,j.id,'posting_details_queued',{runId,sourceId:source.id},j.revision);
+   return run;
   }
   if(c.action==='start_search'){
    const ids=[...new Set(c.payload.sourceIds)],sources=(await tx.query('SELECT * FROM discovery_sources WHERE workspace_id=$1 AND id=ANY($2::uuid[]) ORDER BY id FOR SHARE',[w,ids])).rows;
@@ -47,7 +72,7 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
    const prefs=(await tx.query("SELECT f.id,f.revision,f.value FROM candidate_facts f JOIN candidate_sources s ON s.id=f.source_id AND s.workspace_id=f.workspace_id WHERE f.workspace_id=$1 AND f.field_key='preferences.roles' AND f.status='current' AND s.deleted_at IS NULL AND s.revision=f.source_revision",[w])).rows;
    const terms=c.payload.terms.length?c.payload.terms:prefs.flatMap(f=>Array.isArray(f.value)?f.value:[]).filter((v:unknown)=>typeof v==='string').slice(0,10);
    invariant(terms.length,'query_required','Enter role terms or approve preferences.roles in Candidate first.');
-   const queryId=crypto.randomUUID(),runId=crypto.randomUUID(),filters={policy:'xavier-nova-dc-v1',maxSources:3,maxPagesPerSource:3,maxRequests:6,maxSeconds:90};
+   const queryId=crypto.randomUUID(),runId=crypto.randomUUID(),filters={policy:'xavier-nova-dc-v1',matchIn:c.payload.matchIn,maxSources:3,maxPagesPerSource:3,maxRequests:6,maxSeconds:90};
    await tx.query('INSERT INTO discovery_queries(id,workspace_id,terms,filters,source_snapshots,candidate_revision,preference_provenance) VALUES($1,$2,$3,$4,$5,$6,$7)',[queryId,w,terms,JSON.stringify(filters),JSON.stringify(sources),candidate.revision,JSON.stringify(c.payload.terms.length?[]:prefs.map(f=>({id:f.id,revision:f.revision})))]);
    const work=await enqueue(tx,w,'discover_jobs',runId+':1',{runId,revision:1});
    const row=(await tx.query('INSERT INTO discovery_runs(id,workspace_id,query_id,work_id) VALUES($1,$2,$3,$4) RETURNING *',[runId,w,queryId,work.id])).rows[0];
@@ -79,9 +104,9 @@ export async function discoveryView(ctx:Context){
   await tx.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');await reauthorize(tx,ctx);
   const w=ctx.workspaceId;
   const sources=(await tx.query('SELECT * FROM discovery_sources WHERE workspace_id=$1 ORDER BY name,id LIMIT 201',[w])).rows;
-  const runs=(await tx.query("SELECT r.*,q.terms,q.filters,q.source_snapshots,q.candidate_revision,q.preference_provenance,w.status AS work_status,w.error_code AS work_error FROM discovery_runs r JOIN discovery_queries q ON q.id=r.query_id AND q.workspace_id=r.workspace_id LEFT JOIN work_items w ON w.id=r.work_id AND w.workspace_id=r.workspace_id WHERE r.workspace_id=$1 ORDER BY r.created_at DESC LIMIT 51",[w])).rows;
+  const runs=(await tx.query("SELECT r.*,q.terms,q.filters,q.source_snapshots,q.candidate_revision,q.preference_provenance,w.status AS work_status,w.error_code AS work_error FROM discovery_runs r JOIN discovery_queries q ON q.id=r.query_id AND q.workspace_id=r.workspace_id LEFT JOIN work_items w ON w.id=r.work_id AND w.workspace_id=r.workspace_id WHERE r.workspace_id=$1 AND NOT (q.filters ? 'posting') ORDER BY r.created_at DESC LIMIT 51",[w])).rows;
   const attempts=(await tx.query('SELECT a.* FROM discovery_attempts a WHERE a.workspace_id=$1 AND a.run_id=ANY($2::uuid[]) ORDER BY a.started_at DESC',[w,runs.slice(0,50).map(r=>r.id)])).rows;
-  const jobs=(await tx.query("SELECT j.*,coalesce(s.state,'none') AS discovery_state FROM jobs j LEFT JOIN job_discovery_states s ON s.job_id=j.id AND s.workspace_id=j.workspace_id WHERE j.workspace_id=$1 AND j.opening_key IS NOT NULL ORDER BY j.last_seen_at DESC,j.id LIMIT 501",[w])).rows;
+  const jobs=(await tx.query("SELECT j.id,j.company,j.title,j.location,j.revision,j.archived,j.opening_key,j.url,j.source_platform,j.application_url,j.posted_at,j.first_seen_at,j.last_seen_at,j.discovery_policy,coalesce(s.state,'none') AS discovery_state FROM jobs j LEFT JOIN job_discovery_states s ON s.job_id=j.id AND s.workspace_id=j.workspace_id WHERE j.workspace_id=$1 AND j.opening_key IS NOT NULL ORDER BY j.last_seen_at DESC,j.id LIMIT 501",[w])).rows;
   const observations=(await tx.query('SELECT job_id,run_id,source_id,identity_conflict,observed_at,date_basis FROM job_observations WHERE workspace_id=$1 AND run_id=ANY($2::uuid[]) ORDER BY observed_at DESC LIMIT 2001',[w,runs.slice(0,50).map(r=>r.id)])).rows;
   return {sources:sources.slice(0,200).map(s=>({...s,stale:s.checked_at&&Date.now()-new Date(s.checked_at).getTime()>86400000})),runs:runs.slice(0,50),attempts,jobs:jobs.slice(0,500),observations:observations.slice(0,2000),partial:{sources:sources.length>200,runs:runs.length>50,jobs:jobs.length>500,observations:observations.length>2000},asOf:new Date().toISOString(),limits:{sourcesPerRun:3,pagesPerSource:3,requestsPerRun:6,secondsPerRun:90},coverage:'Selected public boards only; not LinkedIn/Indeed/Workday or universal site coverage.'};
  });

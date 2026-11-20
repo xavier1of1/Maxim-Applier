@@ -8,14 +8,25 @@ export async function snapshot(ctx: Context) {
  await db.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
  const w=ctx.workspaceId;
  const workspace=(await db.query('SELECT id,name,is_owner FROM workspaces WHERE id=$1',[w])).rows[0];
- const jobs=(await db.query('SELECT j.*,a.id AS application_id FROM jobs j LEFT JOIN applications a ON a.job_id=j.id AND a.workspace_id=j.workspace_id WHERE j.workspace_id=$1 ORDER BY j.updated_at DESC,j.id LIMIT 500',[w])).rows;
+ const jobs=(await db.query(`SELECT j.*,a.id AS application_id,coalesce(d.state,'none') AS discovery_state,row_to_json(detail) AS posting_detail_work
+  FROM (SELECT * FROM jobs WHERE workspace_id=$1 ORDER BY updated_at DESC,id LIMIT 501) j
+  LEFT JOIN applications a ON a.job_id=j.id AND a.workspace_id=j.workspace_id
+  LEFT JOIN job_discovery_states d ON d.job_id=j.id AND d.workspace_id=j.workspace_id
+  LEFT JOIN LATERAL (
+   SELECT CASE WHEN work.status='failed' THEN 'failed' ELSE r.status END AS status,coalesce(work.error_code,r.error_code) AS error_code
+   FROM discovery_queries q JOIN discovery_runs r ON r.workspace_id=q.workspace_id AND r.query_id=q.id
+   JOIN work_items work ON work.workspace_id=r.workspace_id AND work.id=r.work_id
+   WHERE q.workspace_id=j.workspace_id AND q.filters->'posting'->>'jobId'=j.id::text
+   ORDER BY r.created_at DESC LIMIT 1
+  ) detail ON j.source_platform='greenhouse'
+  ORDER BY j.updated_at DESC,j.id`,[w])).rows;
  const applications=(await db.query('SELECT a.*,j.company,j.title,j.location FROM applications a JOIN jobs j ON j.id=a.job_id AND j.workspace_id=a.workspace_id WHERE a.workspace_id=$1 ORDER BY a.updated_at DESC,a.id LIMIT 500',[w])).rows;
  const events=(await db.query('SELECT id,entity_id,event_type,revision,payload,created_at FROM events WHERE workspace_id=$1 ORDER BY sequence DESC LIMIT 100',[w])).rows;
  const conversations=(await db.query('SELECT id,title,job_id,updated_at FROM conversations WHERE workspace_id=$1 ORDER BY updated_at DESC,id LIMIT 100',[w])).rows;
  const proposals=(await db.query('SELECT p.id,p.job_id,p.note,p.expected_revision,p.status,p.expires_at,p.created_at FROM proposals p JOIN runs r ON r.id=p.run_id AND r.workspace_id=p.workspace_id WHERE p.workspace_id=$1 AND p.status=$2 AND p.expires_at>now() AND r.status=$3 AND p.session_id=$4 ORDER BY p.created_at DESC',[w,'pending','completed',ctx.sessionId])).rows;
  const artifacts=(await db.query('SELECT id,job_id,name,bytes,content_type,created_at FROM artifacts WHERE workspace_id=$1 ORDER BY created_at DESC LIMIT 500',[w])).rows;
- return {workspace,jobs,applications,events,conversations,proposals,artifacts,settings:{model:publicModelSettings(),testMode:config().testMode,ownership:'new_workspace'},
-  asOf:new Date().toISOString(),sourceStatus:jobs.length===500?'partial':jobs.length?'fresh':'empty'};
+ return {workspace,jobs:jobs.slice(0,500),applications,events,conversations,proposals,artifacts,settings:{model:publicModelSettings(),testMode:config().testMode,ownership:'new_workspace'},
+  asOf:new Date().toISOString(),sourceStatus:jobs.length>500?'partial':jobs.length?'fresh':'empty'};
  });
 }
 export async function getJob(ctx: Context, id: string) {

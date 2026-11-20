@@ -7,10 +7,12 @@ import {TextArea} from '@astryxdesign/core/TextArea';
 import {Selector} from '@astryxdesign/core/Selector';
 import {Dialog, DialogHeader} from '@astryxdesign/core/Dialog';
 import {Archive, ArchiveRestore, ArrowLeft, ArrowUpRight, BriefcaseBusiness, Check, Download,
-  FileText, MapPin, MessageSquare, Paperclip, Plus, RotateCcw, Save, Search, Send, Upload} from 'lucide-react';
+  FileText, MapPin, MessageSquare, Paperclip, Plus, RefreshCw, RotateCcw, Save, Search, Send, Upload} from 'lucide-react';
 import {ApiError, errorMessage, type WorkspaceApi} from './api';
 import {Banner, EmptyState, Glyph, Pill, ToolButton, formatBytes, formatDate, initials, safeExternalUrl} from './shared';
 import type {Job, Navigation, RecordFilter, WorkspaceData} from './types';
+import {companySpread,locationFilters,locationMatches,rolePolicyLabel} from './role-triage';
+import {useBoundedRefresh} from './use-bounded-refresh';
 
 type SharedProps = {
   data: WorkspaceData;
@@ -89,9 +91,12 @@ export function JobsView({data, api, disabled, refresh, navigate, selectedId, fi
   selectedId: string | null; filter: RecordFilter; onCreate: () => void; onDirtyChange: (dirty: boolean) => void; onAgent: () => void;
 }) {
   const [search, setSearch] = useState('');
-  const jobs = data.jobs.filter(job => job.archived === (filter === 'archived') &&
+  const [location,setLocation]=useState('focus');
+  const matching = data.jobs.filter(job => job.archived === (filter === 'archived') &&
     [job.company, job.title, job.location ?? ''].join(' ').toLowerCase().includes(search.toLowerCase().trim()))
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+  const jobs=filter==='archived'?matching:companySpread(matching.filter(job=>locationMatches(job,location)));
+  const employers=new Set(jobs.map(job=>job.company)).size;
   const selected = data.jobs.find(job => job.id === selectedId);
   return <div className={'jobs-workbench' + (selectedId ? ' has-selection' : '')}>
     <section className="role-list" aria-label="Job records">
@@ -103,9 +108,11 @@ export function JobsView({data, api, disabled, refresh, navigate, selectedId, fi
             onChange={value => navigate({filter: value})} options={[
               {value: 'active', label: 'Active roles'}, {value: 'archived', label: 'Archived roles'},
             ]} />
-          <span className="muted small tabular">{jobs.length} {jobs.length === 1 ? 'role' : 'roles'}</span>
+          <span className="muted small tabular">{jobs.length} {jobs.length === 1 ? 'role' : 'roles'} / {employers} {employers===1?'employer':'employers'}</span>
         </div>
+        {filter==='active'&&<Selector label="Filter roles by location" isLabelHidden value={location} onChange={setLocation} options={locationFilters} width="100%" size="sm"/>}
       </div>
+      {data.sourceStatus==='partial'&&<Banner tone="info">Showing the newest 500 stored roles.</Banner>}
       <div className="role-rows">
         {jobs.map(job => <button type="button" key={job.id} className={'role-row' + (selectedId === job.id ? ' selected' : '')}
           aria-current={selectedId === job.id ? 'true' : undefined} onClick={() => navigate({job: job.id})}>
@@ -113,14 +120,16 @@ export function JobsView({data, api, disabled, refresh, navigate, selectedId, fi
           <span className="role-row-copy"><span className="role-company">{job.company}</span><strong>{job.title}</strong>
             <span className="role-location"><MapPin size={12} aria-hidden="true" />{job.location || 'Location not specified'}</span>
             <span className="role-row-meta"><span>{formatDate(job.updated_at)}</span>
+              {job.opening_key&&<Pill tone={rolePolicyLabel(job).tone}>{rolePolicyLabel(job).label}</Pill>}
               {job.application_id && <span className="intent-dot">Application intent</span>}</span>
           </span>
           <span className="row-chevron" aria-hidden="true"><ArrowUpRight size={14} /></span>
         </button>)}
         {!jobs.length && <EmptyState compact icon={filter === 'archived' ? Archive : BriefcaseBusiness}
-          title={search ? 'No matching roles' : filter === 'archived' ? 'Archive is empty' : 'No roles yet'}
+          title={search||matching.length ? 'No matching roles' : filter === 'archived' ? 'Archive is empty' : 'No roles yet'}
           detail={search ? 'Try another company, title, or location.' : undefined}
           action={search ? <Button label="Clear search" variant="ghost" onClick={() => setSearch('')} />
+            : matching.length&&filter==='active' ? <Button label="All locations" onClick={()=>setLocation('all')}/>
             : filter === 'active' ? <Button label="New role" icon={<Glyph icon={Plus} />} onClick={onCreate} isDisabled={disabled} /> : undefined} />}
       </div>
       <div className="list-footer"><span className="status-dot" />Workspace records <span className="mono">{data.jobs.length}</span></div>
@@ -150,6 +159,17 @@ function JobDetail({job, data, api, disabled, refresh, navigate, onDirtyChange, 
   const attempt = useRef<{key: string; id: string} | null>(null);
   const dirty = note !== base.note;
   const conflict = dirty && job.revision !== base.revision;
+  const detailPending=['queued','running'].includes(job.posting_detail_work?.status||'');
+  useBoundedRefresh(detailPending,refresh);
+  async function fetchPosting(){
+    if(disabled||busy||detailPending)return;
+    setBusy('posting');setError('');
+    try{
+      await api.post('/api/discovery/commands',{commandId:crypto.randomUUID(),action:'fetch_posting_details',payload:{jobId:job.id,expectedRevision:job.revision}});
+      await refresh();
+    }catch(failure){setError(errorMessage(failure));}
+    finally{setBusy('');}
+  }
   const files = data.artifacts.filter(file => file.job_id === job.id);
   const application = data.applications.find(item => item.job_id === job.id);
   const url = safeExternalUrl(job.url);
@@ -238,7 +258,12 @@ function JobDetail({job, data, api, disabled, refresh, navigate, onDirtyChange, 
     <div className="detail-sections">
       <section className="record-section">
         <div className="section-heading"><h3><FileText size={16} aria-hidden="true" />Job description</h3></div>
-        {job.description ? <p className="posting-text">{job.description}</p> : <p className="muted section-empty">No description added.</p>}
+        {job.description ? <p className="posting-text">{job.description}</p> : <p className="muted section-empty">{job.source_platform==='greenhouse'?'Board summary only':'No description added.'}</p>}
+        {job.source_platform==='greenhouse'&&!job.archived&&(!job.description||job.description.trim().length<50)&&<div className="inline-actions">
+          <Button label="Fetch full posting" icon={<Glyph icon={RefreshCw}/>} onClick={()=>void fetchPosting()} isDisabled={disabled||Boolean(busy)||detailPending} isLoading={busy==='posting'||detailPending}/>
+          {detailPending&&<Pill tone="amber">{job.posting_detail_work?.status}</Pill>}
+          {job.posting_detail_work?.error_code&&<Pill tone="coral">{job.posting_detail_work.error_code.replaceAll('_',' ')}</Pill>}
+        </div>}
       </section>
       <section className="record-section">
         <div className="section-heading"><h3><MessageSquare size={16} aria-hidden="true" />Working note</h3>

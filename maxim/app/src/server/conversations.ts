@@ -18,6 +18,7 @@ import {interviewTool} from './interview/agent';
 import {gmailAgentView} from './integrations/gmail/reads';
 import {networkingAgentRead} from './networking/reads';
 import {discordView} from './integrations/discord';
+import {scopedIntent} from './scoped-intent';
 
 const controllers=new Map<string,AbortController>();
 const toolSchemas = {
@@ -65,8 +66,8 @@ async function invoke(ctx:Context,cid:string,rid:string,call:ToolCall) {
  }
  if(call.function.name==='evaluate_job'){
   const p=z.object({jobId:uuid,expectedJobRevision:z.number().int().positive(),expectedCandidateRevision:z.number().int().positive(),quote:z.string().min(3).max(4000)}).strict().parse(args);
-  const user=(await database().query("SELECT content FROM messages WHERE workspace_id=$1 AND run_id=$2 AND role='user' ORDER BY sequence DESC LIMIT 1",[ctx.workspaceId,rid])).rows[0];
-  invariant(typeof user?.content.text==='string'&&user.content.text.includes(p.quote)&&/\b(evaluate|assess)\b/i.test(p.quote)&&p.quote.includes(p.jobId),'explicit_request_required','Quote the exact current evaluation request and job UUID.');
+  const user=(await database().query("SELECT m.content,c.job_id FROM messages m JOIN conversations c ON c.workspace_id=m.workspace_id AND c.id=m.conversation_id WHERE m.workspace_id=$1 AND m.run_id=$2 AND m.role='user' ORDER BY m.sequence DESC LIMIT 1",[ctx.workspaceId,rid])).rows[0];
+  invariant(scopedIntent(user?.content.text,p.quote,p.jobId,user?.job_id===p.jobId,'evaluate'),'explicit_request_required','Select the role and ask to evaluate this role, or specify its exact job UUID.');
   return evaluationCommand(ctx,{commandId:digest(rid+':evaluate:'+p.jobId).slice(0,8)+'-'+digest(rid+p.jobId).slice(8,12)+'-4'+digest(rid+p.jobId).slice(13,16)+'-a'+digest(rid+p.jobId).slice(17,20)+'-'+digest(rid+p.jobId).slice(20,32),action:'start_evaluation',payload:{jobId:p.jobId,expectedJobRevision:p.expectedJobRevision,expectedCandidateRevision:p.expectedCandidateRevision}});
  }
  if(call.function.name==='read_discovery'){

@@ -20,7 +20,7 @@ export async function harness() {
  const root=createFixture('maxim-test-');
  const suffix=crypto.randomUUID(),container='maxim-test-'+suffix,database='maxim_test_'+suffix.replaceAll('-','');
  const dbPort=await freePort(),port=await freePort(),password=crypto.randomBytes(24).toString('hex');
- const captured=[],timers=new Set(),providerRequests=[],providerRoutes=new Map();
+ const captured=[],timers=new Set(),providerRequests=[],providerRoutes=new Map(),chatTools=new Map();
  const modelServer=http.createServer(async(req,res)=>{
   try{
    if(req.method==='GET'){
@@ -60,6 +60,7 @@ export async function harness() {
    const id=q.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i)?.[0];
    if(last.role==='tool'){
     const data=JSON.parse(last.content);
+    if(chatTools.has(q)){text(JSON.stringify(data));return;}
     if(q.includes('[case:application')){text(JSON.stringify(data));return;}
     if(q.includes('[case:discovery')){text(JSON.stringify(data));return;}
     if(q.includes('[case:answer-evidence]')&&last.tool_call_id==='call_evidence_read'&&!data.error){
@@ -76,9 +77,7 @@ export async function harness() {
    }
    if(q.includes('[case:self-confirm]')){tool('confirm_proposal',{proposalId:id||crypto.randomUUID()},'call_forbidden');return;}
    if(q.includes('[case:application-read]')){tool('read_applications',{},'call_application_read');return;}
-   if(q.includes('[case:application-evaluate]')||q.includes('[case:application-unrequested]')){
-    tool('evaluate_job',{jobId:id,expectedJobRevision:Number(q.match(/rev (\d+)/)?.[1]),expectedCandidateRevision:Number(q.match(/candidate (\d+)/)?.[1]),quote:q.includes('unrequested')?'evaluate '+id:q},'call_application_evaluate');return;
-   }
+   if(chatTools.has(q)){const call=chatTools.get(q);tool(call.name,call.args,'call_scoped_fixture');return;}
    if(q.includes('[case:discovery]')){tool('read_discovery',{},'call_discovery');return;}
    if(q.includes('[case:discovery-start]')){tool('start_job_search',{sourceIds:[id],terms:['Software'],quote:q},'call_discovery_start');return;}
    if(q.includes('[case:discovery-save]')){tool('set_discovery_state',{jobId:id,expectedRevision:Number(q.match(/rev (\d+)/)?.[1]),state:q.includes('dismiss')?'dismissed':'saved',quote:q},'call_discovery_save');return;}
@@ -177,7 +176,7 @@ export async function harness() {
   return response;
  };
  const a=await login(c.bootstrapKey),b=await login(other.key);
- return {root,c,runtime,container,database,captured,providerRequests,providerRoutes,a,b,other,sql,login,request,startServer,stopServer,startWorker,stopWorker,
+ return {root,c,runtime,container,database,captured,providerRequests,providerRoutes,chatTools,a,b,other,sql,login,request,startServer,stopServer,startWorker,stopWorker,
   snapshotDatabase:target=>snapshotDatabase(c,target),restoreDatabase:(dump,name)=>restoreDatabase(c,dump,name),
   close:release,
  };

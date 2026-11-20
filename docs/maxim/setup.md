@@ -1,6 +1,6 @@
 # Start And Use Maxim Apply
 
-Updated: 2026-11-17. Canonical folder: `D:\VSC Programs\maxim-apply`.
+Updated: 2026-11-19. Canonical folder: `D:\VSC Programs\maxim-apply`.
 Do not reopen the deprecated maxim-applier folder to run this product.
 
 ## First Start Or Updated Build
@@ -30,6 +30,29 @@ The current build must pass the final verification record before describing it
 as fully accepted. An unresponsive Docker engine cannot be replaced with demo
 records. See [verification](../../roadmap/reviews/mvp-completion-verification.md).
 
+## Continue A Saved Application
+
+Open [Applications](http://127.0.0.1:3010/maxim?view=applications) and select the
+role. An intent is a local record, not a submitted application.
+
+1. **Review candidate knowledge.** Existing confirmed facts can be used without
+   re-uploading your resume. In Candidate, inspect the fields, open **Career-Ops
+   authority -> Review cutover**, review the four exact projections and activate
+   only if you approve the ownership change. Legacy application migration is
+   separate and is not required for evaluating a saved role.
+2. **Configure evaluation model.** In Settings, enter an OpenAI API key and a
+   model supported by your API project and the local tokenizer policy (for
+   example, `gpt-4.1-mini`). **Save connection** stores settings locally.
+   **Check model access** checks the provider's model endpoint without sending
+   your profile, a posting, or an evaluation. Saved does not mean verified.
+3. **Evaluate with Career-Ops**, review its report and approve an exact current
+   packet. Choose **Open Apply Assistant** from that application. Confirm site
+   and private-field consent yourself. A role conversation accepts **Evaluate
+   this role** or **Fill approved fields** when the scoped action is permitted.
+4. For an unknown field, **Save question** opens the exact question in Answers.
+   Record and approve your answer, then **Return to Apply Assistant** and review
+   the exact reuse. Take manual control, submit yourself, and record what happened.
+
 ## Your Actual Journey
 
 1. **Candidate:** import authorized sources, review facts and disclosure. Existing
@@ -42,6 +65,7 @@ records. See [verification](../../roadmap/reviews/mvp-completion-verification.md
 3. **Discovery or Jobs:** configure public company board sources and terms, search,
    inspect coverage/errors and save roles; or paste a real job manually. Searching
    does not evaluate fit. A company feed cannot guarantee all jobs on the internet.
+   [Setup and local-role filters](discovery.md).
 4. **Applications:** create intent, review location/salary/clearance policy,
    evaluate with Career-Ops, inspect retained 1.0-5.0 score/tier, select approved
    evidence and build/review/approve the exact report and PDF. Reconcile any legacy

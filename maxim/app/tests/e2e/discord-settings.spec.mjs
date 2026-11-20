@@ -38,7 +38,12 @@ for(const width of [1600,390]){
   await page.getByRole('button',{name:'Save schedule'}).click();await expect(page.getByRole('region',{name:'Durable schedules'})).toContainText('Weekly review: enabled');
   await page.reload();await expect(page.getByRole('region',{name:'Delivery history'})).toContainText('HTTP accepted');
   await expect(page.getByRole('region',{name:'Durable schedules'})).toContainText('Weekly review: enabled');
-  await expect(page.getByRole('checkbox',{name:'Needs Response (S7 unavailable)',exact:true})).toBeDisabled();
+  await expect(page.getByRole('checkbox',{name:'Needs Response',exact:true})).toBeEnabled();
+  await page.getByRole('region',{name:'Delivery plan'}).getByRole('combobox').selectOption({label:'Needs Response'});
+  const requestsBeforeEmptyPreview=h.requests.length;
+  await page.getByRole('button',{name:'Preview only'}).click();
+  await expect(page.getByRole('button',{name:'Queue this notification'})).toBeDisabled();
+  expect(h.requests.length).toBe(requestsBeforeEmptyPreview);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)).toBe(false);
   expect(await page.evaluate(()=>localStorage.length+sessionStorage.length)).toBe(0);
   await page.keyboard.press('Tab');expect(await page.evaluate(()=>document.activeElement!==document.body)).toBe(true);

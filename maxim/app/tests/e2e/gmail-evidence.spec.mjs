@@ -7,7 +7,7 @@ import {build} from 'esbuild';
 import {harness} from '../support/harness.mjs';
 import {authenticate} from '../../src/server/auth.ts';
 import {executeCommand} from '../../src/server/commands.ts';
-import {database} from '../../src/server/db.ts';
+import {closeDatabase} from '../../src/server/db.ts';
 import {claimWork} from '../../src/server/work.ts';
 import {gmailCommand,beginGmailOAuth,completeGmailOAuth} from '../../src/server/integrations/gmail/service.ts';
 import {gmailView} from '../../src/server/integrations/gmail/reads.ts';
@@ -60,8 +60,11 @@ test.beforeAll(async()=>{
 });
 test.afterAll(async()=>{
  if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
- await database().end();if(oldEnv===undefined)delete process.env.MAXIM_RUNTIME_FILE;else process.env.MAXIM_RUNTIME_FILE=oldEnv;
- if(h)await h.close();
+ try{await closeDatabase();}
+ finally{
+  if(oldEnv===undefined)delete process.env.MAXIM_RUNTIME_FILE;else process.env.MAXIM_RUNTIME_FILE=oldEnv;
+  if(h)await h.close();
+ }
 });
 async function open(page){await page.context().addCookies([{name:'maxim_session',value:h.a.cookie.split('=')[1],url:h.c.origin,httpOnly:true,sameSite:'Strict'}]);await page.goto(h.c.origin);}
 async function layout(page){expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);}

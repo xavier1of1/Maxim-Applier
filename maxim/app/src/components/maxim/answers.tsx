@@ -6,7 +6,7 @@ import {TextArea} from '@astryxdesign/core/TextArea';
 import {NumberInput} from '@astryxdesign/core/NumberInput';
 import {Selector} from '@astryxdesign/core/Selector';
 import {Dialog,DialogHeader} from '@astryxdesign/core/Dialog';
-import {BookOpen,Check,Download,Eye,FileCheck,Plus,Pencil,RefreshCw,Search,ShieldCheck,Trash2,X} from 'lucide-react';
+import {ArrowLeft,BookOpen,Check,Download,Eye,FileCheck,Plus,Pencil,RefreshCw,Search,ShieldCheck,Trash2,X} from 'lucide-react';
 import {type WorkspaceApi,errorMessage} from './api';
 import {Banner,EmptyState,Glyph,Pill,ToolButton,formatDate} from './shared';
 
@@ -24,7 +24,8 @@ const questionValue=(q:{text:string;company:string;roleLane:string;answerType:st
  text:q.text,company:q.company,roleLane:q.roleLane||'unspecified',answerType:q.answerType,locale:'en-US',
  options:q.options.split('\n').map(s=>s.trim()).filter(Boolean),tags:q.tags.split(',').map(s=>s.trim()).filter(Boolean),
 });
-export function AnswersView({api,disabled,refresh,asOf}:{api:WorkspaceApi;disabled:boolean;refresh:()=>Promise<void>;asOf:string}){
+const questionForm=(q:Question)=>({text:q.exact_text,company:q.company,roleLane:q.context.roleLane,answerType:q.context.answerType,options:q.context.options.join('\n'),tags:q.tags.join(',')});
+export function AnswersView({api,disabled,refresh,asOf,requestedQuestion,returnToAssistant}:{api:WorkspaceApi;disabled:boolean;refresh:()=>Promise<void>;asOf:string;requestedQuestion:string|null;returnToAssistant?:()=>void}){
  const [data,setData]=useState<Library|null>(null),[candidate,setCandidate]=useState<Candidate|null>(null),[error,setError]=useState(''),[readError,setReadError]=useState(''),[busy,setBusy]=useState('');
  const [tab,setTab]=useState('recall'),[lookup,setLookup]=useState<Recall|null>(null);
  const [includePrivate,setIncludePrivate]=useState(false);
@@ -32,12 +33,17 @@ export function AnswersView({api,disabled,refresh,asOf}:{api:WorkspaceApi;disabl
  const [draft,setDraft]=useState<{question:ReturnType<typeof questionValue>;entry?:Answer}|null>(null),[inspect,setInspect]=useState<Answer|null>(null),[reuse,setReuse]=useState<Use|null>(null);
  const [checked,setChecked]=useState(false),[why,setWhy]=useState('');
  const [removeQuestion,setRemoveQuestion]=useState<Question|null>(null);
- const sequence=useRef(0),active=useRef(false),attempts=useRef(new Map<string,string>());
+ const sequence=useRef(0),active=useRef(false),attempts=useRef(new Map<string,string>()),loadedQuestion=useRef<string|null>(null);
  const load=useCallback(async()=>{
   const n=++sequence.current;
-  try{const library=await api.get<Library>('/api/answers'),person=await api.get<Candidate>('/api/candidate');if(n===sequence.current){setData(library);setCandidate(person);setReadError('');}}
+  try{const library=await api.get<Library>('/api/answers'+(requestedQuestion?'?question='+encodeURIComponent(requestedQuestion):'')),person=await api.get<Candidate>('/api/candidate');
+   if(n===sequence.current){
+    setData(library);setCandidate(person);setReadError('');
+    const target=library.questions.find(q=>q.id===requestedQuestion);
+    if(target&&loadedQuestion.current!==target.id){loadedQuestion.current=target.id;setForm(questionForm(target));}
+   }}
   catch(e){if(n===sequence.current)setReadError(errorMessage(e));}
- },[api]);
+ },[api,requestedQuestion]);
  useEffect(()=>{void load();return()=>{sequence.current++;};},[load,asOf]);
  const blocked=disabled||Boolean(readError)||Boolean(busy);
  const command=async(action:string,payload:unknown)=>{
@@ -64,11 +70,13 @@ export function AnswersView({api,disabled,refresh,asOf}:{api:WorkspaceApi;disabl
  return <div className="knowledge-view">
   {readError&&<Banner>{readError} Showing last loaded answers.</Banner>}{error&&<Banner onDismiss={()=>setError('')}>{error}</Banner>}
   {data.partial&&<Banner tone="warning">Recent 200 questions and answers shown. Export includes the complete authorized history.</Banner>}
+  {requestedQuestion&&!data.questions.some(q=>q.id===requestedQuestion)&&<Banner tone="warning">The selected question is no longer available.</Banner>}
   {candidate.candidate.ownership!=='canonical'&&<Banner tone="info">Candidate authority is not active. Recall stays paused; recorded answers remain reviewable.</Banner>}
   <div className="knowledge-summary"><div><span>Approved</span><strong>{data.answers.filter(a=>a.status==='approved'&&!a.expired).length}</strong></div><div><span>Drafts</span><strong>{data.answers.filter(a=>a.status==='draft').length}</strong></div>
    <div><span>Questions</span><strong>{data.questions.length}</strong></div><div><span>Confirmed reuses</span><strong>{data.uses.filter(u=>u.status==='confirmed').length}</strong></div></div>
   <div className="knowledge-toolbar"><Selector label="Answer view" isLabelHidden value={tab} onChange={setTab} width={200} options={[{value:'recall',label:'Recall'},{value:'library',label:'Answer library'},{value:'uses',label:'Reuse history'}]}/>
-   <div className="inline-actions"><a href="/api/answers/export" download title="Export answer memory" aria-label="Export answer memory" className="icon-link"><Download size={17}/></a>
+   <div className="inline-actions">{returnToAssistant&&<Button label="Return to Apply Assistant" size="sm" icon={<Glyph icon={ArrowLeft}/>} onClick={returnToAssistant}/>}
+    <a href="/api/answers/export" download title="Export answer memory" aria-label="Export answer memory" className="icon-link"><Download size={17}/></a>
     <ToolButton label="Refresh answers" icon={RefreshCw} onClick={()=>void load()} disabled={disabled}/></div></div>
   {tab==='recall'&&<section className="knowledge-section" aria-label="Answer recall">
    <form className="answer-lookup" onSubmit={e=>{e.preventDefault();void act('recall',async()=>{setLookup(await api.post<Recall>('/api/answers/recall',{...questionValue(form),includePrivate}));});}}>
@@ -92,7 +100,7 @@ export function AnswersView({api,disabled,refresh,asOf}:{api:WorkspaceApi;disabl
     {lookup.related?.map((a,i)=><details className="projection-file" key={i}><summary>Related history, not reusable</summary><p>{a.question}</p><pre>{a.text}</pre></details>)}
    </section>}
    {data.questions.length>0&&<div className="recent-questions"><h3>Recent questions</h3>{data.questions.slice(0,10).map(q=><div className="recent-question-row" key={q.id}>
-    <button type="button" className="recent-question" onClick={()=>{setForm({text:q.exact_text,company:q.company,roleLane:q.context.roleLane,answerType:q.context.answerType,options:q.context.options.join('\n'),tags:q.tags.join(',')});setLookup(null);}}>
+    <button type="button" className="recent-question" onClick={()=>{setForm(questionForm(q));setLookup(null);}}>
     <span>{q.exact_text}</span><small>{q.company} / {q.context.roleLane}</small></button>
     <ToolButton label="Delete unanswered question" icon={Trash2} disabled={blocked||data.answers.some(a=>a.question_id===q.id&&a.status!=='deleted')||data.uses.some(u=>u.question_id===q.id&&['draft','confirmed'].includes(u.status))} onClick={()=>setRemoveQuestion(q)}/></div>)}</div>}
   </section>}

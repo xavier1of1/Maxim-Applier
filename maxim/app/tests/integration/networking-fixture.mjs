@@ -9,7 +9,8 @@ export async function networkingFixture({ui=false}={}){
  const oldRuntime=process.env.MAXIM_RUNTIME_FILE;process.env.MAXIM_RUNTIME_FILE=h.runtime;
  const {networkingRoute}=await import('../../src/server/networking/routes.ts');
  const {authenticate,checkOrigin,login}=await import('../../src/server/auth.ts');
- const {database}=await import('../../src/server/db.ts');
+ const {closeDatabase}=await import('../../src/server/db.ts');
+ const restoreRuntime=()=>{if(oldRuntime===undefined)delete process.env.MAXIM_RUNTIME_FILE;else process.env.MAXIM_RUNTIME_FILE=oldRuntime;};
  let server,output=[];
  try{
   if(ui){
@@ -35,8 +36,11 @@ export async function networkingFixture({ui=false}={}){
    }catch(e){outgoing.writeHead(e.status||500,{'Content-Type':'application/json'});outgoing.end(JSON.stringify({error:{code:e.code||'fixture_failed',message:e.message}}));}
   });
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(new URL(h.c.origin).port,'127.0.0.1',resolve);});
-  return {...h,async close(){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));await database().end();if(oldRuntime===undefined)delete process.env.MAXIM_RUNTIME_FILE;else process.env.MAXIM_RUNTIME_FILE=oldRuntime;await h.close();}};
- }catch(e){if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}await database().end().catch(()=>{});await h.close();throw e;}
+  return {...h,async close(){
+   server.closeAllConnections();await new Promise(resolve=>server.close(resolve));
+   try{await closeDatabase();}finally{restoreRuntime();await h.close();}
+  }};
+ }catch(e){if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}await closeDatabase().catch(()=>{});restoreRuntime();await h.close();throw e;}
 }
 export async function seedNetworking(h){
  const w=h.c.workspaceId,jobId=crypto.randomUUID(),sourceId=crypto.randomUUID(),factId=crypto.randomUUID();

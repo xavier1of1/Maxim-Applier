@@ -48,14 +48,17 @@ signals are priority overlays, never additional fit scores.
 
 ## 3. Evaluate With Career-Ops
 
-Click **Evaluate with Career-Ops**, or ask Agent:
+Click **Evaluate with Career-Ops**, or open a new conversation for the selected
+role and ask the Agent:
 
 ~~~text
-Evaluate <exact-job-UUID>.
+Evaluate this role
 ~~~
 
-The agent reads current IDs/revisions and can queue only an exact current user
-request containing the opening UUID. It cannot approve facts, packets or submissions.
+The agent checks the exact current request and its persisted role context. In a
+conversation with no selected role, specify the exact job UUID. Staged candidate
+authority and a missing supported model have direct review/setup links.
+The agent cannot approve facts, packets or submissions.
 The same evaluator is available through:
 
 ~~~powershell

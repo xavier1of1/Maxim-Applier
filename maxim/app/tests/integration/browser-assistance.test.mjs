@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
-import {harness} from '../support/harness.mjs';
+import {harness,streamResult} from '../support/harness.mjs';
 import {preparedApplication,apiCommand,until,applicationForm} from '../support/assisted-application.mjs';
 
 test('S6 real agent-browser, canonical packet, remembered unknown and denied final actions',async t=>{
@@ -20,7 +20,17 @@ test('S6 real agent-browser, canonical packet, remembered unknown and denied fin
    await apiCommand(h,'browser','attach_packet',{sessionId:s.id,expectedRevision:s.revision,fieldId:s.observation.fields[0].id,observationId:s.observation.id,path:'.env'},400);
    await apiCommand(h,'browser','observe',{sessionId:s.id,expectedRevision:s.revision},404,crypto.randomUUID(),h.b);
   });
-  await apiCommand(h,'browser','fill_known',{sessionId:s.id,expectedRevision:s.revision});d=await stable();s=d.sessions[0];
+  await t.test('a direct chat request fills only the browser session for the conversation job',async()=>{
+   const conversation=async jobId=>(await(await h.request(h.a,'/api/conversations',{method:'POST',body:{commandId:crypto.randomUUID(),title:'Browser demonstration',...(jobId?{jobId}:{})}})).json()).conversation.id;
+   const text='Fill approved fields and the PDF';
+   h.chatTools.set(text,{name:'fill_approved_application_fields',args:{sessionId:s.id,expectedRevision:s.revision,quote:text}});
+   const ask=async cid=>streamResult(await h.request(h.a,'/api/conversations/'+cid+'/messages',{method:'POST',body:{commandId:crypto.randomUUID(),text}}));
+   const rejected=await ask(await conversation());
+   assert.match(rejected.filter(e=>e.event==='delta').map(e=>e.data.text).join(''),/explicit_request_required/);
+   assert.ok(!(await read()).actions.some(a=>a.kind==='fill_known'));
+   const accepted=await ask(await conversation(fixture.job.id));assert.ok(accepted.some(e=>e.event==='done'));
+  });
+  d=await stable();s=d.sessions[0];
   assert.equal(s.status,'observed',JSON.stringify(d.actions));assert.equal(Object.values(s.progress).filter(p=>p.status==='filled_locally').length,2);assert.ok(Object.values(s.progress).some(p=>p.status==='attachment_selected'));
   const field=s.observation.fields.find(f=>f.name==='project');assert.ok(field);
   await t.test('an unknown is approved in S3, confirmed in exact scope and filled without a private browser cache',async()=>{

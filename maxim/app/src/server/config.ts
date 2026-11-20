@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
-import { DomainError } from './errors';
+import { DomainError, invariant } from './errors';
+import {modelProfile} from './context-budget';
 
 const schema = z.object({
   databaseUrl: z.string().url(), origin: z.string().url(), privateRoot: z.string(),
@@ -41,16 +42,39 @@ export function config(): RuntimeConfig {
 }
 export function publicModelSettings() {
   const c = config();
-  return { configured: Boolean(c.model.model && c.model.apiKey), model: c.model.model,
+  let supported=false;
+  try{modelProfile(c.model.model,c.testMode);supported=true;}catch{}
+  return { configured: Boolean(supported && c.model.apiKey), model: c.model.model,
     hasKey: Boolean(c.model.apiKey), provider: 'OpenAI', requestByteLimit: 32000, outputTokenLimit: 1024,
     inputTokenBudget:c.contextBudget,tokenizer:'@microsoft/tiktokenizer@1.0.10',
     accounting: 'Full-request local BPE with framing/margin and output reserve; measured provider usage is separate.' };
 }
 export function saveModelSettings(model: string, apiKey?: string) {
   const c = config();
+  modelProfile(model,c.testMode);
+  invariant(apiKey||c.model.apiKey,'model_key_required','Enter your OpenAI API key before saving.',400);
+  invariant(!apiKey||/^[!-~]+$/.test(apiKey),'invalid_model_key','Enter an API key without spaces or line breaks.',400);
   c.model.model = model;
   if (apiKey !== undefined && apiKey !== '') c.model.apiKey = apiKey;
   const target = configFile(), temp = target + '.new';
   fs.writeFileSync(temp, JSON.stringify(c, null, 2), { mode: 0o600 });
   fs.renameSync(temp, target);
+}
+
+export async function checkModelAccess(signal:AbortSignal) {
+  const c=config(),model=c.model;
+  invariant(model.model&&model.apiKey,'model_unconfigured','Save your model connection first.',409);
+  modelProfile(model.model,c.testMode);
+  let response:Response;
+  try{
+    response=await fetch(model.baseUrl+'/models/'+encodeURIComponent(model.model),{
+      headers:{Authorization:'Bearer '+model.apiKey},redirect:'error',
+      signal:AbortSignal.any([signal,AbortSignal.timeout(8000)]),
+    });
+    await response.body?.cancel();
+  }catch{
+    throw new DomainError('model_unavailable','The model provider could not be reached. Check your connection and retry.',502);
+  }
+  invariant(response.ok,'model_access_denied','OpenAI did not confirm access to this model (HTTP '+response.status+'). Check the key and model ID.',502);
+  return {accessible:true};
 }

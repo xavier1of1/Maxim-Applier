@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { config,publicModelSettings,saveModelSettings } from './config';
+import { checkModelAccess,config,publicModelSettings,saveModelSettings } from './config';
 import { database } from './db';
 import { authenticate,checkOrigin,login,digest } from './auth';
 import { executeCommand,resolveProposal,uuid } from './commands';
@@ -107,7 +107,7 @@ export async function handle(req:Request) {
   if(get&&name==='discovery')return json(await discoveryView(ctx));
   if(post&&name==='discovery/commands')return json({result:await discoveryCommand(ctx,await body(req))});
   if(get&&name==='candidate')return json(await candidateView(ctx));
-  if(get&&name==='answers')return json(await answerLibrary(ctx));
+  if(get&&name==='answers')return json(await answerLibrary(ctx,new URL(req.url).searchParams.get('question')));
   if(get&&name==='answers/export')return json(await exportAnswers(ctx),200,{'Content-Disposition':'attachment; filename="maxim-answer-memory.json"'});
   if(post&&name==='answers/commands')return json({result:await answerCommand(ctx,await body(req))});
   if(post&&name==='answers/recall')return json(await recallAnswers(ctx,await body(req)));
@@ -141,6 +141,10 @@ export async function handle(req:Request) {
    const p=z.object({model:z.string().trim().min(1).max(120).regex(/^[a-zA-Z0-9._:/-]+$/),apiKey:z.string().max(512).optional()}).strict().parse(await body(req));
    saveModelSettings(p.model,p.apiKey);
    return json({model:publicModelSettings()});
+  }
+  if(post&&name==='settings/model/check'){
+   invariant(ctx.isOwner,'not_found','Record not found.',404);
+   return json(await checkModelAccess(req.signal));
   }
   if(post&&name==='artifacts') {
    const data=await bytes(req,10*1024*1024+65536);

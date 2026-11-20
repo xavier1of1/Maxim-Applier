@@ -1,19 +1,44 @@
 # MVP Completion Verification
 
-Date: 2026-11-17 America/New_York (testing continued into November 18 UTC).
+Original evidence: 2026-11-17 America/New_York. Updated: 2026-11-19.
 Branch: `maxim/mvp-completion`. This is measured implementation evidence and a
 remaining-work record, not full MVP acceptance or an independent EGM review.
+
+## November 19 Journey Rerun
+
+- Read the manifesto and current stage evidence; corrected setup, discovery,
+  role-context commands and the browser-to-Answers handoff. The
+  [journey audit](2026-11-19_DRIFT_REPORT.md) records live source coverage,
+  repair decisions and remaining owner-only setup.
+- Full isolated integration: **129 passed, zero failed**, including both
+  mounted S11 rehearsals, real packet/fill/manual-control tests and negative
+  provider/authorization cases. Retested on the repaired production build.
+- Full Chromium suite: **27 passed, zero failed**, one worker, 4.3 minutes,
+  after repairing the fixture teardown and updating stale assertions. Desktop
+  and mobile independently traverse the exact unknown-question handoff,
+  approval, reuse and manual review. Inspected actual screenshots; the full
+  PDF fingerprint now wraps and fits its own mobile container. The setup test
+  preserves the selected intent and leaves candidate activation explicit.
+- App unit **40**, Rust **29**, retained Maxim **70**, sanitized Career-Ops
+  **146** plus the expected missing-CV warning, and Go all pass. No fit scales,
+  native data contracts or platform limits were replaced.
+- Production build/typecheck pass. Safety, privacy and roadmap validation
+  checks pass. The app is running at `http://127.0.0.1:3010/maxim`.
+- The first combined Chromium run exposed stale assertions for mounted
+  integrations, a shared-process fixture pool reused after shutdown, and a
+  non-independent mobile answer test. Corrections preserve the real database,
+  browser and consent checks; live ATS/account evidence remains separate.
 
 ## Delivered Code
 
 | Stage | Implemented integration | Remaining acceptance |
 | --- | --- | --- |
-| S6 | Pinned native agent-browser, headed dedicated session, current approved evidence/PDF, exact answer reuse, pause/resume, manual handoff, owned shutdown | Final changed integration/UI rerun and dated permitted live form-variant inspection |
-| S7 | Read-only Google OAuth/PKCE, selected-thread evidence/corrections/tasks, retention/revoke, UI/agent read/worker | Final combined rerun; owner OAuth setup and live consented smoke |
-| S8 | Protected existing webhook, preview/consent, persistent outbox/attempts, bounded retry/uncertainty, calendar schedules, domain/task producers | Final combined rerun; exact destination/contents and live accepted message |
-| S9 | Raw CSV/XLSX/ZIP preservation, reviewed contacts/history, role shortlist/research/five-part manual drafts, recruiter corrections, cohort analytics | Final mounted rerun; deliberate personal import/reconciliation, not automatic legacy cutover |
-| S10 | Role-linked private practice, approved evidence, bounded optional model feedback, cancel/revision/retention guards | Final rerun after context/transport integration; real model quality untested |
-| S11 | Two full-product rehearsal tests, all-view desktop/mobile test, operator guide and proposed demo script | New rehearsals/UI tests not yet executed; demo profile not owner-approved |
+| S6 | Pinned native agent-browser, headed dedicated session, current approved evidence/PDF, exact answer reuse, pause/resume, manual handoff, owned shutdown | Dated permitted live form-variant inspection |
+| S7 | Read-only Google OAuth/PKCE, selected-thread evidence/corrections/tasks, retention/revoke, UI/agent read/worker | Owner OAuth setup and live consented smoke |
+| S8 | Protected existing webhook, preview/consent, persistent outbox/attempts, bounded retry/uncertainty, calendar schedules, domain/task producers | Exact destination/contents and live accepted message |
+| S9 | Raw CSV/XLSX/ZIP preservation, reviewed contacts/history, role shortlist/research/five-part manual drafts, recruiter corrections, cohort analytics | Deliberate personal import/reconciliation, not automatic legacy cutover |
+| S10 | Role-linked private practice, approved evidence, bounded optional model feedback, cancel/revision/retention guards | Live model quality if claimed |
+| S11 | Two passing isolated product rehearsals, all-view desktop/mobile checks, operator guide and proposed demo script | Live per-variant proof and owner-approved demo profile |
 
 These stages remain **In progress**, not Verified. Merely applying migrations or
 building navigation does not satisfy their live, review or recovery gates.
@@ -54,12 +79,13 @@ agent-browser 0.43.0 and Chrome for Testing 158.0.8127.36.
   13 integration and one UI case passed. These were actual isolated lane runs,
   not proof of the final main dispatcher wiring or any real account connection.
 
-## Interrupted And Unrun Checks
+## Historical Interrupted Run
 
 The final full app integration run and S6 UI run were stopped when **C: reached
 zero free bytes** and Docker Desktop became unresponsive. Completed output from
 that partial run is not a passing suite. A later bounded Docker preflight failed
-explicitly. The two new product rehearsals and all-view UI test remain unrun.
+explicitly. At that point the two new product rehearsals and all-view UI check
+had not yet run; see the November 19 rerun above.
 
 Only Maxim's newly downloaded 449 MB agent-browser binary directory was relocated
 to ignored storage on D:, retaining its normal path via a junction. No broad
@@ -71,8 +97,9 @@ Docker still uses C:, so changing test TEMP does not solve its capacity problem.
 No real candidate data was filled, employer application submitted, Gmail account
 authorized, webhook configured or external model request sent in this work.
 Candidate/application ownership and production disclosure were not activated.
-The production stack was stopped for rebuilding and remains stopped pending
-Docker/disk recovery. Its private data and pre-change backup were retained.
+During that interruption, the production stack was stopped pending Docker/disk
+recovery. Its private data and pre-change backup were retained. The November 19
+rerun above verified the rebuilt stack is running.
 
 ## Resume Verification
 
@@ -83,8 +110,8 @@ real database cycles plus an actual interrupted-owner recovery left no new owned
 resources. A fresh private backup/restore passed; user ownership remains legacy.
 Separately approved shared build-cache cleanup reported 21.25 GB reclaimed inside
 Docker, without deleting any application image, container or database volume.
-See [storage evidence](../../docs/maxim/storage-maintenance.md). Full S11/UI/live
-acceptance remains open; the original outage record above is historical.
+See [storage evidence](../../docs/maxim/storage-maintenance.md). Isolated
+integration/UI reruns passed on November 19. Live acceptance remains open.
 
 1. Confirm Docker remains responsive and its actual drive still has at least
    10 GiB free. Recovery/cache cleanup has run, but the disk remains on C:.
