@@ -11,6 +11,8 @@ import {DiscoveryError,secureGet} from '../server/discovery-network';
 import {feedUrl,greenhousePostingUrl,matchesRoleTerms,pageRecords,normalizeProvider,providerHosts,supported,type Source,type NormalizedJob} from '../server/discovery-providers';
 import {domain} from '../server/domain';
 import {applicationWritable,queueApplicationProjection} from '../server/application-authority';
+import {checkScanGrant} from '../server/intelligence-budget';
+import {intelligenceLock,capacity} from '../server/intelligence-policy';
 
 const fallback='Review this source in a visible browser, or retry explicitly after fixing its configuration/cooldown. No access-control workaround is available.';
 type Posting={jobId:string;revision:number;externalId:string;openingKey:string};
@@ -24,6 +26,8 @@ async function active(tx:PoolClient,item:WorkItem,source?:Source){
  await checkLease(tx,item);
  const run=(await tx.query('SELECT * FROM discovery_runs WHERE workspace_id=$1 AND id=$2 FOR UPDATE',[item.workspace_id,item.input.runId])).rows[0];
  invariant(run&&run.revision===item.input.revision&&run.work_id===item.id&&['queued','running'].includes(run.status),'search_superseded','Search no longer authorizes this result.',409);
+ const grant=(await tx.query('SELECT filters->\'automation\' AS grant FROM discovery_queries WHERE workspace_id=$1 AND id=$2',[item.workspace_id,run.query_id])).rows[0]?.grant;
+ await checkScanGrant(tx,item.workspace_id,grant);
  if(source){
   const live=(await tx.query('SELECT revision,enabled FROM discovery_sources WHERE workspace_id=$1 AND id=$2 FOR SHARE',[item.workspace_id,source.id])).rows[0];
   invariant(live?.enabled&&live.revision===source.revision,'source_changed','Source changed; start a new search.',409);
@@ -32,15 +36,18 @@ async function active(tx:PoolClient,item:WorkItem,source?:Source){
 }
 async function publishJob(tx:PoolClient,item:WorkItem,source:Source,page:{id:string;captured_at:string},job:NormalizedJob,summaryOnly:boolean){
  const w=item.workspace_id;
+ await intelligenceLock(tx,w);
  await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[w+':opening:'+job.openingKey]);
  const existing=(await tx.query('SELECT * FROM jobs WHERE workspace_id=$1 AND opening_key=$2 FOR UPDATE',[w,job.openingKey])).rows[0];
+ if(existing?.compacted_at){await tx.query('UPDATE jobs SET last_seen_at=$1 WHERE workspace_id=$2 AND id=$3',[page.captured_at,w,existing.id]);return {created:false,identityConflict:false,eligibility:'archived_compact'};}
+ if(!existing&&!(await capacity(tx,w)).available)return {created:false,identityConflict:false,eligibility:'capacity_hold'};
  const id=existing?.id||crypto.randomUUID(),identityConflict=Boolean(existing&&(existing.title!==job.title||existing.company!==job.company));
  const age=job.postedAt?(Date.now()-Date.parse(job.postedAt))/3600000:null;
  const profile=(await tx.query('SELECT profile FROM workspace_policies WHERE workspace_id=$1',[w])).rows[0];
  const evaluated=profile?.profile==='xavier-v1'?domain({operation:'job_policy',job:{title:job.title,description:job.description,locations:job.locations,locationText:job.location,salary:job.salary,postedAgeHours:age}}):{ok:true,eligibility:'review',allowed:false,flags:[{flagType:'policy',severity:'review',reason:'No approved policy profile for this candidate.'}]};
  const policy={...evaluated,detailStatus:summaryOnly?'summary':'full',eligibility:summaryOnly&&evaluated.eligibility==='eligible'?'review':evaluated.eligibility};
  if(!existing){
-  await tx.query('INSERT INTO jobs(id,workspace_id,company,title,location,url,description,opening_key,source_platform,application_url,posted_at,source_updated_at,first_seen_at,last_seen_at,discovery_policy) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$13,$14)',[id,w,job.company,job.title,job.location,job.url,job.description,job.openingKey,source.provider,job.applicationUrl,job.postedAt,job.updatedAt,page.captured_at,JSON.stringify(policy)]);
+  await tx.query('INSERT INTO jobs(id,workspace_id,company,title,location,url,description,opening_key,source_platform,application_url,posted_at,source_updated_at,first_seen_at,last_seen_at,discovery_policy,role_lane,industry,industry_provenance) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$13,$14,$15,$16,$17)',[id,w,job.company,job.title,job.location,job.url,job.description,job.openingKey,source.provider,job.applicationUrl,job.postedAt,job.updatedAt,page.captured_at,JSON.stringify(policy),domain({operation:'job_metadata',title:job.title}).lane,(source as Source&{industry?:string}).industry||null,(source as Source&{industry?:string}).industry?'Owner-confirmed source industry':null]);
  }else if(!identityConflict&&summaryOnly&&existing.description.trim().length>=50&&(!job.updatedAt||job.updatedAt===existing.source_updated_at?.toISOString())){
   await tx.query('UPDATE jobs SET last_seen_at=$1 WHERE workspace_id=$2 AND id=$3',[page.captured_at,w,id]);
  }else if(!identityConflict){
@@ -124,13 +131,27 @@ export async function discoverJobs(item:WorkItem,parentSignal?:AbortSignal){
     }
     const summaryOnly=!posting&&source.provider==='greenhouse'&&url===feedUrl(source,pageNumber,true);
     if(summaryOnly){partial=true;errorCode='expanded_feed_too_large';}
-    const records=pageRecords(source.provider,value);
+    let records=pageRecords(source.provider,value);const providerCount=records.length;
+    const automation=initial.query.filters.automation;
+    if(automation){
+     const index=sources.indexOf(source),quota=Math.floor(automation.maxMatches/sources.length)+(index<automation.maxMatches%sources.length?1:0);
+     const shift=records.length?Math.floor(Date.now()/3600000)*Math.max(1,quota)%records.length:0;
+     const rotated=[...records.slice(shift),...records.slice(0,shift)],kept:Record<string,unknown>[]=[];let cacheBytes=100;
+     for(const row of rotated){
+      if(kept.length>=quota)break;
+      if(!matchesRoleTerms({title:String(row.title||row.text||''),description:''},terms,'title'))continue;
+      const bytes=Buffer.byteLength(JSON.stringify(row));if(cacheBytes+bytes>512000)continue;
+      kept.push(row);cacheBytes+=bytes;
+     }
+     records=kept;value=source.provider==='lever'?kept:{jobs:kept};
+     if(records.length<providerCount){partial=true;errorCode=errorCode||'bounded_intake';}
+    }
     const saved=await transaction(async tx=>{
      await active(tx,item,source);
      return (await tx.query('INSERT INTO discovery_pages(id,workspace_id,run_id,source_id,attempt_id,source_revision,page_number,request_url,payload,content_hash,record_count,captured_at,cached_from,complete) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,true) ON CONFLICT(workspace_id,attempt_id,page_number) DO UPDATE SET complete=true RETURNING id,captured_at',[crypto.randomUUID(),item.workspace_id,item.input.runId,source.id,attemptId,source.revision,pageNumber,url,JSON.stringify(value),digest(JSON.stringify(value)),records.length,receivedAt!,cachedFrom])).rows[0];
     });
     pages.push({...saved,records,summaryOnly});
-    if(source.provider!=='lever'||records.length<100)break;
+    if(source.provider!=='lever'||providerCount<100)break;
     if(pageNumber===2)partial=true;
    }
   }catch(e){
@@ -152,15 +173,21 @@ export async function discoverJobs(item:WorkItem,parentSignal?:AbortSignal){
      const page=pages.find(p=>p.records.includes(job.raw))!;
      const result=await transaction(async tx=>{
       await active(tx,item,source);
+      const automation=initial.query.filters.automation;
+      if(automation){const index=sources.indexOf(source),quota=Math.floor(automation.maxMatches/sources.length)+(index<automation.maxMatches%sources.length?1:0);
+       const done=(await tx.query('SELECT count(*)::int AS n FROM job_observations WHERE workspace_id=$1 AND run_id=$2 AND source_id=$3',[item.workspace_id,item.input.runId,source.id])).rows[0].n;
+       if(done>=quota)return {created:false,identityConflict:false,eligibility:'intake_limit'};
+      }
       if(posting){const current=await currentPosting(tx,item,source,posting);invariant(current.title===job.title&&current.company===job.company,'posting_changed','The provider returned a changed opening. Review it manually.',409);}
       return publishJob(tx,item,source,page,job,page.summaryOnly);
      });
+     if(['capacity_hold','intake_limit','archived_compact'].includes(String(result.eligibility))){partial=true;continue;}
      matched++;count++;if(result.created)created++;if(result.identityConflict)conflicts++;
     }
     if(normalized.length>2000)partial=true;
    }catch(e){if(e instanceof DomainError&&['lease_lost','search_superseded','source_changed'].includes(e.code))throw e;errorCode=e instanceof DomainError?e.code:'schema_drift';status=errorCode;}
   }
-  if(errorCode&&errorCode!=='expanded_feed_too_large'){failures++;if(pages.length)partial=true;}else{successes++;if(!count)status='empty_success';}
+  if(errorCode&&!['expanded_feed_too_large','bounded_intake'].includes(errorCode)){failures++;if(pages.length)partial=true;}else{successes++;if(!count)status='empty_success';}
   if(partial){partialSources++;status='partial';}
   await transaction(async tx=>{
    await active(tx,item,source);
@@ -180,5 +207,6 @@ export async function discoverJobs(item:WorkItem,parentSignal?:AbortSignal){
   await event(tx,{workspaceId:item.workspace_id},String(item.input.runId),'discovery_search_finished',{status,counts},Number(item.input.revision));
   await queueApplicationProjection(tx,item.workspace_id);
   await finishWork(tx,item,{runId:item.input.runId,status,counts});
+  if(!posting)await tx.query("UPDATE discovery_policies SET next_score_at=least(next_score_at,now()) WHERE workspace_id=$1 AND value->>'autoScore'='true'",[item.workspace_id]);
  });
 }

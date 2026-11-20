@@ -27,8 +27,8 @@ flowchart LR
 | Stage | Deliverable | Standing |
 | --- | --- | --- |
 | [0 Baseline](stages/00-baseline.md) | Push current work, main merge, new branch | Complete: origin/main 2c7031e |
-| [1 Policy](stages/01-policy.md) | Versioned settings, pure Rust screening | Planned |
-| [2 Orchestration](stages/02-orchestration.md) | Bounded durable scan/evaluation timing and reservations | Planned |
+| [1 Policy](stages/01-policy.md) | Versioned settings, pure Rust screening | Complete: 34 Rust tests, 2 policy tests |
+| [2 Orchestration](stages/02-orchestration.md) | Bounded durable scan/evaluation timing and reservations | Implemented: build and isolated scoring/budget/proposal integration passed |
 | [3 Retention](stages/03-retention.md) | Capacity, compact archive, preview and restore | Planned |
 | [4 Workspace](stages/04-workspace.md) | Global filters, archive, settings and agent proposals | Planned |
 | [5 Home](stages/05-home.md) | Sankey, eight metrics, top lanes, real README and proof | Planned |
@@ -47,7 +47,8 @@ this roadmap does not authorize a later merge of unverified changes.
   Deployment does not spend money or delete production job details.
 - Default active-lead capacity 200, configurable 20-2000. Saved/pinned records,
   applications/packets, user notes, references and active work are protected, but
-  count toward capacity. If protection exceeds capacity, hold ingestion and report
+  count toward capacity while still unsubmitted. Submitted/terminal applications
+  retain their evidence outside the active-lead slots. If protection exceeds capacity, hold ingestion and report
   the overage; never erase evidence to pretend the limit was met.
 - Once enabled: scan every six hours, three boards maximum per run, 100 matching
   postings processed per cycle. Existing request/page/byte/time/pacing limits

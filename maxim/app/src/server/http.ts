@@ -15,6 +15,7 @@ import {answerCommand,answerLibrary,exportAnswers} from './answers';
 import {recallAnswers} from './answer-recall';
 import {discoveryCommand,discoveryView} from './discovery';
 import {evaluationCommand} from './evaluations';
+import {intelligenceCommand,intelligenceView} from './intelligence';
 import {applicationCommand} from './applications';
 import {packetCommand} from './packets';
 import {applicationView} from './application-reads';
@@ -103,6 +104,8 @@ export async function handle(req:Request) {
   }
   if(post&&name==='applications/commands')return json({result:await applicationCommand(ctx,await body(req))});
   if(post&&name==='evaluations/commands')return json({result:await evaluationCommand(ctx,await body(req))});
+  if(get&&name==='intelligence')return json(await intelligenceView(ctx));
+  if(post&&name==='intelligence/commands')return json({result:await intelligenceCommand(ctx,await body(req))});
   if(post&&name==='packets/commands')return json({result:await packetCommand(ctx,await body(req))});
   if(get&&name==='discovery')return json(await discoveryView(ctx,new URL(req.url).searchParams.get('sort')));
   if(post&&name==='discovery/commands')return json({result:await discoveryCommand(ctx,await body(req))});

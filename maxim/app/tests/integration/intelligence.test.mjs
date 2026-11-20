@@ -1,0 +1,38 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import {harness,streamResult} from '../support/harness.mjs';
+import {apiCommand,until} from '../support/assisted-application.mjs';
+
+test('bounded discovery settings, approved-evidence scoring, atomic allowances and owner proposals',{timeout:180000},async t=>{
+ const h=await harness();t.after(()=>h.close());
+ const read=async()=>{const r=await h.request(h.a,'/api/intelligence');assert.equal(r.status,200);return r.json();};
+ let v=await read();assert.equal(v.policy.revision,0);assert.equal(v.capacity.limit,200);assert.equal(v.policy.value.autoScore,false);assert.equal(v.budget.cents,0);
+ await apiCommand(h,'intelligence','save',{expectedRevision:0,changes:{maxActiveJobs:19}},400);
+ await apiCommand(h,'intelligence','save',{expectedRevision:0,changes:{autoScore:true}},409);
+ await apiCommand(h,'intelligence','pause',{},404,crypto.randomUUID(),h.b);
+ for(const [fieldKey,value]of [['candidate.name','Discovery Example'],['skills.languages','Rust, TypeScript']])await apiCommand(h,'candidate','manual_fact',{fieldKey,value,expectedFactRevision:0,modelConsent:true,reason:'Synthetic discovery fixture'});
+ const candidate=(await(await h.request(h.a,'/api/candidate')).json()).candidate;
+ const change=async action=>h.request(h.a,'/api/candidate/cutover',{method:'POST',body:{commandId:crypto.randomUUID(),action,expectedRevision:candidate.revision}});
+ const prepared=await(await change('prepare')).json();
+ assert.equal((await h.request(h.a,'/api/candidate/cutover',{method:'POST',body:{commandId:crypto.randomUUID(),action:'activate',expectedRevision:candidate.revision,transitionId:prepared.result.id}})).status,200);
+ for(let i=0;i<7;i++)await h.sql(`INSERT INTO jobs(id,workspace_id,company,title,location,description,posted_at,first_seen_at,last_seen_at,discovery_policy) VALUES($1,$2,$3,'Full Stack Engineer','Reston, VA','Build customer software in Rust and TypeScript. Requirements: Rust engineering experience. Salary: 100000 USD annually.',now(),now(),now(),$4)`,[crypto.randomUUID(),h.c.workspaceId,'Employer '+i,JSON.stringify({flags:[{flagType:'location',severity:'positive'}]})]);
+ v=await read();assert.equal(v.preview.selected.length,5);assert.equal(v.preview.evidenceAvailable,true);
+ await apiCommand(h,'intelligence','save',{expectedRevision:0,changes:{autoScore:true,evaluationsPerDay:2,dailyBudgetCents:1000,inputUsdPerMillion:1,outputUsdPerMillion:1,pricingModel:'fixture-model'},acknowledgeAutomation:true});
+ await apiCommand(h,'intelligence','save',{expectedRevision:0,changes:{}},409);
+ await apiCommand(h,'intelligence','run',{});
+ const w=await h.startWorker();
+ v=await until(async()=>{const r=await read();return r.reservations.filter(x=>x.status==='settled').length===2&&r;},'two fixture evaluations');
+ assert.equal(v.budget.requests,2);assert.equal(v.reservations.length,2);assert.equal(h.captured.filter(r=>r.body.stream===false).length,2);
+ await apiCommand(h,'intelligence','run',{});
+ await until(async()=>{const r=await read();return r.cycles.some(c=>c.receipt.holds?.includes('evaluation_budget_exhausted'));});
+ assert.equal((await read()).reservations.length,2);
+ await apiCommand(h,'intelligence','pause',{});await h.stopWorker(w);
+ v=await read();assert.equal(v.policy.value.autoScore,false);
+ const message='Set maxActiveJobs to 100',conversation=(await(await h.request(h.a,'/api/conversations',{method:'POST',body:{commandId:crypto.randomUUID()}})).json()).conversation;
+ h.chatTools.set(message,{name:'propose_discovery_settings',args:{expectedRevision:v.policy.revision,changesJson:'{"maxActiveJobs":100}',quote:message}});
+ await streamResult(await h.request(h.a,`/api/conversations/${conversation.id}/messages`,{method:'POST',body:{commandId:crypto.randomUUID(),text:message}}));
+ const proposal=(await read()).proposals[0];assert.ok(proposal);assert.equal((await read()).capacity.limit,200);
+ await apiCommand(h,'intelligence','approve_proposal',{id:proposal.id});assert.equal((await read()).capacity.limit,100);
+ assert.equal((await(await h.request(h.b,'/api/intelligence')).json()).reservations.length,0);
+});

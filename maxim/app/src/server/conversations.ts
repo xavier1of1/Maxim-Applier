@@ -46,6 +46,7 @@ async function addMessage(ctx:Context,cid:string,rid:string,role:string,content:
  [crypto.randomUUID(),ctx.workspaceId,cid,rid,role,JSON.stringify(content)]);
 }
 async function invoke(ctx:Context,cid:string,rid:string,call:ToolCall) {
+ if(['read_discovery_settings','propose_discovery_settings'].includes(call.function.name))return (await import('./intelligence')).intelligenceTool(ctx,rid,call.function.name,JSON.parse(call.function.arguments));
  await live(ctx,cid,rid);
  let args:unknown;
  try { args=JSON.parse(call.function.arguments); } catch { return {error:'invalid_arguments'}; }

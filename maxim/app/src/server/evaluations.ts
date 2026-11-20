@@ -12,6 +12,8 @@ import {engineSnapshot,retainedPrompt} from './evaluation-native';
 import {assertDisclosureText} from './candidate-context';
 import {jobPolicy} from './application-material';
 import {applicationWritable} from './application-authority';
+import type {PoolClient} from 'pg';
+import {intelligenceLock} from './intelligence-policy';
 
 const schema=z.discriminatedUnion('action',[
  z.object({commandId:uuid,action:z.literal('start_evaluation'),payload:z.object({jobId:uuid,expectedJobRevision:z.number().int().positive(),expectedCandidateRevision:z.number().int().positive()}).strict()}).strict(),
@@ -29,7 +31,12 @@ export async function evaluationCommand(ctx:Context,raw:unknown){
    await tx.query("UPDATE work_items SET status='cancelled',lease_until=null,updated_at=now() WHERE workspace_id=$1 AND id=$2 AND status IN ('queued','leased')",[ctx.workspaceId,e.work_id]);
    await event(tx,ctx,e.id,'evaluation_cancelled',{},e.revision+1);return {id:e.id,status:'cancelled',revision:e.revision+1};
   }
-  const p=c.payload,j=await jobFor(tx,ctx,p.jobId),candidate=(await tx.query('SELECT * FROM candidates WHERE workspace_id=$1',[ctx.workspaceId])).rows[0];
+  return queueCareerOpsEvaluation(tx,ctx,c.payload);
+ });
+}
+export async function queueCareerOpsEvaluation(tx:PoolClient,ctx:Pick<Context,'workspaceId'>,p:{jobId:string;expectedJobRevision:number;expectedCandidateRevision:number}){
+  await candidateLock(tx,ctx.workspaceId);await applicationWritable(tx,ctx.workspaceId);await intelligenceLock(tx,ctx.workspaceId);
+  const j=await jobFor(tx,ctx,p.jobId),candidate=(await tx.query('SELECT * FROM candidates WHERE workspace_id=$1',[ctx.workspaceId])).rows[0];
   invariant(candidate.ownership==='canonical','candidate_authority_required','Review and activate Candidate knowledge before evaluation.',409);
   invariant(j.revision===p.expectedJobRevision&&candidate.revision===p.expectedCandidateRevision,'revision_conflict','Candidate/job changed; review the current versions.',409);
   invariant(!j.archived&&j.description.trim().length>=50,'job_description_required','A current full job description is required before evaluation.',409);
@@ -53,5 +60,4 @@ export async function evaluationCommand(ctx:Context,raw:unknown){
   for(const f of facts)await tx.query("INSERT INTO fact_dependencies(workspace_id,fact_id,fact_revision,kind,entity_id) VALUES($1,$2,$3,'context',$4)",[ctx.workspaceId,f.id,f.revision,id]);
   await event(tx,ctx,id,'careerops_evaluation_queued',{jobId:j.id,candidateRevision:candidate.revision,inputHash,engineHash:engine.hash},1);
   return {id,status:'queued',revision:1,workId:work.id};
- });
 }

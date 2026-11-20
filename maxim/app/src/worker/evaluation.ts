@@ -12,9 +12,11 @@ import {jobPolicy} from '../server/application-material';
 import {digest} from '../server/auth';
 import {applicationWritable,queueApplicationProjection} from '../server/application-authority';
 import {enqueueDiscordEvent} from '../server/integrations/discord';
+import {assertAutoGrant,beginAutomaticDispatch,finishAutomaticSpend} from '../server/intelligence-budget';
 
 async function active(tx:import('pg').PoolClient,item:WorkItem){
  await candidateLock(tx,item.workspace_id);await applicationWritable(tx,item.workspace_id);await checkLease(tx,item);
+ if(item.input.autoReservationId)await assertAutoGrant(tx,item.workspace_id,String(item.input.autoReservationId));
  const e=(await tx.query('SELECT e.*,j.revision AS live_job_revision,c.revision AS live_candidate_revision,c.ownership FROM evaluations e JOIN jobs j ON j.id=e.job_id AND j.workspace_id=e.workspace_id JOIN candidates c ON c.workspace_id=e.workspace_id WHERE e.workspace_id=$1 AND e.id=$2 FOR UPDATE OF e',[item.workspace_id,item.input.evaluationId])).rows[0];
  invariant(e&&['queued','running'].includes(e.status)&&e.job_revision===e.live_job_revision&&e.candidate_revision===e.live_candidate_revision&&e.ownership==='canonical','evaluation_stale','Evaluation input changed or was cancelled.',409);
  invariant(digest(e.input_snapshot.prompt)===e.prompt_hash,'snapshot_changed','Evaluation prompt integrity failed.',409);return e;
@@ -23,10 +25,11 @@ export async function evaluateJob(item:WorkItem,parent?:AbortSignal){
  const signal=AbortSignal.any([AbortSignal.timeout(75000),...(parent?[parent]:[])]),created:string[]=[];
  let committed=false,dir:string|undefined;
  try{
-  const e=await transaction(async tx=>{const e=await active(tx,item);await tx.query("UPDATE evaluations SET status='running' WHERE workspace_id=$1 AND id=$2",[item.workspace_id,e.id]);return e;});
+  const e=await transaction(async tx=>{const e=await active(tx,item);await beginAutomaticDispatch(tx,item);await tx.query("UPDATE evaluations SET status='running' WHERE workspace_id=$1 AND id=$2",[item.workspace_id,e.id]);return e;});
   dir=await invocationDirectory(e.id,item.lease_token);
   await fs.writeFile(path.join(dir,'input.json'),JSON.stringify({evaluationId:e.id,inputHash:e.input_hash,promptHash:e.prompt_hash,jobId:e.job_id,candidateRevision:e.candidate_revision,leaseToken:item.lease_token}),{flag:'wx',mode:0o600});
   const result=await evaluationCompletion({prompt:e.input_snapshot.prompt,job:e.input_snapshot.job,model:e.model,provider:e.provider,api:e.input_snapshot.api||'chat_completions'},signal);
+  await finishAutomaticSpend(item,result.usage);
   await fs.writeFile(path.join(dir,'report.md'),result.report,{flag:'wx',mode:0o600});
   let parsed:Record<string,unknown>|null=null,invalid:string|null=null;
   try{parsed=domain({operation:'parse_evaluation',report:result.report,company:e.input_snapshot.job.company,title:e.input_snapshot.job.title});}catch(error){invalid=error instanceof DomainError?error.code:'invalid_report';}
@@ -50,6 +53,7 @@ export async function evaluateJob(item:WorkItem,parent?:AbortSignal){
    await finishWork(tx,item,{evaluationId:e.id,status:invalid?'review_required':'completed',manifest});
   });committed=true;
  }catch(error){
+  await finishAutomaticSpend(item,null).catch(()=>{});
   const code=error instanceof DomainError?error.code:'evaluation_unavailable';
   await transaction(async tx=>{await candidateLock(tx,item.workspace_id);await applicationWritable(tx,item.workspace_id);await checkLease(tx,item);await tx.query("UPDATE evaluations SET status='failed',error_code=$1,revision=revision+1,completed_at=now() WHERE workspace_id=$2 AND id=$3 AND status IN ('queued','running')",[code,item.workspace_id,item.input.evaluationId]);await finishWork(tx,item,{evaluationId:item.input.evaluationId,status:'failed',error:code});}).catch(()=>{});
   if(['lease_lost','evaluation_stale'].includes(code))throw error;

@@ -39,3 +39,5 @@ CREATE INDEX intelligence_history ON intelligence_cycles(workspace_id,created_at
 CREATE INDEX reservation_budget ON evaluation_reservations(workspace_id,created_at,status);
 CREATE INDEX archived_jobs_history ON job_archive(workspace_id,archived_at DESC,job_id);
 CREATE INDEX job_filter_posted ON jobs(workspace_id,archived,posted_at DESC);
+CREATE UNIQUE INDEX automatic_evaluation_single_lease ON work_items(workspace_id)
+ WHERE status='leased' AND input ? 'autoReservationId';

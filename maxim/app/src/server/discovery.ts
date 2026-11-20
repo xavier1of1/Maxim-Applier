@@ -9,6 +9,7 @@ import {greenhousePostingUrl,sourceDefinition,supported} from './discovery-provi
 import {applicationWritable} from './application-authority';
 import {engineSnapshot} from './evaluation-native';
 import {jobFitJoin,jobFitOrder} from './job-fit';
+import type {PoolClient} from 'pg';
 
 const schema=z.discriminatedUnion('action',[
  z.object({commandId:uuid,action:z.literal('add_source'),payload:z.object({name:z.string().trim().min(1).max(180),provider:z.enum(['greenhouse','lever','ashby','manual']),board:z.string().max(100).default(''),careersUrl:z.string().url().max(2048).optional()}).strict()}).strict(),
@@ -66,19 +67,7 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
    return run;
   }
   if(c.action==='start_search'){
-   const ids=[...new Set(c.payload.sourceIds)],sources=(await tx.query('SELECT * FROM discovery_sources WHERE workspace_id=$1 AND id=ANY($2::uuid[]) ORDER BY id FOR SHARE',[w,ids])).rows;
-   invariant(sources.length===ids.length,'not_found','Source not found.',404);
-   invariant(sources.every(s=>s.enabled),'source_disabled','Enable the selected source before starting.',409);
-   invariant(sources.every(s=>!s.next_retry_at||new Date(s.next_retry_at).getTime()<=Date.now()),'source_cooldown','A selected source is still in its recorded cooldown.',409);
-   const candidate=(await tx.query('SELECT id,revision FROM candidates WHERE workspace_id=$1',[w])).rows[0];
-   const prefs=(await tx.query("SELECT f.id,f.revision,f.value FROM candidate_facts f JOIN candidate_sources s ON s.id=f.source_id AND s.workspace_id=f.workspace_id WHERE f.workspace_id=$1 AND f.field_key='preferences.roles' AND f.status='current' AND s.deleted_at IS NULL AND s.revision=f.source_revision",[w])).rows;
-   const terms=c.payload.terms.length?c.payload.terms:prefs.flatMap(f=>Array.isArray(f.value)?f.value:[]).filter((v:unknown)=>typeof v==='string').slice(0,10);
-   invariant(terms.length,'query_required','Enter role terms or approve preferences.roles in Candidate first.');
-   const queryId=crypto.randomUUID(),runId=crypto.randomUUID(),filters={policy:'xavier-nova-dc-v1',matchIn:c.payload.matchIn,maxSources:3,maxPagesPerSource:3,maxRequests:6,maxSeconds:90};
-   await tx.query('INSERT INTO discovery_queries(id,workspace_id,terms,filters,source_snapshots,candidate_revision,preference_provenance) VALUES($1,$2,$3,$4,$5,$6,$7)',[queryId,w,terms,JSON.stringify(filters),JSON.stringify(sources),candidate.revision,JSON.stringify(c.payload.terms.length?[]:prefs.map(f=>({id:f.id,revision:f.revision})))]);
-   const work=await enqueue(tx,w,'discover_jobs',runId+':1',{runId,revision:1});
-   const row=(await tx.query('INSERT INTO discovery_runs(id,workspace_id,query_id,work_id) VALUES($1,$2,$3,$4) RETURNING *',[runId,w,queryId,work.id])).rows[0];
-   await event(tx,ctx,runId,'discovery_search_queued',{queryId,terms,sourceIds:ids},1);return row;
+   return queueDiscoverySearch(tx,ctx,c.payload);
   }
   const p=c.payload,row=(await tx.query('SELECT * FROM discovery_runs WHERE workspace_id=$1 AND id=$2 FOR UPDATE',[w,p.runId])).rows[0];
   if(!row)throw notFound();invariant(row.revision===p.expectedRevision,'revision_conflict','Search changed; refresh before acting.',409);
@@ -90,6 +79,7 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
    await tx.query("UPDATE discovery_requests SET status='cancelled',error_code='cancelled',completed_at=now() WHERE workspace_id=$1 AND run_id=$2 AND status='running'",[w,row.id]);
    await event(tx,ctx,row.id,'discovery_search_cancelled',{},row.revision);return {...row,status:'cancelled'};
   }
+  invariant(!row.raw_compacted_at,'search_history_compacted','Raw history was compacted. Start a new search instead of retrying old pages.',409);
   const workState=(await tx.query('SELECT status FROM work_items WHERE workspace_id=$1 AND id=$2',[w,row.work_id])).rows[0];
   invariant(['partial','failed','cancelled'].includes(row.status)||workState?.status==='failed','search_not_retryable','Only interrupted, partial, cancelled or failed searches can retry.',409);
   const q=(await tx.query('SELECT source_snapshots FROM discovery_queries WHERE workspace_id=$1 AND id=$2',[w,row.query_id])).rows[0];
@@ -100,6 +90,23 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
   await tx.query("UPDATE discovery_runs SET status='queued',revision=$1,work_id=$2,error_code=null,completed_at=null WHERE workspace_id=$3 AND id=$4",[revision,work.id,w,row.id]);
   await event(tx,ctx,row.id,'discovery_search_retried',{},revision);return {...row,revision,status:'queued',work_id:work.id};
  });
+}
+export async function queueDiscoverySearch(tx:PoolClient,ctx:Pick<Context,'workspaceId'>,p:{sourceIds:string[];terms:string[];matchIn:string},automation?:{policyRevision:number;cycleId:string;maxMatches:number}){
+   const w=ctx.workspaceId;await applicationWritable(tx,w);
+   const ids=[...new Set(p.sourceIds)],sources=(await tx.query('SELECT * FROM discovery_sources WHERE workspace_id=$1 AND id=ANY($2::uuid[]) ORDER BY id FOR SHARE',[w,ids])).rows;
+   invariant(sources.length===ids.length,'not_found','Source not found.',404);
+   invariant(sources.every(s=>s.enabled),'source_disabled','Enable the selected source before starting.',409);
+   invariant(sources.every(s=>!s.next_retry_at||new Date(s.next_retry_at).getTime()<=Date.now()),'source_cooldown','A selected source is still in its recorded cooldown.',409);
+   const candidate=(await tx.query('SELECT id,revision FROM candidates WHERE workspace_id=$1',[w])).rows[0];
+   const prefs=(await tx.query("SELECT f.id,f.revision,f.value FROM candidate_facts f JOIN candidate_sources s ON s.id=f.source_id AND s.workspace_id=f.workspace_id WHERE f.workspace_id=$1 AND f.field_key='preferences.roles' AND f.status='current' AND s.deleted_at IS NULL AND s.revision=f.source_revision",[w])).rows;
+   const terms=p.terms.length?p.terms:prefs.flatMap(f=>Array.isArray(f.value)?f.value:[]).filter((v:unknown)=>typeof v==='string').slice(0,10);
+   invariant(terms.length,'query_required','Enter role terms or approve preferences.roles in Candidate first.');
+   if(automation&&sources.length>1){const n=Math.floor(Date.now()/3600000)%sources.length;sources.push(...sources.splice(0,n));}
+   const queryId=crypto.randomUUID(),runId=crypto.randomUUID(),filters={policy:'xavier-nova-dc-v1',matchIn:p.matchIn,maxSources:3,maxPagesPerSource:3,maxRequests:6,maxSeconds:90,...(automation?{automation}:{})};
+   await tx.query('INSERT INTO discovery_queries(id,workspace_id,terms,filters,source_snapshots,candidate_revision,preference_provenance) VALUES($1,$2,$3,$4,$5,$6,$7)',[queryId,w,terms,JSON.stringify(filters),JSON.stringify(sources),candidate.revision,JSON.stringify(p.terms.length?[]:prefs.map(f=>({id:f.id,revision:f.revision})))]);
+   const work=await enqueue(tx,w,'discover_jobs',runId+':1',{runId,revision:1});
+   const row=(await tx.query('INSERT INTO discovery_runs(id,workspace_id,query_id,work_id) VALUES($1,$2,$3,$4) RETURNING *',[runId,w,queryId,work.id])).rows[0];
+   await event(tx,ctx,runId,'discovery_search_queued',{queryId,terms,sourceIds:ids},1);return row;
 }
 export async function discoveryView(ctx:Context,sort:string|null=null){
  const engine=await engineSnapshot();

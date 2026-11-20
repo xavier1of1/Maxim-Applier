@@ -47,7 +47,7 @@ export async function command<T>(ctx: Context, commandId: string, payload: unkno
   return value;
  });
 }
-export async function jobFor(tx: PoolClient, ctx: Context, id: string) {
+export async function jobFor(tx: PoolClient, ctx: Pick<Context,'workspaceId'>, id: string) {
  const r = await tx.query('SELECT * FROM jobs WHERE id=$1 AND workspace_id=$2 FOR UPDATE', [id,ctx.workspaceId]);
  if (!r.rows[0]) throw notFound();
  return r.rows[0];

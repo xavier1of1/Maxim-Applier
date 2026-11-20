@@ -17,6 +17,7 @@ import {expireGmail} from '../server/integrations/gmail/reads';
 import {deliverDiscord,tickDiscord} from './discord';
 import {practiceInterview} from './interview';
 import {expireInterviews} from '../server/interview/service';
+import {tickIntelligence,runIntelligenceCycle} from '../server/intelligence-cycle';
 import {setTimeout as wait} from 'node:timers/promises';
 
 config();
@@ -28,6 +29,7 @@ process.on('SIGINT',()=>{stopping=true;});
 process.on('SIGTERM',()=>{stopping=true;});
 const delay=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
 export async function executeWork(item:WorkItem,signal?:AbortSignal){
+ if(item.kind==='intelligence_cycle')return runIntelligenceCycle(item);
  if(item.kind==='gmail_sync'||item.kind==='gmail_revoke')return gmailWork(item,signal||AbortSignal.timeout(35000));
  if(item.kind==='discord_delivery')return deliverDiscord(item,signal);
  if(item.kind==='interview_feedback')return practiceInterview(item,signal);
@@ -42,13 +44,14 @@ export async function executeWork(item:WorkItem,signal?:AbortSignal){
  throw new DomainError('unsupported_work','This worker does not support the requested work type.');
 }
 async function main(){
- let maintenanceAt=0,tickAt=0;
+ let maintenanceAt=0,tickAt=0,intelligenceAt=0;
  while(!stopping){
   let active:WorkItem|null=null,finished=false;
   const renewalStop=new AbortController(),executionStop=new AbortController();
   try{
    await database().query('INSERT INTO worker_heartbeats(worker_id) VALUES($1) ON CONFLICT(worker_id) DO UPDATE SET last_seen=now()',[workerId]);
    if(Date.now()-tickAt>=1000){tickAt=Date.now();await tickDiscord();}
+   if(Date.now()-intelligenceAt>=60000){intelligenceAt=Date.now();await tickIntelligence();}
    if(Date.now()-maintenanceAt>=30000){maintenanceAt=Date.now();await expireRawSources();await expireAnswers();await expireApplicationWork();await expireGmail();await expireInterviews();}
    active=await claimWork(workerId);
    if(!active){await delay(1000);continue;}

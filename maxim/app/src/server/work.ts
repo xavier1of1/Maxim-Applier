@@ -13,7 +13,7 @@ export async function claimWork(workerId:string,leaseSeconds=45):Promise<WorkIte
  invariant(leaseSeconds>=2&&leaseSeconds<=120,'invalid_lease','Worker lease out of bounds.');
  return transaction(async tx=>{
   await tx.query("UPDATE work_items SET status='failed',error_code='attempts_exhausted',updated_at=now() WHERE status='leased' AND lease_until<now() AND attempts>=max_attempts");
-  const r=await tx.query("SELECT * FROM work_items WHERE ((status='queued' AND available_at<=now()) OR (status='leased' AND lease_until<now())) AND attempts<max_attempts ORDER BY created_at,id FOR UPDATE SKIP LOCKED LIMIT 1");
+  const r=await tx.query("SELECT * FROM work_items x WHERE ((x.status='queued' AND x.available_at<=now()) OR (x.status='leased' AND x.lease_until<now())) AND x.attempts<x.max_attempts AND (NOT (x.input ? 'autoReservationId') OR NOT EXISTS(SELECT 1 FROM work_items other WHERE other.workspace_id=x.workspace_id AND other.id<>x.id AND other.status='leased' AND other.input ? 'autoReservationId')) ORDER BY x.created_at,x.id FOR UPDATE SKIP LOCKED LIMIT 1");
   if(!r.rows[0])return null;
   return (await tx.query("UPDATE work_items SET status='leased',attempts=attempts+1,lease_token=$1,lease_owner=$2,lease_until=now()+$3*interval '1 second',updated_at=now() WHERE id=$4 RETURNING *",
    [crypto.randomUUID(),workerId,leaseSeconds,r.rows[0].id])).rows[0];
