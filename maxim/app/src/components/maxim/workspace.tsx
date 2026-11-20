@@ -25,6 +25,7 @@ import {InterviewView} from './interview';
 import {useAgent} from './use-agent';
 import {Banner, Brand, EmptyState, Glyph, Pill, PrivacyStamp, ToolButton, WorkspaceLoading, formatDate, useMediaQuery, useOnline} from './shared';
 import type {Navigation, Proposal, Session, View, WorkspaceData} from './types';
+import {roleSort} from './role-fit';
 
 const navigation = [
   {view: 'jobs' as const, label: 'Jobs', icon: BriefcaseBusiness},
@@ -120,6 +121,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
   const requestedView = searchParams.get('view');
   const view: View = navigation.some(item => item.view === requestedView) ? requestedView as View : 'jobs';
   const jobId = searchParams.get('job');
+  const sort=roleSort(searchParams.get('sort'));
   const conversationId = searchParams.get('conversation');
   const filter = searchParams.get('filter') === 'archived' ? 'archived' : 'active';
   const [data, setData] = useState<WorkspaceData | null>(null);
@@ -157,7 +159,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
     const requestId = ++sequence.current;
     setRefreshing(true);
     try {
-      const result = await api.get<WorkspaceData>('/api/workspace');
+      const result = await api.get<WorkspaceData>('/api/workspace?sort='+sort+(jobId?'&job='+jobId:''));
       if (!Array.isArray(result.jobs) || !Array.isArray(result.conversations) || !result.settings?.model) {
         throw new ApiError('The service returned an incomplete workspace.', 'INVALID_RESPONSE');
       }
@@ -165,7 +167,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
     } catch (failure) {
       if (live.current && requestId === sequence.current && !isAbort(failure)) setError(errorMessage(failure));
     } finally { if (live.current && requestId === sequence.current) setRefreshing(false); }
-  }, [api]);
+  }, [api,sort,jobId]);
   useEffect(() => {
     live.current = true;
     void refresh();
@@ -232,12 +234,12 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
           action={<Button label="Retry" icon={<Glyph icon={RefreshCw} />} onClick={() => void refresh()} isDisabled={!online || refreshing} />} />
           : <div className="workspace-skeleton" role="status"><span className="visually-hidden">Loading workspace</span><i /><i /><i /><i /></div>
           : view === 'jobs' ? <JobsView data={data} api={api} disabled={disabled} refresh={refresh} navigate={navigate}
-            selectedId={jobId} filter={filter} onCreate={() => setCreateOpen(true)} onDirtyChange={setNoteDirty}
+            selectedId={jobId} filter={filter} sort={sort} onCreate={() => setCreateOpen(true)} onDirtyChange={setNoteDirty}
             onAgent={() => { setAgentOpen(true); if (conversationId && agent.detail && agent.detail.conversation.job_id !== jobId && !agent.isRunning) void agent.newConversation(); }} />
           : view === 'candidate' ? <CandidateView key={searchParams.get('knowledge')} api={api} disabled={disabled} refresh={refresh} navigate={navigate} sourceId={searchParams.get('source')} initialTab={searchParams.get('knowledge')} asOf={data.asOf} isOwner={data.workspace.is_owner}/>
           : view === 'answers' ? <AnswersView key={searchParams.get('question')} api={api} disabled={disabled} refresh={refresh} asOf={data.asOf}
             requestedQuestion={searchParams.get('question')} returnToAssistant={searchParams.has('application')&&searchParams.has('question')?()=>navigate({view:'browser',question:null}):undefined}/>
-          : view === 'discovery' ? <DiscoveryView api={api} disabled={disabled} refresh={refresh} asOf={data.asOf} navigate={navigate}/>
+          : view === 'discovery' ? <DiscoveryView api={api} disabled={disabled} refresh={refresh} asOf={data.asOf} navigate={navigate} sort={sort}/>
           : view === 'browser' ? <BrowserView key={searchParams.get('application')} api={api} disabled={disabled} refresh={refresh} navigate={navigate} requestedApplication={searchParams.get('application')}/>
           : view === 'gmail' ? <GmailView api={api} disabled={disabled} asOf={data.asOf} navigate={navigate}/>
           : view === 'discord' ? <DiscordView api={api} disabled={disabled} asOf={data.asOf}/>

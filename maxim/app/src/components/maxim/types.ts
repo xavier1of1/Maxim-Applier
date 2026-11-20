@@ -1,8 +1,9 @@
 import type {PostingPolicy} from './role-triage';
+import type {JobFit} from './role-fit';
 
 export type View = 'jobs' | 'applications' | 'activity' | 'settings' | 'candidate' | 'answers' | 'discovery' | 'browser' | 'gmail' | 'discord' | 'networking' | 'interview';
 export type RecordFilter = 'active' | 'archived';
-export type Navigation = Partial<Record<'view' | 'job' | 'conversation' | 'filter' | 'source' | 'application' | 'knowledge' | 'question', string | null>>;
+export type Navigation = Partial<Record<'view' | 'job' | 'conversation' | 'filter' | 'source' | 'application' | 'knowledge' | 'question' | 'sort', string | null>>;
 
 export interface WorkspaceIdentity {
   id: string;
@@ -18,6 +19,7 @@ export interface Session {
 }
 
 export interface Job {
+  fit?:JobFit|null;
   id: string;
   company: string;
   title: string;
@@ -96,6 +98,7 @@ export interface ModelSettings {
 }
 
 export interface WorkspaceData {
+  candidate?:{revision:number;ownership:string};
   workspace: WorkspaceIdentity;
   jobs: Job[];
   applications: Application[];

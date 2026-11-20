@@ -28,6 +28,7 @@ pre { font:inherit; }
 .tabular { font-variant-numeric:tabular-nums; }
 .eyebrow { color:var(--ui-muted); font-size:10px; font-weight:600; line-height:1.4; }
 .inline-actions,.inline-label { display:inline-flex; align-items:center; gap:8px; }
+.job-fit-actions {display:flex;flex-wrap:wrap}.job-fit-actions>* {flex-shrink:0;max-width:100%}
 .text-link { display:inline-flex; gap:5px; align-items:center; border:0; background:transparent; padding:0; color:var(--ui-green); font-size:inherit; font-weight:500; text-align:left; }
 .text-link:hover { text-decoration:underline; }
 .status-dot { display:inline-block; flex-shrink:0; width:6px; height:6px; border-radius:50%; background:#4c9a6d; }

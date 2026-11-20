@@ -103,11 +103,11 @@ test('keyboard focus, form cancellation and dirty-note protection',async({page})
 });
 test('truthful backend failure, model failure, empty result, and sign-out states',async({page})=>{
  await signIn(page);
- await page.route('**/api/workspace',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'service_unavailable',message:'Workspace storage is unavailable.'}})}));
+ await page.route('**/api/workspace*',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'service_unavailable',message:'Workspace storage is unavailable.'}})}));
  await page.getByRole('button',{name:'Refresh workspace',exact:true}).click();
  await expect(page.locator('.banner-error')).toContainText('Showing the last loaded workspace.');
  await expect(page.getByRole('button',{name:'New role',exact:true}).first()).toBeDisabled();
- await page.unroute('**/api/workspace');
+ await page.unroute('**/api/workspace*');
  await page.getByRole('button',{name:'Refresh workspace',exact:true}).click();
  await expect(page.locator('.banner-error')).toBeHidden();
  await page.getByRole('searchbox',{name:'Search roles'}).fill('Not an existing company');

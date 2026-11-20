@@ -19,6 +19,23 @@ The prior June implementation record is retained in
 
 ## Available Workflow
 
+### Job Fit Visibility (2026-11-20)
+
+Jobs and Discovery expose the latest stored Career-Ops score/tier. Jobs defaults
+to highest score first, with low-first, recent and company sorts retained in the
+URL; its details show the report, evaluation date and candidate revision, and can
+explicitly queue evaluation without inventing fit from a scan. Unknown, queued,
+failed and stale states remain distinct. Only current evidence ranks numerically.
+Database sorting precedes the snapshot cap; an older selected record remains
+accessible even outside the 500-row window. No bulk model requests were run.
+
+Verification: 48 app unit tests, 46 relevant integration cases and 13 Chromium
+tests passed (Jobs, Discovery, packets, workspace and new score workflow). After
+visual inspection, a mobile action-row wrap adjustment passed a fresh production
+build/typecheck and both desktop/mobile score cases again. Safety, privacy,
+roadmap validation and diff checks pass. No core Career-Ops scorer/scanner was
+changed. See [scanning and score semantics](job-scoring.md).
+
 Current use/setup: [Start and use Maxim](setup.md). The November 18 storage follow-up
 recovered Docker, fixed fixture/volume cleanup, relocated required browser binaries,
 cleared separately approved unused build cache and verified fresh backup/restore.

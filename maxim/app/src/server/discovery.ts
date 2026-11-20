@@ -7,6 +7,8 @@ import {invariant,notFound} from './errors';
 import {enqueue} from './work';
 import {greenhousePostingUrl,sourceDefinition,supported} from './discovery-providers';
 import {applicationWritable} from './application-authority';
+import {engineSnapshot} from './evaluation-native';
+import {jobFitJoin,jobFitOrder} from './job-fit';
 
 const schema=z.discriminatedUnion('action',[
  z.object({commandId:uuid,action:z.literal('add_source'),payload:z.object({name:z.string().trim().min(1).max(180),provider:z.enum(['greenhouse','lever','ashby','manual']),board:z.string().max(100).default(''),careersUrl:z.string().url().max(2048).optional()}).strict()}).strict(),
@@ -99,14 +101,15 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
   await event(tx,ctx,row.id,'discovery_search_retried',{},revision);return {...row,revision,status:'queued',work_id:work.id};
  });
 }
-export async function discoveryView(ctx:Context){
+export async function discoveryView(ctx:Context,sort:string|null=null){
+ const engine=await engineSnapshot();
  return transaction(async tx=>{
   await tx.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');await reauthorize(tx,ctx);
   const w=ctx.workspaceId;
   const sources=(await tx.query('SELECT * FROM discovery_sources WHERE workspace_id=$1 ORDER BY name,id LIMIT 201',[w])).rows;
   const runs=(await tx.query("SELECT r.*,q.terms,q.filters,q.source_snapshots,q.candidate_revision,q.preference_provenance,w.status AS work_status,w.error_code AS work_error FROM discovery_runs r JOIN discovery_queries q ON q.id=r.query_id AND q.workspace_id=r.workspace_id LEFT JOIN work_items w ON w.id=r.work_id AND w.workspace_id=r.workspace_id WHERE r.workspace_id=$1 AND NOT (q.filters ? 'posting') ORDER BY r.created_at DESC LIMIT 51",[w])).rows;
   const attempts=(await tx.query('SELECT a.* FROM discovery_attempts a WHERE a.workspace_id=$1 AND a.run_id=ANY($2::uuid[]) ORDER BY a.started_at DESC',[w,runs.slice(0,50).map(r=>r.id)])).rows;
-  const jobs=(await tx.query("SELECT j.id,j.company,j.title,j.location,j.revision,j.archived,j.opening_key,j.url,j.source_platform,j.application_url,j.posted_at,j.first_seen_at,j.last_seen_at,j.discovery_policy,coalesce(s.state,'none') AS discovery_state FROM jobs j LEFT JOIN job_discovery_states s ON s.job_id=j.id AND s.workspace_id=j.workspace_id WHERE j.workspace_id=$1 AND j.opening_key IS NOT NULL ORDER BY j.last_seen_at DESC,j.id LIMIT 501",[w])).rows;
+  const jobs=(await tx.query(`SELECT j.id,j.company,j.title,j.location,j.revision,j.archived,j.opening_key,j.url,j.source_platform,j.application_url,j.posted_at,j.first_seen_at,j.last_seen_at,j.updated_at,j.discovery_policy,coalesce(s.state,'none') AS discovery_state,row_to_json(fit) AS fit FROM jobs j LEFT JOIN job_discovery_states s ON s.job_id=j.id AND s.workspace_id=j.workspace_id ${jobFitJoin} WHERE j.workspace_id=$1 AND j.opening_key IS NOT NULL ORDER BY ${jobFitOrder(sort)} LIMIT 501`,[w,engine.hash])).rows;
   const observations=(await tx.query('SELECT job_id,run_id,source_id,identity_conflict,observed_at,date_basis FROM job_observations WHERE workspace_id=$1 AND run_id=ANY($2::uuid[]) ORDER BY observed_at DESC LIMIT 2001',[w,runs.slice(0,50).map(r=>r.id)])).rows;
   return {sources:sources.slice(0,200).map(s=>({...s,stale:s.checked_at&&Date.now()-new Date(s.checked_at).getTime()>86400000})),runs:runs.slice(0,50),attempts,jobs:jobs.slice(0,500),observations:observations.slice(0,2000),partial:{sources:sources.length>200,runs:runs.length>50,jobs:jobs.length>500,observations:observations.length>2000},asOf:new Date().toISOString(),limits:{sourcesPerRun:3,pagesPerSource:3,requestsPerRun:6,secondsPerRun:90},coverage:'Selected public boards only; not LinkedIn/Indeed/Workday or universal site coverage.'};
  });

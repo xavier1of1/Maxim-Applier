@@ -11,8 +11,9 @@ import {Archive, ArchiveRestore, ArrowLeft, ArrowUpRight, BriefcaseBusiness, Che
 import {ApiError, errorMessage, type WorkspaceApi} from './api';
 import {Banner, EmptyState, Glyph, Pill, ToolButton, formatBytes, formatDate, initials, safeExternalUrl} from './shared';
 import type {Job, Navigation, RecordFilter, WorkspaceData} from './types';
-import {companySpread,locationFilters,locationMatches,rolePolicyLabel} from './role-triage';
+import {locationFilters,locationMatches,rolePolicyLabel} from './role-triage';
 import {useBoundedRefresh} from './use-bounded-refresh';
+import {currentScore,fitLabel,roleSorts,sortRoles} from './role-fit';
 
 type SharedProps = {
   data: WorkspaceData;
@@ -87,15 +88,17 @@ export function CreateRoleDialog({open, onClose, api, disabled, onCreated}: {
   </Dialog>;
 }
 
-export function JobsView({data, api, disabled, refresh, navigate, selectedId, filter, onCreate, onDirtyChange, onAgent}: SharedProps & {
-  selectedId: string | null; filter: RecordFilter; onCreate: () => void; onDirtyChange: (dirty: boolean) => void; onAgent: () => void;
+export function JobsView({data, api, disabled, refresh, navigate, selectedId, filter,sort, onCreate, onDirtyChange, onAgent}: SharedProps & {
+  selectedId: string | null; filter: RecordFilter;sort:string; onCreate: () => void; onDirtyChange: (dirty: boolean) => void; onAgent: () => void;
 }) {
   const [search, setSearch] = useState('');
   const [location,setLocation]=useState('focus');
   const matching = data.jobs.filter(job => job.archived === (filter === 'archived') &&
     [job.company, job.title, job.location ?? ''].join(' ').toLowerCase().includes(search.toLowerCase().trim()))
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
-  const jobs=filter==='archived'?matching:companySpread(matching.filter(job=>locationMatches(job,location)));
+  const jobs=sortRoles(filter==='archived'?matching:matching.filter(job=>locationMatches(job,location)),sort);
+  const evaluated=jobs.filter(job=>currentScore(job.fit)!==null).length;
+  useBoundedRefresh(data.jobs.some(job=>['queued','running'].includes(job.fit?.status||'')),refresh);
   const employers=new Set(jobs.map(job=>job.company)).size;
   const selected = data.jobs.find(job => job.id === selectedId);
   return <div className={'jobs-workbench' + (selectedId ? ' has-selection' : '')}>
@@ -111,8 +114,10 @@ export function JobsView({data, api, disabled, refresh, navigate, selectedId, fi
           <span className="muted small tabular">{jobs.length} {jobs.length === 1 ? 'role' : 'roles'} / {employers} {employers===1?'employer':'employers'}</span>
         </div>
         {filter==='active'&&<Selector label="Filter roles by location" isLabelHidden value={location} onChange={setLocation} options={locationFilters} width="100%" size="sm"/>}
+        <Selector label="Sort roles" isLabelHidden value={sort} onChange={value=>navigate({sort:value})} options={roleSorts} width="100%" size="sm"/>
+        <span className="small muted tabular">{evaluated} evaluated / {jobs.length-evaluated} without a current score</span>
       </div>
-      {data.sourceStatus==='partial'&&<Banner tone="info">Showing the newest 500 stored roles.</Banner>}
+      {data.sourceStatus==='partial'&&<Banner tone="info">Showing 500 stored roles in the selected sort order, plus the selected role when needed.</Banner>}
       <div className="role-rows">
         {jobs.map(job => <button type="button" key={job.id} className={'role-row' + (selectedId === job.id ? ' selected' : '')}
           aria-current={selectedId === job.id ? 'true' : undefined} onClick={() => navigate({job: job.id})}>
@@ -120,6 +125,7 @@ export function JobsView({data, api, disabled, refresh, navigate, selectedId, fi
           <span className="role-row-copy"><span className="role-company">{job.company}</span><strong>{job.title}</strong>
             <span className="role-location"><MapPin size={12} aria-hidden="true" />{job.location || 'Location not specified'}</span>
             <span className="role-row-meta"><span>{formatDate(job.updated_at)}</span>
+              <span title="Career-Ops fit"><Pill tone={fitLabel(job.fit).tone}>{fitLabel(job.fit).label}</Pill></span>
               {job.opening_key&&<Pill tone={rolePolicyLabel(job).tone}>{rolePolicyLabel(job).label}</Pill>}
               {job.application_id && <span className="intent-dot">Application intent</span>}</span>
           </span>
@@ -172,6 +178,13 @@ function JobDetail({job, data, api, disabled, refresh, navigate, onDirtyChange, 
   }
   const files = data.artifacts.filter(file => file.job_id === job.id);
   const application = data.applications.find(item => item.job_id === job.id);
+  const score=currentScore(job.fit),fit=fitLabel(job.fit),evaluating=['queued','running'].includes(job.fit?.status||'');
+  async function evaluate(){
+    if(disabled||busy||evaluating||!data.candidate)return;
+    setBusy('evaluate');setError('');
+    try{await api.post('/api/evaluations/commands',{commandId:crypto.randomUUID(),action:'start_evaluation',payload:{jobId:job.id,expectedJobRevision:job.revision,expectedCandidateRevision:data.candidate.revision}});await refresh();}
+    catch(failure){setError(errorMessage(failure));}finally{setBusy('');}
+  }
   const url = safeExternalUrl(job.url);
   useEffect(() => { onDirtyChange(dirty); return () => onDirtyChange(false); }, [dirty, onDirtyChange]);
   useEffect(() => {
@@ -245,7 +258,7 @@ function JobDetail({job, data, api, disabled, refresh, navigate, onDirtyChange, 
         {url && <a href={url} target="_blank" rel="noopener noreferrer">Original posting<ArrowUpRight size={14} aria-hidden="true" /></a>}</div>
       <div className="job-actions">
         {application ? <Button label={application.status === 'archived' ? 'Archived intent' : 'Application intent'}
-          icon={<Glyph icon={Check} />} onClick={() => navigate({view: 'applications', filter: application.status === 'archived' ? 'archived' : 'active'})} />
+          icon={<Glyph icon={Check} />} onClick={() => navigate({view: 'applications',application:application.id, filter: application.status === 'archived' ? 'archived' : 'active'})} />
           : <Button label="Create intent" variant="primary" icon={<Glyph icon={Send} />}
             onClick={createIntent} isLoading={busy === 'intent'} isDisabled={disabled || Boolean(busy) || job.archived} />}
         <ToolButton label="Discuss role with agent" icon={MessageSquare} onClick={onAgent} />
@@ -256,6 +269,19 @@ function JobDetail({job, data, api, disabled, refresh, navigate, onDirtyChange, 
     </header>
     {error && <div className="detail-alert"><Banner onDismiss={() => setError('')}>{error}</Banner></div>}
     <div className="detail-sections">
+      <section className="record-section" aria-label="Career-Ops fit">
+        <div className="section-heading"><h3>Career-Ops fit</h3><Pill tone={fit.tone}>{fit.label}</Pill></div>
+        {score!==null?<p className="small muted">Evaluated {job.fit?.completed_at?formatDate(job.fit.completed_at,true):''} / candidate revision {job.fit?.candidate_revision}</p>
+          :<p className="small muted">{!job.fit?'Scanned or saved, but not yet evaluated against your approved experience.':job.fit.status==='completed'||job.fit.status==='stale'?'The saved evaluation is outdated. Evaluate the current candidate and posting.':fit.label+'. No current fit score is available.'}</p>}
+        {(job.description||'').trim().length<50&&<p className="small muted">A full job description is required before evaluation.</p>}
+        <div className="inline-actions job-fit-actions">
+          <Button label={score===null?'Evaluate with Career-Ops':'Re-evaluate with Career-Ops'} icon={<Glyph icon={FileText}/>} variant="secondary" onClick={()=>void evaluate()}
+            isLoading={busy==='evaluate'||evaluating} isDisabled={disabled||Boolean(busy)||evaluating||job.archived||!data.settings.model.configured||data.candidate?.ownership!=='canonical'||(job.description||'').trim().length<50}/>
+          {job.fit?.report_artifact_id&&<a className="text-link" href={'/api/artifacts/'+job.fit.report_artifact_id} target="_blank" rel="noreferrer">{score===null?'Previous report':'Full evaluation report'}<ArrowUpRight size={14}/></a>}
+          {data.candidate?.ownership!=='canonical'&&<Button label="Review candidate knowledge" variant="ghost" onClick={()=>navigate({view:'candidate',knowledge:'facts'})}/>}
+          {!data.settings.model.configured&&<Button label="Configure evaluation model" variant="ghost" onClick={()=>navigate({view:'settings'})}/>}
+        </div>
+      </section>
       <section className="record-section">
         <div className="section-heading"><h3><FileText size={16} aria-hidden="true" />Job description</h3></div>
         {job.description ? <p className="posting-text">{job.description}</p> : <p className="muted section-empty">{job.source_platform==='greenhouse'?'Board summary only':'No description added.'}</p>}

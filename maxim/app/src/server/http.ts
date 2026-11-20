@@ -79,7 +79,7 @@ export async function handle(req:Request) {
    await database().query('UPDATE sessions SET expires_at=now() WHERE id=$1',[ctx.sessionId]);
    return json({ok:true},200,{'Set-Cookie':'maxim_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'});
   }
-  if(get&&name==='workspace')return json(await snapshot(ctx));
+  if(get&&name==='workspace'){const q=new URL(req.url).searchParams;return json(await snapshot(ctx,q.get('sort'),q.get('job')));}
   if(get&&name==='gmail')return json(await gmailView(ctx,Number(new URL(req.url).searchParams.get('offset')||0)));
   if(post&&name==='gmail/commands')return json({result:await gmailCommand(ctx,await body(req))});
   if(post&&name==='gmail/oauth')return json({result:await beginGmailOAuth(ctx,await body(req))});
@@ -104,7 +104,7 @@ export async function handle(req:Request) {
   if(post&&name==='applications/commands')return json({result:await applicationCommand(ctx,await body(req))});
   if(post&&name==='evaluations/commands')return json({result:await evaluationCommand(ctx,await body(req))});
   if(post&&name==='packets/commands')return json({result:await packetCommand(ctx,await body(req))});
-  if(get&&name==='discovery')return json(await discoveryView(ctx));
+  if(get&&name==='discovery')return json(await discoveryView(ctx,new URL(req.url).searchParams.get('sort')));
   if(post&&name==='discovery/commands')return json({result:await discoveryCommand(ctx,await body(req))});
   if(get&&name==='candidate')return json(await candidateView(ctx));
   if(get&&name==='answers')return json(await answerLibrary(ctx,new URL(req.url).searchParams.get('question')));

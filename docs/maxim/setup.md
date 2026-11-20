@@ -32,6 +32,11 @@ records. See [verification](../../roadmap/reviews/mvp-completion-verification.md
 
 ## Continue A Saved Application
 
+For sorting scanned jobs and distinguishing evaluated fit from search matches,
+see [Scanning, fit scores and ranking](job-scoring.md). Jobs shows current scores
+in its list and details and defaults to highest first. Discovery keyword/location
+matches are not fit scores.
+
 Open [Applications](http://127.0.0.1:3010/maxim?view=applications) and select the
 role. An intent is a local record, not a submitted application.
 
