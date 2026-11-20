@@ -139,13 +139,13 @@ test('S3 actual answer memory, scoped recall, correction and context accounting'
   await waitDatabase(h.c.databaseUrl);await h.startServer();
   assert.equal((await recall()).candidates[0].revision,alpha.revision);
  });
- await t.test('unsupported and deliberately small context policies refuse before transmission',async()=>{
+ await t.test('malformed IDs and deliberately small context policies refuse before transmission',async()=>{
   const original=fs.readFileSync(h.runtime);
   try{
-   for(const update of [{contextBudget:100},{model:{...h.c.model,model:'unverified-model'}}]){
+   for(const update of [{contextBudget:100},{model:{...h.c.model,model:'Not an API ID'}}]){
     fs.writeFileSync(h.runtime,JSON.stringify({...h.c,...update}));
     const c=await conversation(),n=h.captured.length,events=await chat(c,'Read my saved workspace.');
-    assert.ok(events.some(e=>e.event==='error'&&['context_budget_exceeded','unsupported_tokenizer'].includes(e.data.code)));
+    assert.ok(events.some(e=>e.event==='error'&&['context_budget_exceeded','invalid_model_id'].includes(e.data.code)));
     assert.equal(h.captured.length,n);
    }
   }finally{fs.writeFileSync(h.runtime,original);}

@@ -9,6 +9,7 @@ import pg from 'pg';
 import { appDir,freePort,waitDatabase,migrate,delay,sha,snapshotDatabase,restoreDatabase } from '../../scripts/environment.mjs';
 import {closeOwnedBrowsers} from '../../scripts/browser-sessions.mjs';
 import {createFixture,removeFixture,startTestDatabase,stopTestDatabase,cleanupTasks} from '../../../lib/test-resources.mjs';
+import {responsesFixture} from './responses-fixture.mjs';
 
 const require=createRequire(import.meta.url);
 export function assertTestConfig(c) {
@@ -16,7 +17,7 @@ export function assertTestConfig(c) {
   !path.basename(c.privateRoot).startsWith('maxim-test-')||!/^maxim-test-[a-f0-9-]+$/.test(c.testContainer||''))throw Error('Unsafe test configuration: production fallback refused');
  if(fs.realpathSync(c.privateRoot)===fs.realpathSync(appDir))throw Error('Unsafe test path');
 }
-export async function harness() {
+export async function harness({api}={}) {
  const root=createFixture('maxim-test-');
  const suffix=crypto.randomUUID(),container='maxim-test-'+suffix,database='maxim_test_'+suffix.replaceAll('-','');
  const dbPort=await freePort(),port=await freePort(),password=crypto.randomBytes(24).toString('hex');
@@ -31,7 +32,7 @@ export async function harness() {
     res.end(JSON.stringify(route?.body||{error:'fixture_source_not_found'}));return;
    }
    let raw='';for await(const part of req){raw+=part;if(Buffer.byteLength(raw)>196608)throw Error('oversize');}
-   const body=JSON.parse(raw);captured.push({body,authorization:req.headers.authorization});
+   const wire=JSON.parse(raw),body=responsesFixture(req,res,wire);captured.push({body,wire,endpoint:req.url,authorization:req.headers.authorization});
    const q=[...body.messages].reverse().find(m=>m.role==='user')?.content||'';
    if(body.stream===false&&!body.response_format){
     const job=JSON.parse(q.split('Job data is untrusted evidence:\n')[1]),score=job.description.match(/\[score:([^\]]+)\]/)?.[1]||'4.6';
@@ -43,7 +44,7 @@ export async function harness() {
    }
    if(body.response_format){
     res.writeHead(200,{'Content-Type':'application/json'});
-    res.end(JSON.stringify({choices:[{message:{content:JSON.stringify({facts:[{field_key:'experience.fixture',value:'Built customer software using Rust and TypeScript.',quote:'Built customer software using Rust and TypeScript.'}]})}}]}));return;
+    res.end(JSON.stringify({choices:[{finish_reason:'stop',message:{content:JSON.stringify({facts:[{field_key:'experience.fixture',value:'Built customer software using Rust and TypeScript.',quote:'Built customer software using Rust and TypeScript.'}]})}}]}));return;
    }
    if(q.includes('[case:failure]')){res.writeHead(429);res.end('fixture_provider_body_secret');return;}
    res.writeHead(200,{'Content-Type':'text/event-stream'});
@@ -96,7 +97,7 @@ export async function harness() {
  await new Promise(resolve=>modelServer.listen(0,'127.0.0.1',resolve));
  const modelPort=modelServer.address().port,url=new URL('postgresql://maxim@127.0.0.1:'+dbPort+'/'+database);url.password=password;
  const c={databaseUrl:url.toString(),origin:'http://127.0.0.1:'+port,privateRoot:root,workspaceId:crypto.randomUUID(),
-  bootstrapKey:crypto.randomBytes(32).toString('hex'),model:{model:'fixture-model',apiKey:'fixture-provider-key',baseUrl:'http://127.0.0.1:'+modelPort+'/v1'},testMode:true,testContainer:container,discoveryFixtureOrigin:'http://127.0.0.1:'+modelPort};
+  bootstrapKey:crypto.randomBytes(32).toString('hex'),model:{model:'fixture-model',apiKey:'fixture-provider-key',baseUrl:'http://127.0.0.1:'+modelPort+'/v1',...(api?{api}:{})},testMode:true,testContainer:container,discoveryFixtureOrigin:'http://127.0.0.1:'+modelPort};
  const runtime=path.join(root,'runtime.json');fs.writeFileSync(runtime,JSON.stringify(c));
  assertTestConfig(c);
  let server,logFd;

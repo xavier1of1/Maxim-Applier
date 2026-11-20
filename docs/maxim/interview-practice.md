@@ -85,7 +85,10 @@ encryption, administrator isolation or provider-side deletion guarantee is claim
 
 One model request per work item, no tools or fan-out, 45-second deadline, 1,024 output
 tokens, 32,000 serialized request bytes and the existing local 8,192-token budget.
-The existing pinned Microsoft tokenizer and supported model profiles are reused.
+The pinned Microsoft tokenizer and verified model profiles are reused. Unknown
+model IDs use explicit local estimates rather than a name whitelist. The saved
+Responses or legacy Chat Completions transport serves feedback through the shared
+adapter; task compatibility and output budgets still apply. See [model setup](setup.md#model-selection-and-compatibility).
 Mandatory context is not silently trimmed to satisfy the budget. Unknown profiles,
 bad JSON, truncation, output bounds and provider rejection fail explicitly.
 Transport is bounded to 64,000 response bytes and 16,000 content bytes. Only schema-

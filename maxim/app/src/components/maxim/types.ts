@@ -87,6 +87,7 @@ export interface ModelSettings {
   configured: boolean;
   hasKey: boolean;
   model: string;
+  api?:'responses'|'chat_completions';
   provider: string;
   requestByteLimit: number;
   inputTokenBudget?:number;

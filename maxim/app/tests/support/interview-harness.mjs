@@ -7,9 +7,10 @@ import {execFileSync} from 'node:child_process';
 import pg from 'pg';
 import {appDir,repo,freePort,waitDatabase,sha,delay} from '../../scripts/environment.mjs';
 import {createFixture,removeFixture,startTestDatabase,stopTestDatabase,cleanupTasks} from '../../../lib/test-resources.mjs';
+import {responsesFixture} from './responses-fixture.mjs';
 
 // No default runtime, existing database, .env, access key or provider is consulted.
-export async function interviewHarness(){
+export async function interviewHarness({api}={}){
  if(process.env.MAXIM_RUNTIME_FILE)throw Error('Interview fixture refuses an inherited runtime selector.');
  const root=createFixture('maxim-test-interview-');
  const suffix=crypto.randomUUID(),container='maxim-test-'+suffix,name='maxim_test_'+suffix.replaceAll('-','');
@@ -18,9 +19,9 @@ export async function interviewHarness(){
  let providerMode='normal',app,modules,closed=false;
  const provider=http.createServer(async(req,res)=>{
   try{
-   if(req.url!=='/v1/chat/completions'||req.method!=='POST'){res.writeHead(404).end();return;}
+   if(!['/v1/chat/completions','/v1/responses'].includes(req.url)||req.method!=='POST'){res.writeHead(404).end();return;}
    let raw='';for await(const b of req){raw+=b;if(Buffer.byteLength(raw)>32000)throw Error('fixture_request_limit');}
-   const body=JSON.parse(raw);captured.push(body);
+   const body=responsesFixture(req,res,JSON.parse(raw));captured.push(body);
    if(providerMode==='hang')return;
    if(providerMode==='reject'){res.writeHead(429).end('synthetic provider refusal');return;}
    if(providerMode==='malformed'){res.writeHead(200,{'Content-Type':'application/json'}).end('{bad');return;}
@@ -39,6 +40,7 @@ export async function interviewHarness(){
  const c={testMode:true,databaseUrl:u.toString(),origin:'http://127.0.0.1:'+port,privateRoot:root,workspaceId:crypto.randomUUID(),bootstrapKey:crypto.randomBytes(32).toString('hex'),model:{model:'fixture-model',apiKey:'synthetic-only-key',baseUrl:'http://127.0.0.1:'+provider.address().port+'/v1'}};
  if(!/^maxim_test_[a-f0-9]+$/.test(name)||!path.basename(root).startsWith('maxim-test-')||new URL(c.model.baseUrl).hostname!=='127.0.0.1')throw Error('Unsafe interview fixture');
  const runtime=path.join(root,'runtime.json');fs.writeFileSync(runtime,JSON.stringify(c),{mode:0o600});
+ if(api){c.model.api=api;fs.writeFileSync(runtime,JSON.stringify(c),{mode:0o600});}
  const sql=async(text,params=[])=>{const client=new pg.Client({connectionString:c.databaseUrl});await client.connect();try{return await client.query(text,params);}finally{await client.end();}};
  const other={workspaceId:crypto.randomUUID(),key:crypto.randomBytes(32).toString('hex')};
  let a,b,job,fact;

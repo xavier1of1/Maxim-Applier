@@ -18,11 +18,15 @@ Only current standard facts whose sources permit model use enter evaluation.
 Private facts can be explicitly selected for a local PDF; sensitive facts cannot.
 Keep employer-proprietary information and secrets out of all sources.
 
-Settings accepts your OpenAI API key and a supported model ID. The selected model
-must support Chat Completions and the workspace's tokenizer policy. Evaluation
+Settings accepts your OpenAI API key and an exact model ID, with account-visible
+selection through Load models and manual entry retained. New connections use
+Responses; existing connections retain Chat Completions. Evaluation
 needs model access; local intake, manual tracking, review and discovery feeds do
 not. The existing Gemini CLI uses its own key; configuring it does not configure
 this workspace. No real model bill is incurred by deterministic acceptance tests.
+Metadata access checks do not certify text/JSON/tool compatibility. Unknown names
+are not blocked by a tokenizer whitelist; local estimates and request budgets
+remain enforced. Provider/task errors never become a completed evaluation.
 
 ## 2. Save The Exact Opening
 

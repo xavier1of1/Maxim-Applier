@@ -164,7 +164,7 @@ export async function chatResponse(ctx:Context,cid:string,raw:unknown,requestSig
  uuid.parse(cid);
  const p=z.object({commandId:uuid,text:z.string().trim().min(1).max(4000)}).strict().parse(raw);
  assertDisclosureText(p.text);
- modelReady();
+ const connection=JSON.stringify(modelReady());
  const hash=digest(JSON.stringify({cid,text:p.text}));
  const initial=await transaction(async tx=>{
   await reauthorize(tx,ctx);
@@ -208,6 +208,7 @@ export async function chatResponse(ctx:Context,cid:string,raw:unknown,requestSig
     let done=false;
     for(let round=0;round<4;round++){
      await live(ctx,cid,p.commandId);
+     invariant(JSON.stringify(modelReady())===connection,'model_changed','Model settings changed. Start a new response.',409);
      if(signal.aborted)throw new DomainError('cancelled','The response was cancelled.',409);
      const result=await completion(messages,signal,async text=>{await live(ctx,cid,p.commandId);partial+=text;emit('delta',{text});});
      accounting.push({...result.accounting,providerUsage:result.usage});
@@ -219,7 +220,7 @@ export async function chatResponse(ctx:Context,cid:string,raw:unknown,requestSig
       usage.completion_tokens+=reported.completion_tokens!;
      }
      if(!result.calls.length){done=true;break;}
-     messages.push({role:'assistant',content:result.text||null,tool_calls:result.calls});
+     messages.push({role:'assistant',content:result.text||null,tool_calls:result.calls,...(result.responseItems?{responseItems:result.responseItems}:{})});
      await addMessage(ctx,cid,p.commandId,'assistant',{text:result.text,toolCalls:result.calls});
      partial='';
      for(const call of result.calls){

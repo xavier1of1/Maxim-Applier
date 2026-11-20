@@ -42,7 +42,7 @@ test('evaluation setup links preserve the exact intent and keep owner approval e
   await page.getByLabel('API key',{exact:true}).fill('synthetic-local-key');
   await page.getByRole('button',{name:'Save connection',exact:true}).click();
   await page.getByRole('button',{name:'Check model access',exact:true}).click();
-  await expect(page.getByText('OpenAI confirmed model access. No evaluation was run.')).toBeVisible();
+  await expect(page.getByText('OpenAI confirmed model access. Task compatibility has not been tested; no evaluation was run.')).toBeVisible();
   await page.goBack();
   await expect(page).toHaveURL(new RegExp('application='+app.id));
   await expect(page.getByRole('button',{name:'Evaluate with Career-Ops'})).toBeDisabled();

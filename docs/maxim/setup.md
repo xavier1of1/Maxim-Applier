@@ -41,10 +41,14 @@ role. An intent is a local record, not a submitted application.
    only if you approve the ownership change. Legacy application migration is
    separate and is not required for evaluating a saved role.
 2. **Configure evaluation model.** In Settings, enter an OpenAI API key and a
-   model supported by your API project and the local tokenizer policy (for
-   example, `gpt-4.1-mini`). **Save connection** stores settings locally.
+   model available to your API project. **Load models** retrieves account-visible
+   IDs using the entered or stored key without saving it; manual exact-ID entry
+   also works. **Save connection** stores settings locally.
    **Check model access** checks the provider's model endpoint without sending
    your profile, a posting, or an evaluation. Saved does not mean verified.
+   Neither listing nor access checking proves task compatibility. New connections
+   use Responses; existing connections retain Chat Completions. Use **Advanced
+   connection** to change API explicitly; there is no automatic paid fallback.
 3. **Evaluate with Career-Ops**, review its report and approve an exact current
    packet. Choose **Open Apply Assistant** from that application. Confirm site
    and private-field consent yourself. A role conversation accepts **Evaluate
@@ -95,6 +99,31 @@ role. An intent is a local record, not a submitted application.
     hypothetical design, inspect selected approved evidence and save local attempts.
     Model feedback is optional and separately consented per attempt. Practice does
     not become a candidate fact or reusable answer. [Practice](interview-practice.md).
+
+## Model Selection And Compatibility
+
+Settings no longer restricts model names to a fixed list. Use an exact API ID,
+not a display name such as `GPT-6.1 Terra`. Select from **Load models**, or enter
+the ID manually if the key lacks model-list permissions. The list may include
+specialized models that cannot perform text, JSON or function-calling tasks.
+The provider determines actual access and capability; failures remain explicit.
+Changing model/API does not silently retry queued work or switch providers.
+
+Chat, retained Career-Ops scoring, consented source interpretation and interview
+feedback share the saved connection. Responses supports stateless text, JSON and
+scoped function calls. Existing Chat Completions connections remain usable; saving
+without an explicit API through the HTTP endpoint defaults to Responses.
+Unknown IDs use an explicitly estimated local token counter with existing byte,
+input and output budgets. Their actual context windows are not guessed. A new
+model can still reject a task, require more output budget, or be unavailable to
+the account. No incomplete evaluation or refusal becomes a completed score.
+
+Credentials remain in the protected local runtime. All model requests explicitly
+set `store:false`; reasoning continuation is replayed only in memory during the
+current tool loop, not saved into reusable facts or hosted conversations. Listing
+and checking access send no candidate/posting contents or generation prompts.
+There is no automatic billable compatibility test. OpenAI API access is required;
+Anthropic credentials are not supported by this connection.
 
 ## Backup, Restore And Problems
 

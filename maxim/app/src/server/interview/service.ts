@@ -39,7 +39,7 @@ async function queueFeedback(tx:PoolClient,ctx:Context,s:Record<string,any>,a:Re
   await tx.query("UPDATE interview_attempts SET status='model_unconfigured',error_code='model_unconfigured' WHERE workspace_id=$1 AND id=$2",[ctx.workspaceId,a.id]);return 'model_unconfigured';
  }
  assertDisclosureText(JSON.stringify(s.snapshot));assertDisclosureText(a.text);
- const work=await enqueue(tx,ctx.workspaceId,'interview_feedback',a.id+':'+s.revision,{sessionId:s.id,attemptId:a.id});
+ const work=await enqueue(tx,ctx.workspaceId,'interview_feedback',a.id+':'+s.revision,{sessionId:s.id,attemptId:a.id,api:c.model.api});
  // A lost response is not permission to bill a second request automatically.
  await tx.query('UPDATE work_items SET max_attempts=1 WHERE workspace_id=$1 AND id=$2',[ctx.workspaceId,work.id]);
  await tx.query("UPDATE interview_attempts SET status='queued',work_id=$1,auth_session_id=$2,model=$3,provider=$4,error_code=null,feedback=null,completed_at=null WHERE workspace_id=$5 AND id=$6",[work.id,ctx.sessionId,c.model.model,c.model.baseUrl,ctx.workspaceId,a.id]);return 'queued';

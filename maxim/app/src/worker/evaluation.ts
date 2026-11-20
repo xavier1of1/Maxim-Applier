@@ -26,7 +26,7 @@ export async function evaluateJob(item:WorkItem,parent?:AbortSignal){
   const e=await transaction(async tx=>{const e=await active(tx,item);await tx.query("UPDATE evaluations SET status='running' WHERE workspace_id=$1 AND id=$2",[item.workspace_id,e.id]);return e;});
   dir=await invocationDirectory(e.id,item.lease_token);
   await fs.writeFile(path.join(dir,'input.json'),JSON.stringify({evaluationId:e.id,inputHash:e.input_hash,promptHash:e.prompt_hash,jobId:e.job_id,candidateRevision:e.candidate_revision,leaseToken:item.lease_token}),{flag:'wx',mode:0o600});
-  const result=await evaluationCompletion({prompt:e.input_snapshot.prompt,job:e.input_snapshot.job,model:e.model,provider:e.provider},signal);
+  const result=await evaluationCompletion({prompt:e.input_snapshot.prompt,job:e.input_snapshot.job,model:e.model,provider:e.provider,api:e.input_snapshot.api||'chat_completions'},signal);
   await fs.writeFile(path.join(dir,'report.md'),result.report,{flag:'wx',mode:0o600});
   let parsed:Record<string,unknown>|null=null,invalid:string|null=null;
   try{parsed=domain({operation:'parse_evaluation',report:result.report,company:e.input_snapshot.job.company,title:e.input_snapshot.job.title});}catch(error){invalid=error instanceof DomainError?error.code:'invalid_report';}

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { checkModelAccess,config,publicModelSettings,saveModelSettings } from './config';
+import { checkModelAccess,config,publicModelSettings,saveModelSettings,listModels } from './config';
 import { database } from './db';
 import { authenticate,checkOrigin,login,digest } from './auth';
 import { executeCommand,resolveProposal,uuid } from './commands';
@@ -138,13 +138,18 @@ export async function handle(req:Request) {
   }
   if(post&&name==='settings/model') {
    invariant(ctx.isOwner,'not_found','Record not found.',404);
-   const p=z.object({model:z.string().trim().min(1).max(120).regex(/^[a-zA-Z0-9._:/-]+$/),apiKey:z.string().max(512).optional()}).strict().parse(await body(req));
-   saveModelSettings(p.model,p.apiKey);
+   const p=z.object({model:z.string(),apiKey:z.string().max(512).optional(),api:z.enum(['responses','chat_completions']).default('responses')}).strict().parse(await body(req));
+   saveModelSettings(p.model,p.apiKey,p.api);
    return json({model:publicModelSettings()});
   }
   if(post&&name==='settings/model/check'){
    invariant(ctx.isOwner,'not_found','Record not found.',404);
    return json(await checkModelAccess(req.signal));
+  }
+  if(post&&name==='settings/model/list'){
+   invariant(ctx.isOwner,'not_found','Record not found.',404);
+   const p=z.object({apiKey:z.string().max(512).optional()}).strict().parse(await body(req));
+   return json(await listModels(p.apiKey,req.signal));
   }
   if(post&&name==='artifacts') {
    const data=await bytes(req,10*1024*1024+65536);

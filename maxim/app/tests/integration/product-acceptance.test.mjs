@@ -7,7 +7,7 @@ import {harness} from '../support/harness.mjs';
 import {preparedApplication,apiCommand,until,applicationForm} from '../support/assisted-application.mjs';
 
 for(const rehearsal of [1,2])test('S11 mounted-product rehearsal '+rehearsal+' preserves lineage, recovery and manual control',async()=>{
- const h=await harness();let worker;
+ const h=await harness(rehearsal===2?{api:'responses'}:{});let worker;
  const read=async route=>{const r=await h.request(h.a,route);assert.equal(r.status,200,route);return r.json();};
  const stable=()=>until(async()=>{const d=await read('/api/browser');return !d.actions.some(a=>['queued','running'].includes(a.status))&&d;},'mounted browser action');
  try{

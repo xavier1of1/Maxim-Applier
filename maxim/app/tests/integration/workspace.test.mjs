@@ -301,8 +301,11 @@ test('S1 actual production HTTP, PostgreSQL, tools and recovery', {timeout:30000
    const saved=await json(h.a,'/api/settings/model',{method:'POST',body});
    assert.equal(saved.response.status,200);assert.equal(saved.data.model.hasKey,true);
    const unsupported=await json(h.a,'/api/settings/model',{method:'POST',body:{model:'unmapped-model',apiKey:'unused-fixture-key'}});
-   assert.equal(unsupported.data.error.code,'unsupported_tokenizer');
-   assert.equal(JSON.parse(fs.readFileSync(h.runtime)).model.model,'fixture-model');
+   assert.equal(unsupported.response.status,200);
+   assert.equal(JSON.parse(fs.readFileSync(h.runtime)).model.model,'unmapped-model');
+   await h.request(h.a,'/api/settings/model',{method:'POST',body});
+   const invalid=await json(h.a,'/api/settings/model',{method:'POST',body:{model:'GPT-6.1 Terra'}});
+   assert.equal(invalid.data.error.code,'invalid_model_id');
    assert.equal((await h.request(h.b,'/api/settings/model/check',{method:'POST',body:{}})).status,404);
    h.providerRoutes.set('/v1/models/fixture-model',{status:401,body:{error:'private fixture upstream message'}});
    const denied=await json(h.a,'/api/settings/model/check',{method:'POST',body:{}});

@@ -115,7 +115,7 @@ test('truthful backend failure, model failure, empty result, and sign-out states
  await page.getByRole('button',{name:'Clear search',exact:true}).click();
  await page.getByRole('textbox',{name:'Message agent'}).fill('[case:failure]');
  await page.getByRole('button',{name:'Send message'}).click();
- await expect(page.locator('.agent-panel').getByRole('alert')).toContainText('model service rejected');
+ await expect(page.locator('.agent-panel').getByRole('alert')).toContainText('provider rate or quota limit');
  await expect(page.locator('body')).not.toContainText('fixture_provider_body_secret');
  await page.locator('.sidebar').getByRole('button',{name:'Settings',exact:true}).click();
  await page.getByRole('button',{name:'Sign out',exact:true}).click();

@@ -7,7 +7,7 @@ import {interviewHarness} from '../support/interview-harness.mjs';
 const id=()=>crypto.randomUUID();
 
 test('S10 real isolated interview commands, worker, revision fencing and erasure',{timeout:240000},async t=>{
- const h=await interviewHarness();t.after(()=>h.close());
+ const h=await interviewHarness({api:'responses'});t.after(()=>h.close());
  const json=async(auth,path,options={})=>{const r=await h.request(auth,path,options);return {status:r.status,...await r.json()};};
  const cmd=(action,payload,commandId=id(),auth=h.a)=>json(auth,'/api/interview/commands',{method:'POST',body:{commandId,action,payload}});
  const view=(sessionId,auth=h.a)=>json(auth,'/api/interview?job='+h.job.id+(sessionId?'&session='+sessionId:''));
@@ -102,10 +102,10 @@ test('S10 real isolated interview commands, worker, revision fencing and erasure
    const v=await view(s.id);assert.equal(v.modelConfigured,false);assert.equal(v.attempts[0].status,'model_unconfigured');assert.equal(v.attempts[0].feedback,null);assert.ok(v.session.snapshot.prompts.length>0);assert.equal(h.captured.length,n);
   }finally{h.configure({model});}
  });
- await t.test('local budget and unsupported tokenizer refuse before transmission; provider failures are explicit',async()=>{
-  for(const update of [{contextBudget:100},{model:{...h.c.model,model:'unverified-model'}}]){
+ await t.test('local budget and malformed model IDs refuse before transmission; provider failures are explicit',async()=>{
+  for(const update of [{contextBudget:100},{model:{...h.c.model,model:'Not an API ID'}}]){
    const old={model:{...h.c.model},contextBudget:h.c.contextBudget||8192};h.configure(update);
-   try{const n=h.captured.length,s=await start();await save(s,'Synthetic bounded request.',{requestFeedback:true,modelConsent:true});await h.work();const a=(await view(s.id)).attempts[0];assert.equal(a.status,'failed');assert.ok(['context_budget_exceeded','unsupported_tokenizer'].includes(a.error_code));assert.equal(h.captured.length,n);}finally{h.configure(old);}
+   try{const n=h.captured.length,s=await start();await save(s,'Synthetic bounded request.',{requestFeedback:true,modelConsent:true});await h.work();const a=(await view(s.id)).attempts[0];assert.equal(a.status,'failed');assert.ok(['context_budget_exceeded','invalid_model_id'].includes(a.error_code));assert.equal(h.captured.length,n);}finally{h.configure(old);}
   }
   for(const mode of ['reject','malformed','truncated','oversize']){
    h.setProviderMode(mode);const s=await start();await save(s,'Synthetic failure request.',{requestFeedback:true,modelConsent:true});await h.work();const a=(await view(s.id)).attempts[0];assert.equal(a.status,'failed',mode);assert.equal(a.feedback,null,mode);assert.ok(['model_rejected','model_invalid_response','model_interrupted','model_output_limit'].includes(a.error_code),JSON.stringify(a));

@@ -47,7 +47,7 @@ The installed Microsoft TypeScript package is `@microsoft/tiktokenizer@1.0.10`, 
 
 References: [Microsoft TypeScript guide](https://github.com/microsoft/Tokenizer/blob/main/tokenizer_ts/README.md), [OpenAI encoding hashes](https://github.com/openai/tiktoken/blob/main/tiktoken_ext/openai_public.py), [OpenAI model mapping](https://github.com/openai/tiktoken/blob/main/tiktoken/model.py).
 
-Model profiles explicitly cover GPT-4o/mini, GPT-4.1/mini/nano, GPT-5/mini/nano and their dated snapshots with o200k, plus a bounded legacy GPT-4/cl100k profile. This is tokenizer/request policy, not proof of account availability, current pricing or model quality. Unknown aliases/encodings fail before transmission rather than being guessed. A synthetic fixture-model alias exists only in test mode. For a simple non-reasoning demo, choose an accessible documented tool-capable model in Settings; account access remains yours.
+Verified local profiles cover GPT-4o/mini, GPT-4.1/mini/nano, GPT-5/mini/nano and their dated snapshots with o200k, plus a bounded legacy GPT-4/cl100k profile. Unknown model IDs use an explicitly estimated o200k counter, with no assumed provider context window; they are not rejected by name. Unsupported encoding assets and malformed IDs still fail before transmission. The synthetic fixture profile is test-only. Token estimates, model listing and metadata access do not certify task support, pricing or quality. See [current model setup](setup.md#model-selection-and-compatibility).
 
 Every chat call counts the complete serialized request: system instructions, all tool schemas, ordered recent history, current input, retrieved evidence and tool results. Hard limits:
 - 32,000 serialized UTF-8 bytes.
@@ -58,7 +58,7 @@ Every chat call counts the complete serialized request: system instructions, all
 - History is bounded to 12 saved user/assistant messages and is never promoted to approved facts by summarization.
 - Consented source interpretation uses the same full-request compiler, a 1,600-token output reserve and its existing 20-second deadline. Context failure preserves local extraction with a warning.
 
-Local serialization/framing counts are **not exact provider billing**. Runs save each local accounting record and separately reported provider usage. Missing usage is unreported, never estimated as actual. Context accounting is inspectable under the agent transcript. Real BPE token vectors, Unicode/ordinary special text, unsupported models, tiny-budget refusal and captured fixture requests are tested. A live-provider quality/billing calibration is not claimed.
+Local serialization/framing counts are **not exact provider billing**. Runs save each local accounting record and separately reported provider usage. Missing usage is unreported, never estimated as actual. Context accounting is inspectable under the agent transcript. Real BPE token vectors, Unicode/ordinary special text, unknown model estimates, malformed IDs, tiny-budget refusal and captured fixture requests are tested. A live-provider quality/billing calibration is not claimed.
 
 ## Revisions, Erasure And History
 

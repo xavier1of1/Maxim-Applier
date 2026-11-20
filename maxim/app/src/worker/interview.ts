@@ -26,7 +26,7 @@ export async function practiceInterview(item:WorkItem,parent?:AbortSignal){
   monitor=(async()=>{
    while(!monitorStop.signal.aborted){await wait(250,undefined,{signal:monitorStop.signal});await transaction(tx=>active(tx,item));}
   })().catch(()=>{if(!monitorStop.signal.aborted)stop.abort();});
-  const result=await interviewCompletion({snapshot:s.snapshot,text:a.text,hypothetical:a.hypothetical,model:a.model,provider:a.provider},signal,accounting=>transaction(async tx=>{
+  const result=await interviewCompletion({snapshot:s.snapshot,text:a.text,hypothetical:a.hypothetical,model:a.model,provider:a.provider,api:item.input.api==='responses'?'responses':'chat_completions'},signal,accounting=>transaction(async tx=>{
    await active(tx,item);signal.throwIfAborted();
    await tx.query('UPDATE interview_attempts SET accounting=$1 WHERE workspace_id=$2 AND id=$3',[JSON.stringify(accounting),item.workspace_id,a.id]);
   }));

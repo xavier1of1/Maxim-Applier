@@ -19,8 +19,8 @@ test('all instructions, schemas, history and tool results are counted with outpu
  assert.ok(count.localTotalBudget>=count.estimatedInputTokens+count.outputReserve);
  assert.throws(()=>compileContext(body,{totalBudget:100}),e=>e.code==='context_budget_exceeded');
  assert.throws(()=>compileContext({...body,messages:[{role:'system',content:'x'.repeat(33000)}]}),e=>e.code==='context_budget_exceeded');
- assert.throws(()=>modelProfile('invented-future-model'),e=>e.code==='unsupported_tokenizer');
- assert.throws(()=>modelProfile('fixture-model'),e=>e.code==='unsupported_tokenizer');
+ assert.equal(modelProfile('invented-future-model').window,null);
+ assert.equal(modelProfile('fixture-model').profile,'estimated_openai_text');
  assert.equal(modelProfile('fixture-model',true).profile,'synthetic_fixture');
 });
 test('Rust question policy is exact, conservative and never infers missing booleans',()=>{

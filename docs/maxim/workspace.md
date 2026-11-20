@@ -72,7 +72,7 @@ final combined acceptance remain open; see the [setup guide](setup.md).
 
 ## Model Configuration And Privacy
 
-Settings -> Model connection accepts an OpenAI model ID and API key. Choose a model your own project can access that supports Chat Completions, streaming and strict tools. Billing/access is your account's responsibility. Blank replacement-key input preserves the stored key.
+Settings -> Model connection accepts an exact OpenAI API model ID and API key. Load models retrieves account-visible IDs without saving an entered key; manual entry remains available. New selections use Responses; existing connections retain Chat Completions unless changed explicitly under Advanced connection. Select a model supporting the required text/JSON/function tasks; listing and metadata checks alone do not certify compatibility. Billing/access is your account's responsibility. Blank replacement-key input preserves the stored key. See [model setup](setup.md#model-selection-and-compatibility).
 
 Secrets remain in the protected runtime file, not public settings, bundles, Git or model messages. Chat sends bounded recent messages, selected IDs and authorized tool data to the provider. Job-reference bytes are not interpreted. Candidate sources are parsed locally; minimized model interpretation and future candidate context require explicit source permission. Private/sensitive fields remain withheld from general model context. Do not put prohibited proprietary material in chat, sources, notes or JDs.
 

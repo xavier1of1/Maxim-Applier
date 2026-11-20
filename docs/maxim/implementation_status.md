@@ -1,6 +1,14 @@
 # Maxim Apply Implementation Status
 
 Updated: 2026-11-19. Canonical repository: `D:\VSC Programs\maxim-apply`.
+Model integration update: 2026-11-20. Dynamic account-visible model selection and
+manual exact-ID entry replace the name whitelist. One shared Responses transport
+serves chat, retained scoring, source interpretation and interview feedback;
+existing runtime configs default to their original Chat Completions transport.
+Task support is not inferred from a model listing. See the current
+[model verification](../../roadmap/reviews/openai-model-compatibility.md).
+This change passed 130 isolated integration, 29 Chromium and 46 app unit tests,
+plus the retained/native, Rust, Go, build, safety, privacy and roadmap checks.
 S0-S5 are verified for their bounded scopes and are recorded as separate stage
 commits. S6-S10 implementation and S11 acceptance infrastructure are integrated
 and passed the November 19 combined regression. They remain In progress where
