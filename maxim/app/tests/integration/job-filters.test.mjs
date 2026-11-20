@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {harness} from '../support/harness.mjs';
+test('SQL filters precede pagination, preserve selected detail and remain workspace-scoped',{timeout:120000},async t=>{
+ const h=await harness();t.after(()=>h.close());
+ await h.sql("INSERT INTO jobs(id,workspace_id,company,title,location,description,posted_at,industry,role_lane) SELECT gen_random_uuid(),$1,'Large Employer','Software Engineer '||n,'Reston, VA','Synthetic public job',now()-interval '2 days','Technology','Software engineering' FROM generate_series(1,510) n",[h.c.workspaceId]);
+ const target=(await h.sql("INSERT INTO jobs(id,workspace_id,company,title,location,description,industry,role_lane) VALUES(gen_random_uuid(),$1,'Distinct Company','Forward Deployed Engineer','Washington, DC','Synthetic distinct job','Manufacturing','Forward deployed') RETURNING id",[h.c.workspaceId])).rows[0];
+ const read=async url=>{const r=await h.request(h.a,url);assert.equal(r.status,200);return r.json();};
+ let v=await read('/api/workspace?company=Distinct%20Company&limit=50');assert.equal(v.jobs.length,1);assert.equal(v.jobPage.total,1);assert.equal(v.jobs[0].id,target.id);
+ v=await read('/api/workspace?industry=Manufacturing&lane=Forward%20deployed&age=unknown');assert.equal(v.jobs.length,1);
+ assert.equal((await read('/api/workspace?industry=Technology&age=7&limit=50')).jobs.length,50);
+ assert.equal((await read('/api/workspace?age=today')).jobs.length,0);
+ assert.equal((await read('/api/workspace?minScore=4')).jobPage.total,0);
+ assert.equal((await read('/api/workspace?company='+encodeURIComponent("' OR 1=1 --"))).jobPage.total,0);
+ v=await read('/api/workspace?limit=50&offset=500&company=Large%20Employer&job='+target.id);assert.equal(v.jobPage.ids.length,10);assert.equal(v.jobs.length,11);assert.equal(v.jobs.at(-1).id,target.id);
+ assert.equal((await(await h.request(h.b,'/api/workspace?company=Distinct%20Company')).json()).jobs.length,0);
+});

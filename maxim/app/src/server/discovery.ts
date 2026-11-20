@@ -15,6 +15,7 @@ import {capacity} from './intelligence-policy';
 const schema=z.discriminatedUnion('action',[
  z.object({commandId:uuid,action:z.literal('add_source'),payload:z.object({name:z.string().trim().min(1).max(180),provider:z.enum(['greenhouse','lever','ashby','manual']),board:z.string().max(100).default(''),careersUrl:z.string().url().max(2048).optional()}).strict()}).strict(),
  z.object({commandId:uuid,action:z.literal('set_source_enabled'),payload:z.object({sourceId:uuid,expectedRevision:z.number().int().positive(),enabled:z.boolean()}).strict()}).strict(),
+ z.object({commandId:uuid,action:z.literal('set_source_industry'),payload:z.object({sourceId:uuid,expectedRevision:z.number().int().positive(),industry:z.string().trim().max(120)}).strict()}).strict(),
  z.object({commandId:uuid,action:z.literal('start_search'),payload:z.object({sourceIds:z.array(uuid).min(1).max(3),terms:z.array(z.string().trim().min(2).max(120)).max(10).default([]),matchIn:z.enum(['title','title_and_description']).default('title_and_description')}).strict()}).strict(),
  z.object({commandId:uuid,action:z.literal('fetch_posting_details'),payload:z.object({jobId:uuid,expectedRevision:z.number().int().positive()}).strict()}).strict(),
  z.object({commandId:uuid,action:z.enum(['cancel_search','retry_search']),payload:z.object({runId:uuid,expectedRevision:z.number().int().positive()}).strict()}).strict(),
@@ -24,6 +25,13 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
  const c=schema.parse(raw);
  return command(ctx,c.commandId,c,async tx=>{
   const w=ctx.workspaceId;
+  if(c.action==='set_source_industry'){
+   invariant(ctx.isOwner,'not_found','Record not found.',404);await applicationWritable(tx,w);
+   const p=c.payload,s=(await tx.query('UPDATE discovery_sources SET industry=$1,revision=revision+1 WHERE workspace_id=$2 AND id=$3 AND revision=$4 RETURNING *',[p.industry||null,w,p.sourceId,p.expectedRevision])).rows[0];
+   invariant(s,'revision_conflict','Source changed; refresh before editing industry.',409);
+   await tx.query("UPDATE jobs j SET industry=$1,industry_provenance='Owner-confirmed source industry' FROM job_source_aliases a WHERE a.workspace_id=$2 AND a.source_id=$3 AND j.workspace_id=a.workspace_id AND j.id=a.job_id",[p.industry||null,w,s.id]);
+   await event(tx,ctx,s.id,'source_industry_confirmed',{industry:p.industry||null},s.revision);return s;
+  }
   if(['start_search','retry_search','set_discovery_state','fetch_posting_details'].includes(c.action))await applicationWritable(tx,w);
   if(c.action==='add_source'){
    const p=c.payload,d=sourceDefinition(p.provider,p.board,p.careersUrl),id=crypto.randomUUID(),hash=digest(JSON.stringify(d));

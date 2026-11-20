@@ -11,7 +11,8 @@ pub fn lane(title:&str)->&'static str {
  else if t.contains("data engineer"){"Data engineering"}
  else if t.contains("automation")||t.contains("test engineer"){"Automation"}
  else if t.contains("systems")||t.contains("platform")||t.contains("devops"){"Systems / platform"}
- else {"Software engineering"}
+ else if t.contains("software")||t.contains("developer")||t.contains("engineer"){"Software engineering"}
+ else {"Other roles"}
 }
 pub fn metadata(input:&Value)->Value{
  let title=input["title"].as_str().unwrap_or("");let text=input["description"].as_str().unwrap_or("");

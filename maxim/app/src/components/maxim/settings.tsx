@@ -8,6 +8,7 @@ import {ArrowRight, Bot, Check, Globe, KeyRound, LogOut, Mail, MessageCircle, Sa
 import {errorMessage, type WorkspaceApi} from './api';
 import {Banner, Glyph, Pill, formatBytes} from './shared';
 import type {ModelSettings, Navigation, WorkspaceData} from './types';
+import {IntelligenceSettings} from './intelligence';
 
 export function SettingsView({data, api, disabled, refresh, navigate, onLogout}: {
   data: WorkspaceData; api: WorkspaceApi; disabled: boolean; refresh: () => Promise<void>; navigate:(value:Navigation)=>void; onLogout: () => Promise<void>;
@@ -55,6 +56,7 @@ export function SettingsView({data, api, disabled, refresh, navigate, onLogout}:
     catch(e){setError(errorMessage(e));}finally{setListing(false);}
   }
   return <div className="settings-view">
+    <IntelligenceSettings api={api} disabled={disabled} asOf={data.asOf} refresh={refresh} navigate={navigate} isOwner={isOwner}/>
     <section className="settings-section">
       <div className="settings-section-title"><Bot size={19} aria-hidden="true" /><div><h2>Model connection</h2>
         <span className="small muted">{current.provider || 'Provider not configured'}</span></div>

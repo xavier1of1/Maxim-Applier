@@ -6,6 +6,7 @@ import { reauthorize, digest, type Context } from './auth';
 import { invariant, notFound } from './errors';
 import {applicationWritable,queueApplicationProjection} from './application-authority';
 import {capacity} from './intelligence-policy';
+import {domain} from './domain';
 
 export const uuid = z.string().uuid();
 const note = z.string().max(8000);
@@ -66,9 +67,11 @@ export async function executeCommand(ctx: Context, raw: unknown) {
     invariant(url.protocol === 'https:' && !url.username && !url.password,'invalid_job_url','Posting URL must be an HTTPS address without credentials.');
    }
    const id = crypto.randomUUID();
+   const lane=domain({operation:'job_metadata',title:p.title}).lane;
    const r = await tx.query('INSERT INTO jobs(id,workspace_id,company,title,location,url,description) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *',
     [id,ctx.workspaceId,p.company,p.title,p.location,p.url || null,p.description]);
    await event(tx,ctx,id,'job_added',{company:p.company,title:p.title},1);
+   await tx.query('UPDATE jobs SET role_lane=$1 WHERE workspace_id=$2 AND id=$3',[lane,ctx.workspaceId,id]);r.rows[0].role_lane=lane;
    return r.rows[0];
   }
   if (c.action === 'set_intent_status') {

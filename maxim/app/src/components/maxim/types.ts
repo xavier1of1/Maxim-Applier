@@ -1,9 +1,9 @@
 import type {PostingPolicy} from './role-triage';
 import type {JobFit} from './role-fit';
 
-export type View = 'jobs' | 'applications' | 'activity' | 'settings' | 'candidate' | 'answers' | 'discovery' | 'browser' | 'gmail' | 'discord' | 'networking' | 'interview';
+export type View = 'home' | 'archive' | 'jobs' | 'applications' | 'activity' | 'settings' | 'candidate' | 'answers' | 'discovery' | 'browser' | 'gmail' | 'discord' | 'networking' | 'interview';
 export type RecordFilter = 'active' | 'archived';
-export type Navigation = Partial<Record<'view' | 'job' | 'conversation' | 'filter' | 'source' | 'application' | 'knowledge' | 'question' | 'sort', string | null>>;
+export type Navigation = Partial<Record<'view' | 'job' | 'conversation' | 'filter' | 'source' | 'application' | 'knowledge' | 'question' | 'sort' | 'q' | 'company' | 'industry' | 'lane' | 'age' | 'minScore' | 'maxScore' | 'fit' | 'location' | 'locationGroup' | 'offset', string | null>>;
 
 export interface WorkspaceIdentity {
   id: string;
@@ -98,6 +98,8 @@ export interface ModelSettings {
 }
 
 export interface WorkspaceData {
+  jobPage?:{total:number;offset:number;limit:number;more:boolean;ids:string[]};
+  facets?:{company:string[];industry:string[];lane:string[]};
   candidate?:{revision:number;ownership:string};
   workspace: WorkspaceIdentity;
   jobs: Job[];

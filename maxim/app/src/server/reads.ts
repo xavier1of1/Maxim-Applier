@@ -5,7 +5,9 @@ import { notFound } from './errors';
 import { uuid } from './commands';
 import {engineSnapshot} from './evaluation-native';
 import {jobFitJoin,jobFitOrder} from './job-fit';
-export async function snapshot(ctx: Context,sort:string|null=null,selectedId:string|null=null) {
+import {jobFilters} from './job-filters';
+import {policyFor} from './intelligence-policy';
+export async function snapshot(ctx: Context,sort:string|null=null,selectedId:string|null=null,query=new URLSearchParams()) {
  if(selectedId)uuid.parse(selectedId);
  const engine=await engineSnapshot();
  return transaction(async db=>{
@@ -24,8 +26,10 @@ export async function snapshot(ctx: Context,sort:string|null=null,selectedId:str
    ORDER BY r.created_at DESC LIMIT 1
   ) detail ON j.source_platform='greenhouse'
   ${jobFitJoin} WHERE j.workspace_id=$1`;
- const page=(await db.query(jobSql+` ORDER BY ${jobFitOrder(sort)} LIMIT 501`,[w,engine.hash])).rows;
- const jobs=page.slice(0,500);
+ const f=jobFilters(query,(await policyFor(db,w)).value.timezone),params=[w,engine.hash,...f.values];
+ const page=(await db.query(jobSql+f.sql+` ORDER BY ${jobFitOrder(sort)} LIMIT ${f.limit+1} OFFSET ${f.offset}`,params)).rows;
+ const jobs=page.slice(0,f.limit),pageIds=jobs.map(j=>j.id);
+ const total=Number((await db.query('SELECT count(*) FROM ('+jobSql+f.sql+') matches',params)).rows[0].count);
  if(selectedId&&!jobs.some(j=>j.id===selectedId)){
   const selected=(await db.query(jobSql+' AND j.id=$3',[w,engine.hash,selectedId])).rows[0];
   if(selected)jobs.push(selected);
@@ -36,8 +40,10 @@ export async function snapshot(ctx: Context,sort:string|null=null,selectedId:str
  const conversations=(await db.query('SELECT id,title,job_id,updated_at FROM conversations WHERE workspace_id=$1 ORDER BY updated_at DESC,id LIMIT 100',[w])).rows;
  const proposals=(await db.query('SELECT p.id,p.job_id,p.note,p.expected_revision,p.status,p.expires_at,p.created_at FROM proposals p JOIN runs r ON r.id=p.run_id AND r.workspace_id=p.workspace_id WHERE p.workspace_id=$1 AND p.status=$2 AND p.expires_at>now() AND r.status=$3 AND p.session_id=$4 ORDER BY p.created_at DESC',[w,'pending','completed',ctx.sessionId])).rows;
  const artifacts=(await db.query('SELECT id,job_id,name,bytes,content_type,created_at FROM artifacts WHERE workspace_id=$1 ORDER BY created_at DESC LIMIT 500',[w])).rows;
+ const facets=(await db.query('SELECT company,industry,role_lane FROM jobs WHERE workspace_id=$1 AND NOT archived GROUP BY company,industry,role_lane ORDER BY company LIMIT 1000',[w])).rows;
  return {workspace,jobs,candidate,applications,events,conversations,proposals,artifacts,settings:{model:publicModelSettings(),testMode:config().testMode,ownership:'new_workspace'},
-  asOf:new Date().toISOString(),sourceStatus:page.length>500?'partial':jobs.length?'fresh':'empty'};
+  jobPage:{total,offset:f.offset,limit:f.limit,more:page.length>f.limit,ids:pageIds},facets:{company:[...new Set(facets.map(j=>j.company))],industry:[...new Set(facets.map(j=>j.industry||'Unknown'))],lane:[...new Set(facets.map(j=>j.role_lane||'Unknown'))]},
+  asOf:new Date().toISOString(),sourceStatus:page.length>f.limit?'partial':jobs.length?'fresh':'empty'};
  });
 }
 export async function getJob(ctx: Context, id: string) {

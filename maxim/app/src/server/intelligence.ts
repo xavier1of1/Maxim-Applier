@@ -46,7 +46,7 @@ export async function intelligenceView(ctx:Context){
   const cycles=(await tx.query('SELECT c.*,x.status AS work_status,x.error_code FROM intelligence_cycles c LEFT JOIN work_items x ON x.id=c.work_id AND x.workspace_id=c.workspace_id WHERE c.workspace_id=$1 ORDER BY c.created_at DESC LIMIT 10',[w])).rows;
   const reservations=(await tx.query('SELECT id,evaluation_id,status,reserved_cents,charged_cents,created_at FROM evaluation_reservations WHERE workspace_id=$1 ORDER BY created_at DESC LIMIT 20',[w])).rows;
   const proposals=(await tx.query("SELECT * FROM intelligence_proposals WHERE workspace_id=$1 AND status='pending' ORDER BY created_at DESC LIMIT 10",[w])).rows;
-  const s=await screening(tx,w),sources=(await tx.query('SELECT id,name,provider,enabled,industry FROM discovery_sources WHERE workspace_id=$1 ORDER BY name,id LIMIT 200',[w])).rows;
+  const s=await screening(tx,w),sources=(await tx.query('SELECT id,name,provider,enabled,industry,revision FROM discovery_sources WHERE workspace_id=$1 ORDER BY name,id LIMIT 200',[w])).rows;
   return {policy:{value:p.value,revision:p.revision,active:p.active},capacity:await capacity(tx,w),budget:await budgetView(tx,w,p.value),reservation:reserveCost(p.value),model:config().model.model,sources,cycles,reservations,proposals,
    preview:{selected:s.selected,held:s.held,jobs:s.jobs.map(j=>({id:j.id,title:j.title,company:j.company})),evidenceAvailable:s.evidenceAvailable},asOf:new Date().toISOString()};
  });

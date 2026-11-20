@@ -12,6 +12,7 @@ import {ApiError, WorkspaceApi, errorMessage, isAbort, readJson, request} from '
 import {AgentPanel, ProposalReview} from './agent';
 import {CreateRoleDialog, JobsView} from './jobs';
 import {SettingsView} from './settings';
+import {ArchiveView} from './intelligence';
 import {CandidateView} from './candidate';
 import {AnswersView} from './answers';
 import {DiscoveryView} from './discovery';
@@ -29,6 +30,7 @@ import {roleSort} from './role-fit';
 
 const navigation = [
   {view: 'jobs' as const, label: 'Jobs', icon: BriefcaseBusiness},
+  {view: 'archive' as const, label: 'Archive', icon: History},
   {view: 'discovery' as const, label: 'Discovery', icon: LayoutGrid},
   {view: 'candidate' as const, label: 'Candidate', icon: ShieldCheck},
   {view: 'answers' as const, label: 'Answers', icon: BookOpen},
@@ -122,6 +124,9 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
   const view: View = navigation.some(item => item.view === requestedView) ? requestedView as View : 'jobs';
   const jobId = searchParams.get('job');
   const sort=roleSort(searchParams.get('sort'));
+  const jobQuery=new URLSearchParams(query);jobQuery.set('limit','50');jobQuery.set('sort',sort);jobQuery.set('filter',searchParams.get('filter')==='archived'?'archived':'active');
+  if(!jobQuery.has('locationGroup'))jobQuery.set('locationGroup','focus');
+  const jobsQuery=jobQuery.toString();
   const conversationId = searchParams.get('conversation');
   const filter = searchParams.get('filter') === 'archived' ? 'archived' : 'active';
   const [data, setData] = useState<WorkspaceData | null>(null);
@@ -159,7 +164,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
     const requestId = ++sequence.current;
     setRefreshing(true);
     try {
-      const result = await api.get<WorkspaceData>('/api/workspace?sort='+sort+(jobId?'&job='+jobId:''));
+      const result = await api.get<WorkspaceData>('/api/workspace?'+jobsQuery);
       if (!Array.isArray(result.jobs) || !Array.isArray(result.conversations) || !result.settings?.model) {
         throw new ApiError('The service returned an incomplete workspace.', 'INVALID_RESPONSE');
       }
@@ -167,7 +172,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
     } catch (failure) {
       if (live.current && requestId === sequence.current && !isAbort(failure)) setError(errorMessage(failure));
     } finally { if (live.current && requestId === sequence.current) setRefreshing(false); }
-  }, [api,sort,jobId]);
+  }, [api,jobsQuery]);
   useEffect(() => {
     live.current = true;
     void refresh();
@@ -237,6 +242,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
             selectedId={jobId} filter={filter} sort={sort} onCreate={() => setCreateOpen(true)} onDirtyChange={setNoteDirty}
             onAgent={() => { setAgentOpen(true); if (conversationId && agent.detail && agent.detail.conversation.job_id !== jobId && !agent.isRunning) void agent.newConversation(); }} />
           : view === 'candidate' ? <CandidateView key={searchParams.get('knowledge')} api={api} disabled={disabled} refresh={refresh} navigate={navigate} sourceId={searchParams.get('source')} initialTab={searchParams.get('knowledge')} asOf={data.asOf} isOwner={data.workspace.is_owner}/>
+          : view === 'archive' ? <ArchiveView api={api} disabled={disabled} asOf={data.asOf} refresh={refresh} isOwner={data.workspace.is_owner} navigate={navigate}/>
           : view === 'answers' ? <AnswersView key={searchParams.get('question')} api={api} disabled={disabled} refresh={refresh} asOf={data.asOf}
             requestedQuestion={searchParams.get('question')} returnToAssistant={searchParams.has('application')&&searchParams.has('question')?()=>navigate({view:'browser',question:null}):undefined}/>
           : view === 'discovery' ? <DiscoveryView api={api} disabled={disabled} refresh={refresh} asOf={data.asOf} navigate={navigate} sort={sort}/>

@@ -1,6 +1,8 @@
 'use client';
 
 import {useEffect, useRef, useState, type FormEvent} from 'react';
+import {useSearchParams} from 'next/navigation';
+import {JobFilters} from './job-filters';
 import {Button} from '@astryxdesign/core/Button';
 import {TextInput} from '@astryxdesign/core/TextInput';
 import {TextArea} from '@astryxdesign/core/TextArea';
@@ -91,12 +93,9 @@ export function CreateRoleDialog({open, onClose, api, disabled, onCreated}: {
 export function JobsView({data, api, disabled, refresh, navigate, selectedId, filter,sort, onCreate, onDirtyChange, onAgent}: SharedProps & {
   selectedId: string | null; filter: RecordFilter;sort:string; onCreate: () => void; onDirtyChange: (dirty: boolean) => void; onAgent: () => void;
 }) {
-  const [search, setSearch] = useState('');
-  const [location,setLocation]=useState('focus');
-  const matching = data.jobs.filter(job => job.archived === (filter === 'archived') &&
-    [job.company, job.title, job.location ?? ''].join(' ').toLowerCase().includes(search.toLowerCase().trim()))
-    .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
-  const jobs=sortRoles(filter==='archived'?matching:matching.filter(job=>locationMatches(job,location)),sort);
+  const params=useSearchParams(),search=params.get('q')||'',location=params.get('locationGroup')||'focus';
+  const matching=data.jobs.filter(job=>data.jobPage?data.jobPage.ids.includes(job.id):job.archived===(filter==='archived'));
+  const jobs=sortRoles(matching,sort);
   const evaluated=jobs.filter(job=>currentScore(job.fit)!==null).length;
   useBoundedRefresh(data.jobs.some(job=>['queued','running'].includes(job.fit?.status||'')),refresh);
   const employers=new Set(jobs.map(job=>job.company)).size;
@@ -104,20 +103,19 @@ export function JobsView({data, api, disabled, refresh, navigate, selectedId, fi
   return <div className={'jobs-workbench' + (selectedId ? ' has-selection' : '')}>
     <section className="role-list" aria-label="Job records">
       <div className="list-controls">
-        <TextInput label="Search roles" isLabelHidden type="search" placeholder="Search roles..."
-          value={search} onChange={setSearch} startIcon={Search} hasClear width="100%" />
+        <JobFilters data={data} navigate={navigate}/>
         <div className="list-filter-row">
           <Selector label="Role status" isLabelHidden value={filter} size="sm" variant="ghost"
-            onChange={value => navigate({filter: value})} options={[
+            onChange={value => navigate({filter: value,offset:null})} options={[
               {value: 'active', label: 'Active roles'}, {value: 'archived', label: 'Archived roles'},
             ]} />
           <span className="muted small tabular">{jobs.length} {jobs.length === 1 ? 'role' : 'roles'} / {employers} {employers===1?'employer':'employers'}</span>
         </div>
-        {filter==='active'&&<Selector label="Filter roles by location" isLabelHidden value={location} onChange={setLocation} options={locationFilters} width="100%" size="sm"/>}
-        <Selector label="Sort roles" isLabelHidden value={sort} onChange={value=>navigate({sort:value})} options={roleSorts} width="100%" size="sm"/>
+        {filter==='active'&&<Selector label="Filter roles by location" isLabelHidden value={location} onChange={value=>navigate({locationGroup:value,offset:null})} options={locationFilters} width="100%" size="sm"/>}
+        <Selector label="Sort roles" isLabelHidden value={sort} onChange={value=>navigate({sort:value,offset:null})} options={roleSorts} width="100%" size="sm"/>
         <span className="small muted tabular">{evaluated} evaluated / {jobs.length-evaluated} without a current score</span>
       </div>
-      {data.sourceStatus==='partial'&&<Banner tone="info">Showing 500 stored roles in the selected sort order, plus the selected role when needed.</Banner>}
+      {data.jobPage&&<div className="list-filter-row page-controls"><ToolButton label="Previous jobs" icon={ArrowLeft} disabled={!data.jobPage.offset} onClick={()=>navigate({offset:String(Math.max(0,data.jobPage!.offset-data.jobPage!.limit))})}/><span className="small tabular">{data.jobPage.total} matches</span><ToolButton label="Next jobs" icon={ArrowUpRight} disabled={!data.jobPage.more} onClick={()=>navigate({offset:String(data.jobPage!.offset+data.jobPage!.limit)})}/></div>}
       <div className="role-rows">
         {jobs.map(job => <button type="button" key={job.id} className={'role-row' + (selectedId === job.id ? ' selected' : '')}
           aria-current={selectedId === job.id ? 'true' : undefined} onClick={() => navigate({job: job.id})}>
@@ -134,8 +132,8 @@ export function JobsView({data, api, disabled, refresh, navigate, selectedId, fi
         {!jobs.length && <EmptyState compact icon={filter === 'archived' ? Archive : BriefcaseBusiness}
           title={search||matching.length ? 'No matching roles' : filter === 'archived' ? 'Archive is empty' : 'No roles yet'}
           detail={search ? 'Try another company, title, or location.' : undefined}
-          action={search ? <Button label="Clear search" variant="ghost" onClick={() => setSearch('')} />
-            : matching.length&&filter==='active' ? <Button label="All locations" onClick={()=>setLocation('all')}/>
+          action={search ? <Button label="Clear search" variant="ghost" onClick={() => navigate({q:null,offset:null})} />
+            : matching.length&&filter==='active' ? <Button label="All locations" onClick={()=>navigate({locationGroup:'all',offset:null})}/>
             : filter === 'active' ? <Button label="New role" icon={<Glyph icon={Plus} />} onClick={onCreate} isDisabled={disabled} /> : undefined} />}
       </div>
       <div className="list-footer"><span className="status-dot" />Workspace records <span className="mono">{data.jobs.length}</span></div>
