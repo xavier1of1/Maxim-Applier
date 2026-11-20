@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import {harness} from '../support/harness.mjs';
 import {apiCommand} from '../support/assisted-application.mjs';
+import {engineSnapshot} from '../../src/server/evaluation-native.ts';
 
 test('compaction preserves protected evidence, rejects changed previews and restores compact identity',{timeout:120000},async t=>{
  const h=await harness();t.after(()=>h.close());
@@ -26,7 +27,18 @@ test('compaction preserves protected evidence, rejects changed previews and rest
  assert.equal((await read('/api/archive')).total,20);
  const restored=(await h.sql('SELECT * FROM jobs WHERE id=$1',[selected.job_id])).rows[0];assert.equal(restored.description,'');assert.equal(restored.archived,false);assert.equal(restored.compacted_at,null);
  // Submitted history is evidence-protected but does not permanently occupy lead slots.
- await h.sql("UPDATE applications SET outcome='submitted' WHERE job_id=$1",[ids[1]]);assert.equal((await read('/api/intelligence')).capacity.active,3);
+ p=await read('/api/intelligence/cleanup');assert.ok(!p.jobs.some(j=>j.id===selected.job_id),'restored roles awaiting details cannot be immediately compacted again');
+ await h.request(h.a,'/api/commands',{method:'POST',body:{commandId:crypto.randomUUID(),action:'archive_job',payload:{jobId:selected.job_id,expectedRevision:restored.revision,archived:true}}});
+ p=await read('/api/intelligence/cleanup');assert.ok(p.jobs.some(j=>j.id===selected.job_id));assert.equal((await apply(p.fingerprint)).status,200);
+ const rearchived=(await read('/api/archive')).jobs.find(j=>j.job_id===selected.job_id);assert.equal(rearchived.qualifications,selected.qualifications);
+ await h.request(h.a,'/api/intelligence/retention',{method:'POST',body:{commandId:crypto.randomUUID(),action:'restore',payload:{jobId:selected.job_id}}});
+ await h.sql("UPDATE applications SET outcome='unknown' WHERE job_id=$1",[ids[1]]);assert.equal((await read('/api/intelligence')).capacity.active,4,'unknown without submission still occupies a protected slot');
+ await h.sql("UPDATE applications SET outcome='submitted',applied_at=now() WHERE job_id=$1",[ids[1]]);assert.equal((await read('/api/intelligence')).capacity.active,3);
+ const old=crypto.randomUUID();await h.sql("INSERT INTO jobs(id,workspace_id,company,title,description,posted_at,created_at,updated_at,last_seen_at) VALUES($1,$2,'Old still listed','Software Engineer','Qualifications\nRust experience',now()-interval '40 days',now()-interval '40 days',now()-interval '40 days',now())",[old,h.c.workspaceId]);
+ await h.sql("UPDATE candidates SET ownership='canonical' WHERE workspace_id=$1",[h.c.workspaceId]);const engine=await engineSnapshot();
+ await h.sql("INSERT INTO evaluations(id,workspace_id,job_id,status,job_revision,candidate_revision,input_snapshot,input_hash,prompt_hash,model,provider,score,tier) SELECT $1,c.workspace_id,$2,'completed',1,c.revision,$3,'fixture','fixture','fixture-model','fixture',4.6,'T3' FROM candidates c WHERE c.workspace_id=$4",[crypto.randomUUID(),old,JSON.stringify({engine:{hash:engine.hash}}),h.c.workspaceId]);
+ p=await read('/api/intelligence/cleanup');assert.ok(p.jobs.some(j=>j.id===old),'repeated observation must not keep an old unprotected posting forever');assert.equal((await apply(p.fingerprint)).status,200);
+ const history=(await read('/api/archive')).jobs.find(j=>j.job_id===old);assert.equal(Number(history.score),4.6);assert.equal(history.score_current,true);
  await h.sql("INSERT INTO work_items(id,workspace_id,kind,dedupe_key,input) VALUES($1,$2,'evaluate_job','busy-fixture','{}')",[crypto.randomUUID(),h.c.workspaceId]);
  p=await read('/api/intelligence/cleanup');assert.equal(p.busy,true);assert.equal(p.jobs.length,0);
 });

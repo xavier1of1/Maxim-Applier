@@ -1,5 +1,9 @@
 # Maxim Apply Roadmap Index
 
+Current extension: [Discovery intelligence roadmap](discovery-intelligence/README.md)
+adds bounded discovery/scoring, compact history, global filters and Home. Its stage
+numbers 0-5 are separate from the original MVP S0-S11 below.
+
 **Status:** Revision 0.5. S0-S5 verified; S6-S11 In progress with integrated code and outstanding final/live gates. See [current verification](reviews/mvp-completion-verification.md) and [operating guide](../docs/maxim/setup.md).
 **Updated:** 2026-11-17.
 **Demo target:** 2026-11-19. No claim that this entire roadmap fits before that date.

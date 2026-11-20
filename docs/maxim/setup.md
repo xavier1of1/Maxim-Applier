@@ -64,6 +64,13 @@ role. An intent is a local record, not a submitted application.
 
 ## Your Actual Journey
 
+Home now summarizes recorded outcomes and fresh current-fit lanes. Before enabling
+scheduled discovery or paid scoring, review **Settings > Discovery intelligence**.
+All automation/cleanup starts off, the automatic spend allowance starts at zero,
+and source/model prices need owner approval. **Jobs** filters globally before its
+50-row pages; **Archive** contains compact searchable history and restore actions.
+See [complete settings, hold recovery and metric formulas](discovery-intelligence.md).
+
 1. **Candidate:** import authorized sources, review facts and disclosure. Existing
    staged information is not active just because it was imported. Review the
    authority preview and explicitly activate it. Correct a fact here, not in

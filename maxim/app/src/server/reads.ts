@@ -6,7 +6,7 @@ import { uuid } from './commands';
 import {engineSnapshot} from './evaluation-native';
 import {jobFitJoin,jobFitOrder} from './job-fit';
 import {jobFilters} from './job-filters';
-import {policyFor} from './intelligence-policy';
+import {policyFor,activeLead} from './intelligence-policy';
 export async function snapshot(ctx: Context,sort:string|null=null,selectedId:string|null=null,query=new URLSearchParams()) {
  if(selectedId)uuid.parse(selectedId);
  const engine=await engineSnapshot();
@@ -39,10 +39,13 @@ export async function snapshot(ctx: Context,sort:string|null=null,selectedId:str
  const events=(await db.query('SELECT id,entity_id,event_type,revision,payload,created_at FROM events WHERE workspace_id=$1 ORDER BY sequence DESC LIMIT 100',[w])).rows;
  const conversations=(await db.query('SELECT id,title,job_id,updated_at FROM conversations WHERE workspace_id=$1 ORDER BY updated_at DESC,id LIMIT 100',[w])).rows;
  const proposals=(await db.query('SELECT p.id,p.job_id,p.note,p.expected_revision,p.status,p.expires_at,p.created_at FROM proposals p JOIN runs r ON r.id=p.run_id AND r.workspace_id=p.workspace_id WHERE p.workspace_id=$1 AND p.status=$2 AND p.expires_at>now() AND r.status=$3 AND p.session_id=$4 ORDER BY p.created_at DESC',[w,'pending','completed',ctx.sessionId])).rows;
- const artifacts=(await db.query('SELECT id,job_id,name,bytes,content_type,created_at FROM artifacts WHERE workspace_id=$1 ORDER BY created_at DESC LIMIT 500',[w])).rows;
- const facets=(await db.query('SELECT company,industry,role_lane FROM jobs WHERE workspace_id=$1 AND NOT archived GROUP BY company,industry,role_lane ORDER BY company LIMIT 1000',[w])).rows;
+ const artifacts=(await db.query('SELECT id,job_id,name,bytes,content_type,created_at FROM artifacts WHERE workspace_id=$1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 500',[w])).rows;
+ const cohort=query.get('filter')==='archived'?'j.archived':query.get('filter')==='active'?activeLead:'true';
+ const facets:Record<string,string[]>={};
+ for(const [key,column]of [['company','company'],['industry','industry'],['lane','role_lane']])facets[key]=(await db.query(`SELECT DISTINCT coalesce(j.${column},'Unknown') AS value FROM jobs j WHERE j.workspace_id=$1 AND ${cohort} ORDER BY value`,[w])).rows.map(r=>r.value);
+ const totals={leads:Number((await db.query('SELECT count(*) FROM jobs j WHERE j.workspace_id=$1 AND '+activeLead,[w])).rows[0].count),applications:Number((await db.query("SELECT count(*) FROM applications WHERE workspace_id=$1 AND status='intent'",[w])).rows[0].count),events:Number((await db.query('SELECT count(*) FROM events WHERE workspace_id=$1',[w])).rows[0].count)};
  return {workspace,jobs,candidate,applications,events,conversations,proposals,artifacts,settings:{model:publicModelSettings(),testMode:config().testMode,ownership:'new_workspace'},
-  jobPage:{total,offset:f.offset,limit:f.limit,more:page.length>f.limit,ids:pageIds},facets:{company:[...new Set(facets.map(j=>j.company))],industry:[...new Set(facets.map(j=>j.industry||'Unknown'))],lane:[...new Set(facets.map(j=>j.role_lane||'Unknown'))]},
+  totals,jobPage:{total,offset:f.offset,limit:f.limit,more:page.length>f.limit,ids:pageIds},facets,
   asOf:new Date().toISOString(),sourceStatus:page.length>f.limit?'partial':jobs.length?'fresh':'empty'};
  });
 }

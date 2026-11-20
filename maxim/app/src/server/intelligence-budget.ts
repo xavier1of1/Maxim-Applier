@@ -15,7 +15,7 @@ export async function budgetView(tx:PoolClient,w:string,p:IntelligencePolicy){
  const row=(await tx.query(`SELECT count(*) FILTER(WHERE status<>'released')::int AS requests,
  coalesce(sum(CASE WHEN status='released' THEN 0 WHEN status='settled' THEN charged_cents ELSE reserved_cents END),0)::float8 AS cents,
  coalesce(sum(CASE WHEN status='released' THEN 0 WHEN status='settled' AND usage IS NOT NULL THEN coalesce((usage->>'prompt_tokens')::int,0)+coalesce((usage->>'completion_tokens')::int,0) ELSE reserved_tokens END),0)::int AS tokens
- FROM evaluation_reservations WHERE workspace_id=$1 AND (created_at AT TIME ZONE $2)::date=(now() AT TIME ZONE $2)::date`,[w,p.timezone])).rows[0];
+ FROM evaluation_reservations WHERE workspace_id=$1 AND (created_at AT TIME ZONE $2)::date=(clock_timestamp() AT TIME ZONE $2)::date`,[w,p.timezone])).rows[0];
  return {...row,limitCents:p.dailyBudgetCents,limitRequests:p.evaluationsPerDay,limitTokens:p.dailyTokenBudget};
 }
 export async function reserveEvaluation(tx:PoolClient,w:string,cycleId:string,revision:number,p:IntelligencePolicy){
@@ -24,12 +24,12 @@ export async function reserveEvaluation(tx:PoolClient,w:string,cycleId:string,re
  const cost=reserveCost(p),used=await budgetView(tx,w,p);
  invariant(used.requests<p.evaluationsPerDay&&used.cents+cost.cents<=p.dailyBudgetCents&&used.tokens+cost.tokens<=p.dailyTokenBudget,'evaluation_budget_exhausted','Automatic evaluation allowance is exhausted. Review limits or wait for the next policy-local day.',409);
  const id=crypto.randomUUID();
- await tx.query('INSERT INTO evaluation_reservations(id,workspace_id,cycle_id,policy_revision,model,api,reserved_cents,reserved_tokens) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[id,w,cycleId,revision,c.model.model,c.model.api,cost.cents,cost.tokens]);return id;
+ await tx.query('INSERT INTO evaluation_reservations(id,workspace_id,cycle_id,policy_revision,model,api,reserved_cents,reserved_tokens,created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,clock_timestamp())',[id,w,cycleId,revision,c.model.model,c.model.api,cost.cents,cost.tokens]);return id;
 }
 export async function assertAutoGrant(tx:PoolClient,w:string,id:string){
  const r=(await tx.query('SELECT * FROM evaluation_reservations WHERE workspace_id=$1 AND id=$2 FOR UPDATE',[w,id])).rows[0],p=await policyFor(tx,w),c=config();
  invariant(r&&p.value.autoScore&&p.revision===r.policy_revision&&r.model===c.model.model&&r.api===c.model.api&&p.value.pricingModel===c.model.model,'automation_revoked','Automatic scoring settings or model changed; queued work is held.',409);
- const day=(await tx.query('SELECT ($1::timestamptz AT TIME ZONE $2)::date=(now() AT TIME ZONE $2)::date AS current',[r.created_at,p.value.timezone])).rows[0];
+ const day=(await tx.query('SELECT ($1::timestamptz AT TIME ZONE $2)::date=(clock_timestamp() AT TIME ZONE $2)::date AS current',[r.created_at,p.value.timezone])).rows[0];
  invariant(r.status!=='reserved'||day.current,'reservation_expired','A queued reservation crossed its policy-local day; create a new cycle after review.',409);return r;
 }
 export async function reconcileReservations(tx:PoolClient,w:string){

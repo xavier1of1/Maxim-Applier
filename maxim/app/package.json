@@ -33,6 +33,7 @@
     "@microsoft/tiktokenizer": "1.0.10",
     "@stylexjs/stylex": "0.19.2",
     "agent-browser": "0.43.0",
+    "d3-sankey": "0.12.3",
     "html-to-text": "10.0.1",
     "ipaddr.js": "2.5.0",
     "js-yaml": "5.5.0",
@@ -48,6 +49,7 @@
   },
   "devDependencies": {
     "@playwright/test": "1.65.1",
+    "@types/d3-sankey": "0.12.5",
     "@types/html-to-text": "9.0.4",
     "@types/js-yaml": "4.0.9",
     "@types/node": "26.6.6",

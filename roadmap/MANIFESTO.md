@@ -1,5 +1,10 @@
 # Maxim Apply System Manifesto
 
+Accepted extension (2026-11-20): [Discovery intelligence](discovery-intelligence/README.md)
+implements the latest owner's bounded attention/spend, compact history, filter and
+Home requirements. It keeps the single Career-Ops fit score, reviewed candidate
+authority and manual final-action boundaries below. The original comments remain.
+
 **Status:** Target proposal, revision 0.3 with detailed stage contracts. Accepted direction and unapproved component recommendations are distinguished.
 **Updated:** 2026-11-16.
 **Basis:** [Original workflow and unfinished comments](current-system-workflow.md), the latest eight decision-group replies, and [external component research](external-components-assessment.md).

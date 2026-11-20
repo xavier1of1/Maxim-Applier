@@ -54,3 +54,22 @@ prefixes; unmatched coverage remains partial. Separate compact archive plus stab
 job stubs is chosen over destructive row deletion or retaining full descriptions
 forever: identity/history survive while bulky data is bounded. Prices are owner
 reviewed rather than scraped; missing/stale model pricing holds automatic spend.
+
+## Implementation Review Resolution
+
+Two further independent source-only reviews found thirteen actionable gaps:
+unsent preflight refunds, wall-clock day/lease fences, rejection and 200-row-prefix
+starvation, source cursor aliasing, restore qualifications, normalized policy inputs,
+unknown-outcome capacity, canonical opening dedupe, archive filtering, facet
+coverage, lane navigation and racing cohort responses. Each now has a targeted
+regression contract in [verification](verification.md). A follow-up paged-source
+case also proved publication rotates beyond Lever page one rather than merely
+rotating requests. Reviewers did not access private records or enable accounts.
+
+Source follow-up confirmed the eight retention/Home fixes. Scheduler follow-up
+identified the additional page-one issue; its later fix is evidenced by the
+two-page integration test, not a claimed final reviewer reinspection. Final
+acceptance passed 38 Rust, 52 app unit, 143 integration and 37 Chromium tests,
+production build/typecheck, retained/native compatibility, Go and safety/privacy
+checks. This remains an autonomous drift audit, not formal human-approved EGM
+convergence. Owner live gates and existing MVP status are unchanged.

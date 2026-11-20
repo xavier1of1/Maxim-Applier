@@ -20,7 +20,7 @@ export async function claimWork(workerId:string,leaseSeconds=45):Promise<WorkIte
  });
 }
 export async function checkLease(tx:PoolClient,item:WorkItem){
- const r=await tx.query("SELECT id FROM work_items WHERE id=$1 AND workspace_id=$2 AND lease_token=$3 AND lease_owner=$4 AND status='leased' AND lease_until>now() FOR UPDATE",
+ const r=await tx.query("SELECT id FROM work_items WHERE id=$1 AND workspace_id=$2 AND lease_token=$3 AND lease_owner=$4 AND status='leased' AND lease_until>clock_timestamp() FOR UPDATE",
  [item.id,item.workspace_id,item.lease_token,item.lease_owner]);
  invariant(r.rowCount,'lease_lost','Work lease no longer authorizes publication.',409);
 }

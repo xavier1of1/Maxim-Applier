@@ -1,4 +1,188 @@
-# Career-Ops
+# Maxim Apply
+
+Local-first job discovery and reviewed application preparation, built on Career-Ops.
+The workspace remembers approved candidate evidence, finds postings on selected
+public boards, and spends a bounded evaluation allowance on a small shortlist.
+Career-Ops' **1.0-5.0** result remains the only fit score. Submission is manual.
+
+## Start Here
+
+```powershell
+cd "D:\VSC Programs\maxim-apply"
+npm run maxim:workspace:install
+npm run maxim:workspace:build
+npm run maxim:workspace
+```
+
+Open **[Maxim Apply](http://127.0.0.1:3010/maxim)**. Obtain your access key locally
+with `npm run maxim:workspace:key`; never paste it into chat or Git.
+Requires Docker Desktop's Linux engine, Rust/MSVC and the pinned local Node 24.
+See the [operating guide](docs/maxim/setup.md) for browser installation and setup.
+Stop without deleting data: `npm run maxim:workspace:stop`.
+
+1. **Candidate:** upload authorized sources or enter facts, review/correct them,
+   allow professional facts to reach the model if desired, then explicitly activate
+   candidate authority. Uploaded text is not automatically approved knowledge.
+2. **Settings:** connect an OpenAI API model/key. Review discovery limits and public
+   sources. Scheduled scans, automatic paid scoring and cleanup start **off**;
+   the automatic monetary allowance starts at **zero**.
+3. **Discovery:** select Greenhouse, Lever or Ashby boards and target title terms.
+   Searches use public provider feeds, not an LLM, LinkedIn login or universal web
+   search. Confirm coverage/source health; a keyword match is not a fit score.
+4. **Home / Jobs:** inspect current high-fit lanes and scores. Filter globally by
+   company, industry, role type, location, posting age or current score, and sort
+   highest-first. Unknown dates, industry and unevaluated/stale fit remain explicit.
+5. **Applications:** create an intent, evaluate/inspect Career-Ops evidence, build
+   and approve the exact PDF/report, use supported browser assistance, review the
+   form, submit yourself and record the actual outcome.
+
+## One User Journey
+
+```mermaid
+flowchart LR
+ Sources[Resume / declared facts] --> Review[Candidate review + disclosure]
+ Review --> Facts[(Approved versioned knowledge)]
+ Boards[Selected public job boards] --> Discover[Bounded discovery]
+ Facts --> Screen[Cheap Rust shortlist]
+ Discover --> Screen
+ Screen --> Score[Budgeted Career-Ops evaluation]
+ Score --> Jobs[Home / filtered Jobs]
+ Jobs --> Packet[Reviewed report + PDF + answers]
+ Packet --> Browser[Supported visible browser]
+ Browser --> Human[User reviews and submits]
+ Human --> Track[Canonical application outcome]
+ Track --> Follow[Gmail evidence / Discord / networking]
+```
+
+## Architecture
+
+```mermaid
+flowchart TD
+ UI[React / Astryx workspace and chat] --> API[Existing Next API and typed commands]
+ API --> PG[(Local PostgreSQL)]
+ API --> Private[Private sources / artifacts / runtime credentials]
+ PG --> Worker[Existing durable worker]
+ Worker --> Rust[Rust policy, screening, metadata, flow aggregation]
+ Worker --> CO[Retained Career-Ops prompts and report contract]
+ CO --> Model[Configured OpenAI API]
+ Worker --> Feeds[Greenhouse / Lever / Ashby feeds]
+ Worker --> Browser[Native agent-browser]
+ PG --> Adapters[Explicit candidate / application projections]
+ Adapters --> Native[Compatible native Career-Ops CLI and Go dashboard]
+```
+
+No new service, vector store or resident model agent was added. The existing
+worker checks due persisted policies once a minute. Missed intervals coalesce.
+TypeScript retains authentication, transactions and network I/O; Rust owns pure
+domain logic. Migrations 013-015 add the discovery policy, receipts, allowance
+ledger, compact archive, proposals, filter metadata, per-source cursors and
+revision-bound automatic scoring holds.
+
+## Spend Attention And Tokens Selectively
+
+```mermaid
+flowchart TD
+ Scan[Public-feed matches] --> Rules[Location / clearance / freshness / title / approved-skill evidence]
+ Rules --> Hold[Unknown / blocked / incomplete: visible hold]
+ Rules --> Batch[Small employer-diverse batch + cumulative exploration]
+ Batch --> Allowance{Daily request / token / cost room?}
+ Allowance -->|No| Wait[Hold until reviewed or next local day]
+ Allowance -->|Yes| Reserve[Persist conservative reservation]
+ Reserve --> Evaluate[One automatic Career-Ops request at a time]
+ Evaluate --> Current[Validated score and report, or explicit failure]
+```
+
+Default limits after owner enablement: 200 active leads, scan every six hours,
+three selected boards, 100 processed matches per scan, five evaluations per cycle,
+ten per local day and a seven-day posting window. All are bounded settings.
+The preselection reasons are **not another fit score**. Approved model-permitted
+skill terms support screening; a full posting and canonical candidate knowledge
+are still required before evaluation. Failed/ambiguous requests are not silently
+repeated. Model pricing must be reviewed for the configured model.
+
+```mermaid
+stateDiagram-v2
+ [*] --> Reserved: Atomic allowance check
+ Reserved --> Released: Stopped before dispatch
+ Reserved --> Sending: Durable dispatch transition
+ Sending --> Settled: Reported token usage
+ Sending --> Uncertain: Crash / ambiguous response
+ Uncertain --> Uncertain: Keep allowance; no automatic retransmission
+```
+
+Automatic allowance is local accounting using owner-entered prices, not a billing
+guarantee from the provider. Explicit manual evaluations, chat and other model
+tasks are outside that automatic allowance. Pause fences queued work and result
+publication; a request already dispatched may still be charged.
+
+## Compact History, Not A Growing Posting Dump
+
+```mermaid
+flowchart LR
+ Leads[Active leads / default 200] --> Protect{Saved / notes / references / applications / active work?}
+ Protect -->|Yes| Keep[Preserve evidence]
+ Protect -->|No| Preview[Idle / dismissed / capacity pressure preview]
+ Preview --> Approve[Owner confirmation or approved daily policy]
+ Approve --> Archive[(Compact searchable history)]
+ Approve --> Strip[Remove descriptions, redundant snapshots and unreferenced reports]
+ Archive --> Restore[Restore same opening identity within capacity]
+ Restore --> Fetch[Fetch current details / re-evaluate]
+```
+
+Compact history retains title, company, location, posted/seen/archive dates,
+source/URL, source-derived qualifications, historical score/tier, candidate revision
+and archive reason. It is a paginated table, not an active lead. Submitted/terminal
+application evidence is protected outside the lead slots. At capacity, approved
+cleanup can free 10% headroom from unprotected lower-priority leads; current T2+
+is not sacrificed just for headroom. Expired raw scan caches are compacted after
+seven days by default. Backups and application evidence are not silently erased.
+Compaction permits PostgreSQL to reuse space; it does not shrink Docker's Windows
+disk file. [Storage maintenance](docs/maxim/storage-maintenance.md).
+
+## Home And Agent Controls
+
+Home contains eight live metrics, a multicolor Sankey over unique recorded
+submissions, and up to five unsubmitted role types supported by current fresh T2+
+evidence. It does not invent intermediate interview stages, positive fit, vacancy
+liveness or missing recommendations. Outcome corrections reset previous stage
+evidence. A flow table is available alongside the diagram.
+
+```mermaid
+sequenceDiagram
+ User->>Chat: Adjust scan frequency / limits / budget
+ Chat->>API: Read current settings and revision
+ Chat->>API: Propose schema-validated patch
+ API-->>Settings: Exact pending changes
+ User->>Settings: Review and approve policy + permissions
+ Settings->>Worker: New versioned grant
+ Note over Chat,Worker: Chat cannot approve spending or deletion
+```
+
+Full contracts, formulas, hold recovery and setup:
+[Discovery intelligence](docs/maxim/discovery-intelligence.md).
+[Roadmap and stage evidence](roadmap/discovery-intelligence/README.md).
+[Implementation status](docs/maxim/implementation_status.md).
+
+## Verification
+
+```powershell
+npm run maxim:workspace:test
+npm run maxim:native:test
+npm run maxim:safety
+npm run maxim:privacy
+node roadmap/validate-roadmap.mjs
+```
+
+The workspace suite covers Rust, app units, real isolated PostgreSQL/provider
+fixtures, production build and Chromium journeys. Fixtures do not prove a live
+account works. Real automatic spending/cleanup and Gmail/Discord access require
+owner setup. Only declared public boards and supported assisted-browser actions
+are available; no LinkedIn sending, CAPTCHA bypass or automatic final submission.
+
+## Retained Career-Ops Instructions
+
+The upstream guide below documents the retained native engine. Workspace ownership
+gates and the operating guide above take precedence for migrated entities.
 
 > **Maxim Apply workspace:** Start with the [complete operating guide](docs/maxim/setup.md).
 > Run `npm run maxim:workspace`; preferred dashboard: http://127.0.0.1:3010/maxim.

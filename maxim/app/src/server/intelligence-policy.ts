@@ -11,12 +11,14 @@ export const intelligenceSchema=z.object({
  rawRetentionDays:z.number().int().min(1).max(90).default(7),dailyBudgetCents:z.number().int().min(0).max(10000).default(0),
  dailyTokenBudget:z.number().int().min(1000).max(20000000).default(1000000),
  inputUsdPerMillion:z.number().min(0).max(1000).default(0),outputUsdPerMillion:z.number().min(0).max(1000).default(0),
- pricingModel:z.string().max(120).default(''),sourceIds:z.array(z.string().uuid()).max(3).default([]),
+ pricingModel:z.string().max(120).default(''),sourceIds:z.array(z.string().uuid()).max(200).default([]),sourcesPerCycle:z.number().int().min(1).max(3).default(3),
  terms:z.array(z.string().trim().min(2).max(120)).max(10).default([]),
  excludedTitleTerms:z.array(z.string().trim().min(2).max(80)).max(20).default(['intern','unpaid','principal','director','vice president']),
- timezone:z.string().max(80).refine(v=>{try{new Intl.DateTimeFormat('en',{timeZone:v});return true;}catch{return false;}}).default('America/New_York'),
+ timezone:z.string().max(80).refine(v=>{try{new Intl.DateTimeFormat('en',{timeZone:v});return v.includes('/')||['UTC','GMT'].includes(v);}catch{return false;}}).default('America/New_York'),
 }).strict();
 export type IntelligencePolicy=z.infer<typeof intelligenceSchema>;
+// Updates must preserve omitted fields, not reapply creation defaults.
+export const intelligencePatch=z.object(Object.fromEntries(Object.entries(intelligenceSchema.shape).map(([key,value])=>[key,value.removeDefault().optional()]))).strict() as z.ZodType<Partial<IntelligencePolicy>>;
 export const defaults=()=>intelligenceSchema.parse({});
 export async function intelligenceLock(tx:PoolClient,w:string){await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[w+':intelligence']);}
 export async function policyFor(tx:PoolClient,w:string){
@@ -27,7 +29,7 @@ export const protectedJob=`EXISTS(SELECT 1 FROM applications a WHERE a.workspace
  OR j.note<>'' OR EXISTS(SELECT 1 FROM job_discovery_states s WHERE s.workspace_id=j.workspace_id AND s.job_id=j.id AND s.state='saved')
  OR EXISTS(SELECT 1 FROM artifacts a WHERE a.workspace_id=j.workspace_id AND a.job_id=j.id AND a.deleted_at IS NULL
  AND NOT EXISTS(SELECT 1 FROM evaluations e WHERE e.workspace_id=a.workspace_id AND e.report_artifact_id=a.id))`;
-export const activeLead=`NOT j.archived AND NOT EXISTS(SELECT 1 FROM applications a WHERE a.workspace_id=j.workspace_id AND a.job_id=j.id AND a.outcome<>'not_submitted')`;
+export const activeLead=`NOT j.archived AND NOT EXISTS(SELECT 1 FROM applications a WHERE a.workspace_id=j.workspace_id AND a.job_id=j.id AND ((a.applied_at IS NOT NULL AND a.outcome<>'not_submitted') OR a.outcome IN ('offer','rejected','withdrawn')))`;
 export async function capacity(tx:PoolClient,w:string){
  const p=await policyFor(tx,w),r=(await tx.query(`SELECT count(*)::int AS active,count(*) FILTER(WHERE ${protectedJob})::int AS protected FROM jobs j WHERE j.workspace_id=$1 AND ${activeLead}`,[w])).rows[0];
  return {...r,limit:p.value.maxActiveJobs,enforced:p.active,available:!p.active||r.active<p.value.maxActiveJobs};

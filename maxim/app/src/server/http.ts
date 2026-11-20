@@ -17,6 +17,7 @@ import {discoveryCommand,discoveryView} from './discovery';
 import {evaluationCommand} from './evaluations';
 import {intelligenceCommand,intelligenceView} from './intelligence';
 import {retentionCommand,retentionPreview,archiveView} from './intelligence-retention';
+import {homeView} from './home';
 import {applicationCommand} from './applications';
 import {packetCommand} from './packets';
 import {applicationView} from './application-reads';
@@ -54,7 +55,7 @@ export async function handle(req:Request) {
   const route=new URL(req.url).pathname.replace(/^\/api\/?/,'').split('/').filter(Boolean);
   const name=route.join('/'),post=req.method==='POST',get=req.method==='GET';
   if(get && name==='health') {
-   const version=await database().query('SELECT version FROM schema_migrations WHERE version=12');
+   const version=await database().query('SELECT version FROM schema_migrations WHERE version=15');
    invariant(version.rowCount,'schema_unavailable','Workspace schema is not initialized.',503);
    return json({ok:true,application:'maxim-apply',installation:digest(config().workspaceId).slice(0,16),database:'available',recordFreshness:'not_assessed'});
   }
@@ -110,6 +111,7 @@ export async function handle(req:Request) {
   if(get&&name==='intelligence/cleanup')return json(await retentionPreview(ctx));
   if(post&&name==='intelligence/retention')return json({result:await retentionCommand(ctx,await body(req))});
   if(get&&name==='archive')return json(await archiveView(ctx,new URL(req.url).searchParams));
+  if(get&&name==='home')return json(await homeView(ctx,new URL(req.url).searchParams));
   if(post&&name==='packets/commands')return json({result:await packetCommand(ctx,await body(req))});
   if(get&&name==='discovery')return json(await discoveryView(ctx,new URL(req.url).searchParams.get('sort')));
   if(post&&name==='discovery/commands')return json({result:await discoveryCommand(ctx,await body(req))});

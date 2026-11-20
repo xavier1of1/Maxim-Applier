@@ -16,7 +16,7 @@ for(const width of [1600,390])test('discover and save unknown API model without 
   await page.getByLabel('Replace API key').fill('synthetic-unsaved-key');
   await page.getByRole('button',{name:'Load models',exact:true}).click();
   await page.getByRole('button',{name:/^Available API models/}).click();
-  await page.getByRole('combobox').fill('future');
+  await page.getByRole('combobox',{name:'Search options',exact:true}).fill('future');
   await page.getByRole('option',{name:'future-text-model',exact:true}).click();
   await expect(page.getByRole('textbox',{name:/^Model ID/})).toHaveValue('future-text-model');
   expect(fs.readFileSync(h.runtime).equals(original)).toBe(true);

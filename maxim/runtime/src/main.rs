@@ -103,6 +103,7 @@ fn validate_fact(f: &Value) -> Result<Value, &'static str> {
 pub fn handle(input: &Value) -> Value {
     match input["operation"].as_str() {
         Some("screen_jobs") => intelligence::shortlist(input),
+        Some("application_flow") => intelligence::flow(input),
         Some("job_metadata") => intelligence::metadata(input),
         Some("question_policy") => memory::question_policy(input),
         Some("job_policy") => policy::evaluate(input),

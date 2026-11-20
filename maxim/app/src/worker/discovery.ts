@@ -75,6 +75,7 @@ export async function discoverJobs(item:WorkItem,parentSignal?:AbortSignal){
  let requests=Number((await database().query('SELECT count(*) FROM discovery_requests r JOIN discovery_attempts a ON a.id=r.attempt_id AND a.workspace_id=r.workspace_id WHERE r.workspace_id=$1 AND r.run_id=$2 AND a.run_revision=$3',[item.workspace_id,item.input.runId,item.input.revision])).rows[0].count),matched=0,created=0,conflicts=0,successes=0,failures=0,partialSources=0;
  for(const source of sources){
   if(signal.aborted)break;
+  const automation=initial.query.filters.automation,sourceIndex=sources.indexOf(source),intakeQuota=automation?Math.floor(automation.maxMatches/sources.length)+(sourceIndex<automation.maxMatches%sources.length?1:0):null;
   const attemptId=await transaction(async tx=>{
    await active(tx,item,source);
    return (await tx.query("INSERT INTO discovery_attempts(id,workspace_id,run_id,source_id,run_revision,source_revision,status,started_at) VALUES($1,$2,$3,$4,$5,$6,'running',now()) ON CONFLICT(workspace_id,run_id,source_id,run_revision) DO UPDATE SET status='running' RETURNING id",[crypto.randomUUID(),item.workspace_id,item.input.runId,source.id,item.input.revision,source.revision])).rows[0].id as string;
@@ -132,10 +133,9 @@ export async function discoverJobs(item:WorkItem,parentSignal?:AbortSignal){
     const summaryOnly=!posting&&source.provider==='greenhouse'&&url===feedUrl(source,pageNumber,true);
     if(summaryOnly){partial=true;errorCode='expanded_feed_too_large';}
     let records=pageRecords(source.provider,value);const providerCount=records.length;
-    const automation=initial.query.filters.automation;
     if(automation){
-     const index=sources.indexOf(source),quota=Math.floor(automation.maxMatches/sources.length)+(index<automation.maxMatches%sources.length?1:0);
-     const shift=records.length?Math.floor(Date.now()/3600000)*Math.max(1,quota)%records.length:0;
+     const quota=intakeQuota!;
+     const shift=records.length?Number(automation.sourceCursors?.[source.id]||0)%records.length:0;
      const rotated=[...records.slice(shift),...records.slice(0,shift)],kept:Record<string,unknown>[]=[];let cacheBytes=100;
      for(const row of rotated){
       if(kept.length>=quota)break;
@@ -163,7 +163,8 @@ export async function discoverJobs(item:WorkItem,parentSignal?:AbortSignal){
   let count=0;
   if(pages.length){
    try{
-    const normalized=await normalizeProvider(source,pages.map(p=>p.records));
+    const pageTurn=automation&&pages.length?Math.floor(Number(automation.sourceCursors?.[source.id]||0)/Math.max(1,intakeQuota!))%pages.length:0;
+    const normalized=await normalizeProvider(source,[...pages.slice(pageTurn),...pages.slice(0,pageTurn)].map(p=>p.records));
     if(posting)invariant(normalized.length===1&&normalized[0].externalId===posting.externalId&&normalized[0].openingKey===posting.openingKey&&normalized[0].description.trim().length>=50,'posting_details_unavailable','The provider did not return the saved opening with a full description.',409);
     const identities=new Set<string>();
     for(const job of normalized.slice(0,2000)){
@@ -173,10 +174,9 @@ export async function discoverJobs(item:WorkItem,parentSignal?:AbortSignal){
      const page=pages.find(p=>p.records.includes(job.raw))!;
      const result=await transaction(async tx=>{
       await active(tx,item,source);
-      const automation=initial.query.filters.automation;
-      if(automation){const index=sources.indexOf(source),quota=Math.floor(automation.maxMatches/sources.length)+(index<automation.maxMatches%sources.length?1:0);
+      if(intakeQuota!==null){
        const done=(await tx.query('SELECT count(*)::int AS n FROM job_observations WHERE workspace_id=$1 AND run_id=$2 AND source_id=$3',[item.workspace_id,item.input.runId,source.id])).rows[0].n;
-       if(done>=quota)return {created:false,identityConflict:false,eligibility:'intake_limit'};
+       if(done>=intakeQuota)return {created:false,identityConflict:false,eligibility:'intake_limit'};
       }
       if(posting){const current=await currentPosting(tx,item,source,posting);invariant(current.title===job.title&&current.company===job.company,'posting_changed','The provider returned a changed opening. Review it manually.',409);}
       return publishJob(tx,item,source,page,job,page.summaryOnly);

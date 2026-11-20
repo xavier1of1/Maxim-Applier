@@ -21,7 +21,7 @@ pub fn metadata(input:&Value)->Value{
   let line=line.trim();let lower=line.to_lowercase();
   if ["qualification","requirement","what you bring","what we look for","must have"].iter().any(|s|lower.contains(s)){in_section=true;}
   if in_section&&!out.is_empty()&&["benefits","compensation","about us","equal opportunity"].iter().any(|s|lower.starts_with(s)){break;}
-  if in_section&&!line.is_empty(){if out.chars().count()+line.chars().count()>4000{break;}out.push_str(line);out.push('\n');}
+  if in_section&&!line.is_empty(){let remaining=4000usize.saturating_sub(out.chars().count());if remaining==0{break;}out.extend(line.chars().take(remaining));if out.chars().count()<4000{out.push('\n');}}
  }
  json!({"ok":true,"lane":lane(title),"qualifications":out})
 }
@@ -36,7 +36,8 @@ pub fn shortlist(input:&Value)->Value{
   let id=job["id"].as_str().unwrap_or("");let title=job["title"].as_str().unwrap_or("").to_lowercase();
   let text=format!("{} {}",title,job["description"].as_str().unwrap_or("").to_lowercase());
   let age=job["ageHours"].as_f64();let hits:Vec<_>=evidence.iter().filter(|s|text.contains(s.as_str())).cloned().collect();
-  let reason=if job["blocked"].as_bool().unwrap_or(true){Some("policy_blocked_or_unreviewed_location")}
+  let reason=if let Some(hold)=job["holdReason"].as_str(){Some(hold)}
+   else if job["blocked"].as_bool().unwrap_or(true){Some("policy_blocked_or_unreviewed_location")}
    else if job["hasEvaluation"].as_bool().unwrap_or(false){Some("already_evaluated_or_pending")}
    else if job["description"].as_str().unwrap_or("").trim().len()<50{Some("full_posting_required")}
    else if age.is_none()&&!p["allowUnknownDates"].as_bool().unwrap_or(false){Some("posted_date_unknown")}
@@ -59,12 +60,32 @@ pub fn shortlist(input:&Value)->Value{
    selected.push(json!({"id":id,"lane":lane(jobs.iter().find(|j|j["id"]==*id).and_then(|j|j["title"].as_str()).unwrap_or("")),"evidenceTerms":hits,"reasons":{"targetRole":target,"priorityOverlay":priority,"fresh24h":age<=&24.0}}));
   }
  }
- if limit>=5 && selected.len()>=5 {
+ let offset=input["explorationOffset"].as_u64().unwrap_or(0) as usize;
+ for index in 0..selected.len(){
+  if (offset+index+1)%5!=0 {continue;}
   if let Some((id,_,_,_,_,hits))=eligible.iter().find(|(id,_,_,target,_,_)|!used.contains(id)&&!*target){
-   selected.pop();selected.push(json!({"id":id,"evidenceTerms":hits,"reasons":{"exploration":true}}));
+   let old=selected[index]["id"].as_str().unwrap_or("").to_string();used.remove(&old);used.insert(id.clone());
+   selected[index]=json!({"id":id,"evidenceTerms":hits,"reasons":{"exploration":true}});
   }
  }
  json!({"ok":true,"selected":selected,"held":held,"eligible":eligible.len(),"kind":"queue_priority_not_fit_score"})
+}
+pub fn flow(input:&Value)->Value{
+ use std::collections::BTreeMap;
+ let mut links:BTreeMap<(String,String),u64>=BTreeMap::new();let mut names=HashSet::new();let mut total=0;
+ if let Some(groups)=input["groups"].as_array(){for group in groups.iter().take(512){
+  let count=group["count"].as_u64().unwrap_or(0);if count==0{continue;}total+=count;
+  let mut path=vec!["Submitted"];
+  if group["responded"].as_bool().unwrap_or(false){path.push("Response recorded");}
+  if group["interviewed"].as_bool().unwrap_or(false){path.push("Interview recorded");}
+  if group["offered"].as_bool().unwrap_or(false){path.push("Offer recorded");}
+  path.push(match group["outcome"].as_str().unwrap_or("unknown"){
+   "submitted"=>"Awaiting response","responded"=>"In discussion","interviewing"=>"Interview active",
+   "offer"=>"Offer active","rejected"=>"Rejected","withdrawn"=>"Withdrawn",_=>"Outcome unknown"});
+  for pair in path.windows(2){let a=pair[0].to_string();let b=pair[1].to_string();names.insert(a.clone());names.insert(b.clone());*links.entry((a,b)).or_default()+=count;}
+ }}
+ let colors=[("Submitted","#287c9e"),("Response recorded","#32775c"),("Interview recorded","#9161a8"),("Offer recorded","#bd8520"),("Awaiting response","#728b98"),("In discussion","#24928d"),("Interview active","#6b64bd"),("Offer active","#68a84b"),("Rejected","#cc6868"),("Withdrawn","#ac7a58"),("Outcome unknown","#8b9297")];
+ json!({"ok":true,"total":total,"nodes":colors.iter().filter(|(name,_)|names.contains(*name)).map(|(name,color)|json!({"id":name,"label":name,"color":color})).collect::<Vec<_>>(),"links":links.iter().map(|((source,target),value)|json!({"source":source,"target":target,"value":value})).collect::<Vec<_>>()})
 }
 #[cfg(test)]mod tests{
  use super::*;
@@ -74,4 +95,8 @@ pub fn shortlist(input:&Value)->Value{
  #[test]fn unknown_blocked_old_and_evaluated_stay_held(){for (key,value) in [("blocked",json!(true)),("ageHours",json!(null)),("ageHours",json!(1000)),("hasEvaluation",json!(true))]{let mut j=job("x","A");j[key]=value;assert_eq!(shortlist(&json!({"jobs":[j],"evidenceTerms":["Rust"]}))["selected"].as_array().unwrap().len(),0);}}
  #[test]fn qualification_text_is_not_invented(){let m=metadata(&json!({"title":"Forward Deployed Engineer","description":"About us\nRequirements\nRust experience\nBenefits\nFree food"}));assert_eq!(m["lane"],"Forward deployed");assert_eq!(m["qualifications"],"Requirements\nRust experience\n");}
  #[test]fn absent_qualifications_remain_unknown(){assert_eq!(metadata(&json!({"description":"We build software"}))["qualifications"],"");}
+ #[test]fn long_qualification_paragraph_retains_bounded_source_text(){let r=metadata(&json!({"description":format!("Qualifications\nRust {}", "工程".repeat(5000))}));let q=r["qualifications"].as_str().unwrap();assert_eq!(q.chars().count(),4000);assert!(q.contains("Rust"));}
+ #[test]fn exploration_spans_small_batches(){let mut other=job("3","C");other["title"]=json!("Platform Engineer");let r=shortlist(&json!({"jobs":[job("1","A"),job("2","B"),other],"evidenceTerms":["Rust"],"targetTerms":["Full Stack"],"explorationOffset":3,"policy":{"evaluationsPerCycle":2}}));assert_eq!(r["selected"][1]["id"],"3");}
+ #[test]fn flow_conserves_submissions_without_inventing_missing_stages(){let r=flow(&json!({"groups":[{"count":3,"outcome":"submitted"},{"count":2,"interviewed":true,"outcome":"rejected"}]}));assert_eq!(r["total"],5);assert!(!r["nodes"].as_array().unwrap().iter().any(|n|n["id"]=="Response recorded"));let root:u64=r["links"].as_array().unwrap().iter().filter(|l|l["source"]=="Submitted").map(|l|l["value"].as_u64().unwrap()).sum();assert_eq!(root,5);}
+ #[test]fn empty_flow_has_no_fixture_nodes(){assert_eq!(flow(&json!({"groups":[]}))["nodes"],json!([]));}
 }

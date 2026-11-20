@@ -15,7 +15,7 @@ test.beforeAll(async()=>{
 test.afterAll(async()=>{if(h)await h.close();});
 for(const width of [1600,390])test('score sorting, selected fit, unscored evaluation and stale evidence at '+width,async({page},info)=>{
  const job=await create('Unscored Software Engineer '+width,4.0);
- await page.setViewportSize({width,height:1000});await page.goto(h.c.origin+'/maxim');
+ await page.setViewportSize({width,height:1000});await page.goto(h.c.origin+'/maxim?view=jobs');
  await page.getByLabel('Workspace access key').fill(h.c.bootstrapKey);await page.getByRole('button',{name:'Sign in',exact:true}).click();
  const rows=page.locator('.role-row');await expect(rows.first()).toContainText('4.6/5 / T3');
  await expect(rows.filter({hasText:job.title})).toContainText('Not evaluated');

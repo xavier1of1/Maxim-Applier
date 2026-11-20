@@ -46,10 +46,10 @@ async function addMessage(ctx:Context,cid:string,rid:string,role:string,content:
  [crypto.randomUUID(),ctx.workspaceId,cid,rid,role,JSON.stringify(content)]);
 }
 async function invoke(ctx:Context,cid:string,rid:string,call:ToolCall) {
- if(['read_discovery_settings','propose_discovery_settings'].includes(call.function.name))return (await import('./intelligence')).intelligenceTool(ctx,rid,call.function.name,JSON.parse(call.function.arguments));
  await live(ctx,cid,rid);
  let args:unknown;
  try { args=JSON.parse(call.function.arguments); } catch { return {error:'invalid_arguments'}; }
+ if(['read_discovery_settings','propose_discovery_settings'].includes(call.function.name))return (await import('./intelligence')).intelligenceTool(ctx,rid,call.function.name,args);
  if(['read_application_assistance','fill_approved_application_fields'].includes(call.function.name))return browserTool(ctx,rid,call.function.name,args);
  if(['start_interview_practice','read_interview_practice'].includes(call.function.name))return interviewTool(ctx,rid,call.function.name,args);
  if(call.function.name==='read_gmail_evidence'){toolSchemas.read_workspace.parse(args);return gmailAgentView(ctx);}

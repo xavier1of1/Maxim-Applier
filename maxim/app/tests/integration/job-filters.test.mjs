@@ -14,4 +14,8 @@ test('SQL filters precede pagination, preserve selected detail and remain worksp
  assert.equal((await read('/api/workspace?company='+encodeURIComponent("' OR 1=1 --"))).jobPage.total,0);
  v=await read('/api/workspace?limit=50&offset=500&company=Large%20Employer&job='+target.id);assert.equal(v.jobPage.ids.length,10);assert.equal(v.jobs.length,11);assert.equal(v.jobs.at(-1).id,target.id);
  assert.equal((await(await h.request(h.b,'/api/workspace?company=Distinct%20Company')).json()).jobs.length,0);
+ await h.sql("INSERT INTO jobs(id,workspace_id,company,title,description,opening_key,archived) VALUES(gen_random_uuid(),$1,'Archive-only Employer','Archived Engineer','','archived-only-fixture',true)",[h.c.workspaceId]);
+ v=await read('/api/workspace?filter=archived&locationGroup=focus');assert.equal(v.jobs.length,1);assert.ok(v.facets.company.includes('Archive-only Employer'));
+ await h.sql("INSERT INTO jobs(id,workspace_id,company,title,description,industry) SELECT gen_random_uuid(),$1,'Company '||n,'Engineer','Synthetic','Industry '||n FROM generate_series(1,1005) n",[h.c.workspaceId]);
+ v=await read('/api/workspace?industry=Industry%201005');assert.equal(v.jobs.length,1);assert.ok(v.facets.industry.includes('Industry 1005'));
 });

@@ -18,9 +18,15 @@ async function plan(tx:PoolClient,w:string){
  const busy=Boolean((await tx.query("SELECT 1 FROM work_items WHERE workspace_id=$1 AND status IN ('queued','leased') AND kind IN ('evaluate_job','discover_jobs','build_packet','browser_action') LIMIT 1",[w])).rowCount);
  const pool=busy?[]:(await tx.query(`SELECT j.*,row_to_json(fit) AS fit,(${activeLead}) AS active FROM jobs j ${jobFitJoin}
  WHERE j.workspace_id=$1 AND j.compacted_at IS NULL AND NOT (${protectedJob})
- ORDER BY coalesce(j.last_seen_at,j.updated_at,j.created_at),j.id LIMIT 2000`,[w,engine.hash])).rows;
- let excess=Math.max(0,cap.active-cap.limit);
- const jobs=pool.filter(j=>{const old=new Date(j.last_seen_at||j.updated_at||j.created_at).getTime()<Date.now()-p.value.idleArchiveDays*86400000;if(old||j.archived){if(j.active)excess=Math.max(0,excess-1);return true;}if(j.active&&excess>0){excess--;return true;}return false;}).slice(0,50);
+ AND NOT (NOT j.archived AND j.description='' AND EXISTS(SELECT 1 FROM job_archive a WHERE a.workspace_id=j.workspace_id AND a.job_id=j.id AND a.restored_at IS NOT NULL))
+ ORDER BY CASE WHEN fit.current THEN fit.score ELSE 0 END,coalesce(j.last_seen_at,j.updated_at,j.created_at),j.id LIMIT 2000`,[w,engine.hash])).rows;
+ let excess=cap.active>=cap.limit?cap.active-Math.floor(cap.limit*0.9):0;
+ const jobs=pool.filter(j=>{
+  const cutoff=Date.now()-p.value.idleArchiveDays*86400000,updated=new Date(j.updated_at).getTime();
+  const old=Math.max(new Date(j.last_seen_at||j.created_at).getTime(),updated)<cutoff||j.posted_at&&new Date(j.posted_at).getTime()<cutoff&&updated<Date.now()-86400000;
+  if(old||j.archived){if(j.active)excess=Math.max(0,excess-1);return true;}
+  if(j.active&&excess>0&&!(j.fit?.current&&j.fit.score>=4)){excess--;return true;}return false;
+ }).slice(0,50);
  const runs=busy?[]:(await tx.query("SELECT id FROM discovery_runs WHERE workspace_id=$1 AND raw_compacted_at IS NULL AND status IN ('completed','partial','failed','cancelled') AND coalesce(completed_at,created_at)<now()-$2*interval '1 day' ORDER BY created_at,id LIMIT 20",[w,p.value.rawRetentionDays])).rows.map(r=>r.id);
  const fingerprint=digest(JSON.stringify({revision:p.revision,busy,cap,jobs:jobs.map(j=>({id:j.id,revision:j.revision,evaluation:j.fit?.id})),runs}));
  return {policy:p,cap,busy,jobs,runs,fingerprint};
@@ -38,8 +44,8 @@ export async function compact(tx:PoolClient,w:string,expected?:string){
   const metadata=domain({operation:'job_metadata',title:j.title,description:j.description}),reason=j.archived?'dismissed':p.cap.active>p.cap.limit?'capacity':'idle';
   await tx.query(`INSERT INTO job_archive(workspace_id,job_id,title,company,posted_at,first_seen_at,last_seen_at,location,url,source,qualifications,score,tier,score_current,candidate_revision,industry,role_lane,reason)
    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
-   ON CONFLICT(workspace_id,job_id) DO UPDATE SET qualifications=EXCLUDED.qualifications,score=EXCLUDED.score,tier=EXCLUDED.tier,score_current=EXCLUDED.score_current,candidate_revision=EXCLUDED.candidate_revision,industry=EXCLUDED.industry,role_lane=EXCLUDED.role_lane,reason=EXCLUDED.reason,archived_at=now(),restored_at=null`,
-   [w,j.id,j.title,j.company,j.posted_at,j.first_seen_at,j.last_seen_at,j.location,j.url,j.source_platform,metadata.qualifications,j.fit?.score??null,j.fit?.tier??null,j.fit?.current||false,j.fit?.candidate_revision??null,j.industry,j.role_lane||metadata.lane,reason]);
+   ON CONFLICT(workspace_id,job_id) DO UPDATE SET title=EXCLUDED.title,company=EXCLUDED.company,posted_at=EXCLUDED.posted_at,first_seen_at=EXCLUDED.first_seen_at,last_seen_at=EXCLUDED.last_seen_at,location=EXCLUDED.location,url=EXCLUDED.url,source=EXCLUDED.source,qualifications=CASE WHEN $19 THEN job_archive.qualifications ELSE EXCLUDED.qualifications END,score=EXCLUDED.score,tier=EXCLUDED.tier,score_current=EXCLUDED.score_current,candidate_revision=EXCLUDED.candidate_revision,industry=EXCLUDED.industry,role_lane=EXCLUDED.role_lane,reason=EXCLUDED.reason,archived_at=now(),restored_at=null`,
+   [w,j.id,j.title,j.company,j.posted_at,j.first_seen_at,j.last_seen_at,j.location,j.url,j.source_platform,metadata.qualifications,j.fit?.score??null,j.fit?.tier??null,j.fit?.current||false,j.fit?.candidate_revision??null,j.industry,j.role_lane||metadata.lane,reason,!j.description.trim()]);
   const reports=(await tx.query('SELECT a.id FROM artifacts a JOIN evaluations e ON e.workspace_id=a.workspace_id AND e.report_artifact_id=a.id WHERE e.workspace_id=$1 AND e.job_id=$2 AND a.deleted_at IS NULL',[w,j.id])).rows;
   await tx.query("UPDATE jobs SET description='',archived=true,compacted_at=now(),discovery_policy='{}',revision=revision+1,updated_at=now() WHERE workspace_id=$1 AND id=$2",[w,j.id]);
   await tx.query("UPDATE evaluations SET status='stale',input_snapshot=jsonb_build_object('compacted',true),explanation=null,output_manifest='{}',report_artifact_id=null,revision=revision+1 WHERE workspace_id=$1 AND job_id=$2",[w,j.id]);
@@ -50,7 +56,9 @@ export async function compact(tx:PoolClient,w:string,expected?:string){
  if(p.runs.length){
   // Raw pages are cache checkpoints, never the authority for submitted evidence.
   await tx.query("UPDATE discovery_pages SET payload='{}' WHERE workspace_id=$1 AND run_id=ANY($2::uuid[])",[w,p.runs]);
-  await tx.query("UPDATE job_observations o SET raw_fields='{}' FROM jobs j WHERE o.workspace_id=$1 AND o.run_id=ANY($2::uuid[]) AND j.workspace_id=o.workspace_id AND j.id=o.job_id AND NOT ("+protectedJob+")",[w,p.runs]);
+  await tx.query(`UPDATE job_observations o SET raw_fields=CASE WHEN j.compacted_at IS NOT NULL THEN '{}'::jsonb ELSE
+   jsonb_strip_nulls(jsonb_build_object('salaryRange',o.raw_fields->'salaryRange','compensation',jsonb_build_object('summaryComponents',o.raw_fields->'compensation'->'summaryComponents'),'secondaryLocations',o.raw_fields->'secondaryLocations')) END
+   FROM jobs j WHERE o.workspace_id=$1 AND o.run_id=ANY($2::uuid[]) AND j.workspace_id=o.workspace_id AND j.id=o.job_id AND NOT (${protectedJob})`,[w,p.runs]);
   await tx.query('UPDATE discovery_runs SET raw_compacted_at=now() WHERE workspace_id=$1 AND id=ANY($2::uuid[])',[w,p.runs]);
  }
  return {archived:p.jobs.length,rawRuns:p.runs.length};

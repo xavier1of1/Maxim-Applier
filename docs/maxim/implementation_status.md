@@ -1,5 +1,35 @@
 # Maxim Apply Implementation Status
 
+## Discovery Intelligence Extension (2026-11-20)
+
+The [new staged roadmap](../../roadmap/discovery-intelligence/README.md) adds
+bounded discovery/evaluation scheduling, a default 200-active-lead limit, compact
+archive/restore, global SQL filters, owner/agent settings proposals and a new Home
+with eight metrics, real Sankey counts and up to five current high-fit role lanes.
+Career-Ops remains the only fit evaluator; there is no replacement scoring engine.
+
+Stages 0-4 are committed separately. Stage 5 completes the Home and review-driven
+reliability fixes; final sequential acceptance passed and is recorded in
+[verification](../../roadmap/discovery-intelligence/reviews/verification.md).
+Implementation resides in existing `maxim/app` services/worker and the pure Rust
+domain binary; migrations 013-015 extend the existing PostgreSQL store.
+
+Verification: production build/typecheck, 38 Rust tests, 52 app units, 143 isolated
+integration tests and 37 Chromium journeys passed. The retained Maxim, native
+Career-Ops, Go dashboard, safety/privacy and roadmap checks also passed. The local
+workspace was backed up before migrations 013-015 and restarted on port 3010;
+authenticated Home/settings reads and schema 15 were checked without enabling
+paid evaluations, notifications or cleanup.
+
+Run/use: [operating contract and setup](discovery-intelligence.md). Root README
+now contains shipped journey, architecture, budget, retention and agent diagrams.
+Automation/cleanup defaults off and automatic monetary allowance zero. Actual
+source selection, candidate/model consent and owner-reviewed prices are manual
+setup steps, not missing credentials silently supplied by the implementation.
+No real paid evaluation or destructive production cleanup was run for acceptance.
+
+The original MVP standing below is retained and is not promoted by this extension.
+
 Updated: 2026-11-19. Canonical repository: `D:\VSC Programs\maxim-apply`.
 Model integration update: 2026-11-20. Dynamic account-visible model selection and
 manual exact-ID entry replace the name whitelist. One shared Responses transport

@@ -29,6 +29,7 @@ export interface Job {
   note: string | null;
   revision: number;
   archived: boolean;
+  compacted_at?:string|null;
   created_at: string;
   updated_at: string;
   application_id: string | null;
@@ -98,6 +99,7 @@ export interface ModelSettings {
 }
 
 export interface WorkspaceData {
+  totals?:{leads:number;applications:number;events:number};
   jobPage?:{total:number;offset:number;limit:number;more:boolean;ids:string[]};
   facets?:{company:string[];industry:string[];lane:string[]};
   candidate?:{revision:number;ownership:string};

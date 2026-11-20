@@ -78,6 +78,13 @@ This repository is Xavier Kubancik's controlled Maxim Apply fork of Career-Ops. 
 
 ### November 2026 Planning And Development
 
+- Discovery intelligence: read `roadmap/discovery-intelligence/README.md` and
+  `docs/maxim/discovery-intelligence.md`. Reuse the existing worker, strict policy
+  schema and Career-Ops evaluator. Cheap screening is not a fit score. Do not
+  enable paid schedules or destructive cleanup as a testing shortcut; owner
+  consent, conservative reservations, source cursors and protected evidence must
+  remain enforced. Partial settings updates must not reapply creation defaults.
+
 - Storage/test maintenance: read `docs/maxim/storage-maintenance.md`. New disposable
   fixtures use `maxim/lib/test-resources.mjs`; retain ownership records and fail
   closed on unknown paths/volumes. `maxim:clean` is preview-only unless applying an

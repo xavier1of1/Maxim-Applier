@@ -157,7 +157,14 @@ export async function harness({api}={}) {
   ]);
  };
  try{
-  startTestDatabase(c);
+  for(let attempt=0;attempt<3;attempt++){
+   try{startTestDatabase(c);break;}
+   catch(e){
+    if(attempt===2||!/address already in use|port is already allocated/i.test(String(e.stderr||'')))throw e;
+    // Only this marked fixture may be removed; fixed mappings survive restart tests.
+    stopTestDatabase(container);url.port=String(await freePort());c.databaseUrl=url.toString();fs.writeFileSync(runtime,JSON.stringify(c));
+   }
+  }
   await waitDatabase(c.databaseUrl);await migrate(c);await startServer();
  const other={workspaceId:crypto.randomUUID(),key:crypto.randomBytes(32).toString('hex')};
  await sql('INSERT INTO workspaces(id,name,is_owner) VALUES($1,$2,false)',[other.workspaceId,'Second isolated workspace']);

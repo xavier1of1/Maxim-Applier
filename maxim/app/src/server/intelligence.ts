@@ -5,14 +5,14 @@ import {transaction} from './db';
 import {type Context,reauthorize} from './auth';
 import {command,event,uuid} from './commands';
 import {candidateLock} from './sources';
-import {intelligenceSchema,policyFor,intelligenceLock,capacity} from './intelligence-policy';
+import {intelligenceSchema,intelligencePatch,policyFor,intelligenceLock,capacity} from './intelligence-policy';
 import {budgetView,reconcileReservations,reserveCost} from './intelligence-budget';
 import {enqueueCycle,screening} from './intelligence-cycle';
 import {config} from './config';
 import {invariant,notFound} from './errors';
 import {applicationLock} from './application-authority';
 
-const patch=intelligenceSchema.partial();
+const patch=intelligencePatch;
 const schema=z.discriminatedUnion('action',[
  z.object({commandId:uuid,action:z.literal('save'),payload:z.object({expectedRevision:z.number().int().min(0),changes:patch,acknowledgeAutomation:z.boolean().default(false)}).strict()}).strict(),
  z.object({commandId:uuid,action:z.enum(['pause','run']),payload:z.object({}).strict()}).strict(),
@@ -23,7 +23,7 @@ async function save(tx:PoolClient,ctx:Context,revision:number,changes:z.infer<ty
  invariant(p.revision===revision,'revision_conflict','Discovery settings changed. Refresh and review them again.',409);
  if(v.autoScan||v.autoScore||v.cleanupEnabled)invariant(ack,'automation_consent_required','Confirm scheduled requests, their spending allowance and cleanup protection policy.',409);
  if(v.autoScore){const c=config();invariant(Boolean(c.model.apiKey)&&v.pricingModel===c.model.model&&v.inputUsdPerMillion>0&&v.outputUsdPerMillion>0&&v.dailyBudgetCents>=reserveCost(v).cents&&v.dailyTokenBudget>=reserveCost(v).tokens,'pricing_review_required','Select the current model, review input/output prices and allow at least one conservatively reserved request.',409);}
- if(v.autoScan){const sources=(await tx.query("SELECT id FROM discovery_sources WHERE workspace_id=$1 AND id=ANY($2::uuid[]) AND enabled AND provider IN ('greenhouse','lever','ashby')",[w,v.sourceIds])).rows;invariant(sources.length>0&&sources.length===v.sourceIds.length,'select_public_sources','Select one to three enabled public boards.',409);}
+ if(v.autoScan){const sources=(await tx.query("SELECT id FROM discovery_sources WHERE workspace_id=$1 AND id=ANY($2::uuid[]) AND enabled AND provider IN ('greenhouse','lever','ashby')",[w,v.sourceIds])).rows;invariant(sources.length>0&&sources.length===v.sourceIds.length,'select_public_sources','Select an enabled public-board rotation pool.',409);}
  await tx.query('INSERT INTO discovery_policies(workspace_id,value) VALUES($1,$2) ON CONFLICT(workspace_id) DO UPDATE SET value=EXCLUDED.value,revision=discovery_policies.revision+1,updated_at=now(),next_scan_at=now(),next_score_at=now(),next_cleanup_at=now()',[w,JSON.stringify(v)]);
  await event(tx,ctx,w,'discovery_policy_saved',{revision:revision+1,autoScan:v.autoScan,autoScore:v.autoScore,cleanupEnabled:v.cleanupEnabled,maxActiveJobs:v.maxActiveJobs},revision+1);
  return {revision:revision+1};
@@ -48,12 +48,14 @@ export async function intelligenceView(ctx:Context){
   const proposals=(await tx.query("SELECT * FROM intelligence_proposals WHERE workspace_id=$1 AND status='pending' ORDER BY created_at DESC LIMIT 10",[w])).rows;
   const s=await screening(tx,w),sources=(await tx.query('SELECT id,name,provider,enabled,industry,revision FROM discovery_sources WHERE workspace_id=$1 ORDER BY name,id LIMIT 200',[w])).rows;
   return {policy:{value:p.value,revision:p.revision,active:p.active},capacity:await capacity(tx,w),budget:await budgetView(tx,w,p.value),reservation:reserveCost(p.value),model:config().model.model,sources,cycles,reservations,proposals,
-   preview:{selected:s.selected,held:s.held,jobs:s.jobs.map(j=>({id:j.id,title:j.title,company:j.company})),evidenceAvailable:s.evidenceAvailable},asOf:new Date().toISOString()};
+   preview:{selected:s.selected,held:s.held,jobs:s.jobs.map(j=>({id:j.id,title:j.title,company:j.company})),evidenceAvailable:s.evidenceAvailable,window:s.window},asOf:new Date().toISOString()};
  });
 }
 export async function intelligenceTool(ctx:Context,rid:string,name:string,args:unknown){
  if(name==='read_discovery_settings'){
-  z.object({}).strict().parse(args);const v=await intelligenceView(ctx);return {policy:v.policy,capacity:v.capacity,budget:v.budget,model:v.model,sources:v.sources,holds:v.preview.held.slice(0,10),requiresOwnerApproval:true};
+  z.object({}).strict().parse(args);const v=await intelligenceView(ctx),value:Partial<typeof v.policy.value>={...v.policy.value},omitted:string[]=[];
+  for(const key of ['sourceIds','terms','excludedTitleTerms'] as const)if(Buffer.byteLength(JSON.stringify(value[key]))>1000){delete value[key];omitted.push(key);}
+  return {policy:{...v.policy,value},capacity:v.capacity,budget:v.budget,model:v.model,sources:v.sources.slice(0,5).map(s=>({id:s.id,name:s.name.slice(0,60),provider:s.provider,enabled:s.enabled})),holds:v.preview.held.slice(0,3),partial:{sources:v.sources.length>5,omittedPolicyFields:omitted},detailView:'settings',requiresOwnerApproval:true};
  }
  invariant(ctx.isOwner,'not_found','Record not found.',404);
  const p=z.object({expectedRevision:z.number().int().min(0),changesJson:z.string().max(4000),quote:z.string().min(1).max(4000)}).strict().parse(args);

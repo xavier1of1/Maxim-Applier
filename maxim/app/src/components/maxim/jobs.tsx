@@ -215,7 +215,8 @@ function JobDetail({job, data, api, disabled, refresh, navigate, onDirtyChange, 
     if (busy || disabled || dirty) return;
     setBusy('archive'); setError('');
     try {
-      await api.command<Job>({action: 'archive_job', payload: {
+      if(job.compacted_at&&job.archived)await api.post('/api/intelligence/retention',{commandId:crypto.randomUUID(),action:'restore',payload:{jobId:job.id}});
+      else await api.command<Job>({action: 'archive_job', payload: {
         jobId: job.id, expectedRevision: job.revision, archived: !job.archived,
       }});
       await refresh();

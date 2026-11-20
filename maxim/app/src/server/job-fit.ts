@@ -1,6 +1,6 @@
 // One latest evaluation per opening. Never promote old or revoked evidence to current fit.
 export const jobFitJoin=`LEFT JOIN LATERAL (
- SELECT e.id,e.score::float8 AS score,e.tier,e.report_artifact_id,e.completed_at,e.candidate_revision,
+ SELECT e.id,e.score::float8 AS score,e.tier,e.report_artifact_id,e.completed_at,e.candidate_revision,e.policy,
   CASE WHEN e.status IN ('queued','running') AND work.status IN ('failed','cancelled') THEN work.status ELSE e.status END AS status,
   e.status='completed' AND e.score IS NOT NULL AND c.ownership='canonical'
    AND e.job_revision=j.revision AND e.candidate_revision=c.revision

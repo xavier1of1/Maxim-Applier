@@ -104,6 +104,7 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
 }
 export async function queueDiscoverySearch(tx:PoolClient,ctx:Pick<Context,'workspaceId'>,p:{sourceIds:string[];terms:string[];matchIn:string},automation?:{policyRevision:number;cycleId:string;maxMatches:number}){
    const w=ctx.workspaceId;await applicationWritable(tx,w);
+   invariant(p.sourceIds.length>=1&&p.sourceIds.length<=3,'source_limit','A single provider run is limited to one to three sources.');
    const ids=[...new Set(p.sourceIds)],sources=(await tx.query('SELECT * FROM discovery_sources WHERE workspace_id=$1 AND id=ANY($2::uuid[]) ORDER BY id FOR SHARE',[w,ids])).rows;
    invariant(sources.length===ids.length,'not_found','Source not found.',404);
    invariant(sources.every(s=>s.enabled),'source_disabled','Enable the selected source before starting.',409);
@@ -112,8 +113,15 @@ export async function queueDiscoverySearch(tx:PoolClient,ctx:Pick<Context,'works
    const prefs=(await tx.query("SELECT f.id,f.revision,f.value FROM candidate_facts f JOIN candidate_sources s ON s.id=f.source_id AND s.workspace_id=f.workspace_id WHERE f.workspace_id=$1 AND f.field_key='preferences.roles' AND f.status='current' AND s.deleted_at IS NULL AND s.revision=f.source_revision",[w])).rows;
    const terms=p.terms.length?p.terms:prefs.flatMap(f=>Array.isArray(f.value)?f.value:[]).filter((v:unknown)=>typeof v==='string').slice(0,10);
    invariant(terms.length,'query_required','Enter role terms or approve preferences.roles in Candidate first.');
-   if(automation&&sources.length>1){const n=Math.floor(Date.now()/3600000)%sources.length;sources.push(...sources.splice(0,n));}
-   const queryId=crypto.randomUUID(),runId=crypto.randomUUID(),filters={policy:'xavier-nova-dc-v1',matchIn:p.matchIn,maxSources:3,maxPagesPerSource:3,maxRequests:6,maxSeconds:90,...(automation?{automation}:{})};
+   const cursor=automation?Number((await tx.query('SELECT count(*) FROM intelligence_cycles WHERE workspace_id=$1 AND cardinality(run_ids)>0',[w])).rows[0].count):0;
+   if(automation&&sources.length>1){const n=cursor%sources.length;sources.push(...sources.splice(0,n));}
+   const sourceCursors:Record<string,number>={};
+   if(automation)for(let i=0;i<sources.length;i++){
+    const quota=Math.floor(automation.maxMatches/sources.length)+(i<automation.maxMatches%sources.length?1:0);
+    const row=(await tx.query('INSERT INTO discovery_source_cursors(workspace_id,source_id,record_offset) VALUES($1,$2,$3) ON CONFLICT(workspace_id,source_id) DO UPDATE SET record_offset=discovery_source_cursors.record_offset+EXCLUDED.record_offset RETURNING record_offset',[w,sources[i].id,quota])).rows[0];
+    sourceCursors[sources[i].id]=Number(row.record_offset)-quota;
+   }
+   const queryId=crypto.randomUUID(),runId=crypto.randomUUID(),filters={policy:'xavier-nova-dc-v1',matchIn:p.matchIn,maxSources:3,maxPagesPerSource:3,maxRequests:6,maxSeconds:90,...(automation?{automation:{...automation,sourceCursors}}:{})};
    await tx.query('INSERT INTO discovery_queries(id,workspace_id,terms,filters,source_snapshots,candidate_revision,preference_provenance) VALUES($1,$2,$3,$4,$5,$6,$7)',[queryId,w,terms,JSON.stringify(filters),JSON.stringify(sources),candidate.revision,JSON.stringify(p.terms.length?[]:prefs.map(f=>({id:f.id,revision:f.revision})))]);
    const work=await enqueue(tx,w,'discover_jobs',runId+':1',{runId,revision:1});
    const row=(await tx.query('INSERT INTO discovery_runs(id,workspace_id,query_id,work_id) VALUES($1,$2,$3,$4) RETURNING *',[runId,w,queryId,work.id])).rows[0];

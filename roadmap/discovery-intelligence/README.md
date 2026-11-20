@@ -27,14 +27,17 @@ flowchart LR
 | Stage | Deliverable | Standing |
 | --- | --- | --- |
 | [0 Baseline](stages/00-baseline.md) | Push current work, main merge, new branch | Complete: origin/main 2c7031e |
-| [1 Policy](stages/01-policy.md) | Versioned settings, pure Rust screening | Complete: 34 Rust tests, 2 policy tests |
-| [2 Orchestration](stages/02-orchestration.md) | Bounded durable scan/evaluation timing and reservations | Implemented: build and isolated scoring/budget/proposal integration passed |
-| [3 Retention](stages/03-retention.md) | Capacity, compact archive, preview and restore | Implemented: build and isolated protection/preview/restore integration passed |
-| [4 Workspace](stages/04-workspace.md) | Global filters, archive, settings and agent proposals | Implemented: global filter integration and six desktop/mobile Chromium cases passed |
-| [5 Home](stages/05-home.md) | Sankey, eight metrics, top lanes, real README and proof | Planned |
+| [1 Policy](stages/01-policy.md) | Versioned settings, pure Rust screening | Complete: 09c4b41; final Rust/policy regression passed |
+| [2 Orchestration](stages/02-orchestration.md) | Bounded durable scan/evaluation timing and reservations | Complete: b8f1152; budget, recovery, rotation and guard regression passed |
+| [3 Retention](stages/03-retention.md) | Capacity, compact archive, preview and restore | Complete: 50c1249; protection, expiry, preview and restore regression passed |
+| [4 Workspace](stages/04-workspace.md) | Global filters, archive, settings and agent proposals | Complete: e95c837; global filters, proposals and desktop/mobile journeys passed |
+| [5 Home](stages/05-home.md) | Sankey, eight metrics, top lanes, real README and proof | Complete: Home/hardening stage commit; 143 integration and 37 Chromium tests passed |
 
 Each stage has its own commit. New work remains on maxim/discovery-intelligence;
 this roadmap does not authorize a later merge of unverified changes.
+The [verification receipt](reviews/verification.md) records exact suites, limits
+and the owner-controlled live gates. Completion does not enable production spend
+or deletion and does not promote unrelated original MVP gates.
 
 > **Comments**
 > Add feedback here.
@@ -50,7 +53,8 @@ this roadmap does not authorize a later merge of unverified changes.
   count toward capacity while still unsubmitted. Submitted/terminal applications
   retain their evidence outside the active-lead slots. If protection exceeds capacity, hold ingestion and report
   the overage; never erase evidence to pretend the limit was met.
-- Once enabled: scan every six hours, three boards maximum per run, 100 matching
+- Once enabled: scan every six hours, three boards maximum per run from an owner-
+  selected rotation pool (up to 200), 100 matching
   postings processed per cycle. Existing request/page/byte/time/pacing limits
   remain. This limits processed matches, not a vendor's feed size. Coalesce missed
   schedules rather than replaying an offline backlog.
@@ -104,8 +108,9 @@ sequenceDiagram
  Dashboard->>DB: Filtered shortlist, archive, metrics and flow
 ```
 
-One migration adds policy, cycles/selection receipts, spend reservations, compact
-archive and settings proposals. Factor narrow queue functions from the existing
+Migrations 013-015 add policy, cycles/selection receipts, spend reservations, compact
+archive, settings proposals, per-source cursors and revision-bound job holds.
+Factor narrow queue functions from the existing
 scan/evaluation command handlers: no impersonated browser login or reusable worker
 credential. Background work rechecks its explicit settings/candidate/model grant
 immediately before transport. Pause/revoke fences queued work.
@@ -130,6 +135,8 @@ capacity, payload reduction, archive/dedupe/restore, global filters, mobile layo
 actual cohort/time semantics, Sankey conservation and no invented progress.
 Use isolated source/provider fixtures, not private credentials. Record tests per
 stage. Preserve retained native tests and actual manual-application boundaries.
+The [case/evidence matrix](reviews/verification.md) maps eighteen regression
+contracts to actual unit, integration, browser and compatibility suites.
 Root README must describe shipped behavior, with data/worker/retention/journey
 diagrams. Do not promote original MVP live gates merely because fixtures pass.
 

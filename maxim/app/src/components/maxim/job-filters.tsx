@@ -13,7 +13,7 @@ export function JobFilters({data,navigate}:{data:WorkspaceData;navigate:(n:Navig
  useEffect(()=>setSearch(current),[current]);
  useEffect(()=>{if(search===current)return;const timer=setTimeout(()=>navigate({q:search||null,offset:null}),300);return()=>clearTimeout(timer);},[search,current,navigate]);
  const set=(key:keyof Navigation,value:string)=>navigate({[key]:value||null,offset:null});
- const select=(label:string,key:keyof Navigation,options:{value:string;label:string}[])=><Selector label={label} value={q.get(key)||''} onChange={v=>set(key,v)} options={options} width="100%" size="sm"/>;
+ const select=(label:string,key:keyof Navigation,options:{value:string;label:string}[])=><Selector label={label} value={q.get(key)||''} onChange={v=>set(key,v)} options={options} hasSearch={options.length>30} width="100%" size="sm"/>;
  return <div className="job-filter-fields">
   <TextInput label="Search roles" isLabelHidden type="search" placeholder="Search roles..." value={search} onChange={setSearch} startIcon={Search} hasClear width="100%"/>
   <div className="filter-pair">{select('Posted','age',[{value:'',label:'Any posting date'},{value:'today',label:'Posted today'},{value:'7',label:'Past week'},{value:'30',label:'Past month'},{value:'unknown',label:'Date unknown'}])}

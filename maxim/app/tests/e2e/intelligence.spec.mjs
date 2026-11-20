@@ -6,11 +6,13 @@ test.beforeAll(async()=>{h=await harness();});
 test.afterAll(async()=>{if(h)await h.close();});
 for(const width of [1600,390])test('discovery limits, global filters and compact history at '+width,async({page},info)=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await h.sql("INSERT INTO jobs(id,workspace_id,company,title,location,description,industry,role_lane,posted_at,updated_at) VALUES($1,$2,$3,'Full Stack Engineer','Reston, VA','Requirements\nRust and TypeScript engineering experience\nBenefits\nHealth insurance','Technology','Full stack',now()-interval '40 days',now()-interval '40 days')",[crypto.randomUUID(),h.c.workspaceId,'Archive Employer '+width]);
+ await h.sql("INSERT INTO jobs(id,workspace_id,company,title,location,description,industry,role_lane,posted_at,updated_at,created_at,first_seen_at) VALUES($1,$2,$3,'Full Stack Engineer','Reston, VA','Requirements\nRust and TypeScript engineering experience\nBenefits\nHealth insurance','Technology','Full stack',now()-interval '40 days',now()-interval '40 days',now()-interval '40 days',now()-interval '40 days')",[crypto.randomUUID(),h.c.workspaceId,'Archive Employer '+width]);
  await page.setViewportSize({width,height:1000});await page.goto(h.c.origin+'/maxim?view=settings');
  await page.getByLabel('Workspace access key').fill(h.c.bootstrapKey);await page.getByRole('button',{name:'Sign in',exact:true}).click();
  await page.getByLabel('Active lead limit',{exact:true}).fill('200');
+ await page.getByLabel('Target title terms (comma separated)',{exact:true}).fill('Software, Platform');
  await page.getByRole('button',{name:'Save discovery settings',exact:true}).click();await expect(page.getByText('Saved.',{exact:true})).toBeVisible();
+ expect((await(await h.request(h.a,'/api/intelligence')).json()).policy.value.terms).toEqual(['Software','Platform']);
  await expect(page.getByLabel('Bounded automatic Career-Ops evaluations',{exact:true})).not.toBeChecked();
  await page.getByRole('button',{name:'Preview cleanup',exact:true}).click();
  const dialog=page.getByRole('dialog',{name:'Review compact history'});await expect(dialog).toContainText('Archive Employer '+width);

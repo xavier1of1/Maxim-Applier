@@ -8,7 +8,7 @@ let h;
 test.beforeAll(async()=>{h=await harness();});
 test.afterAll(async()=>{if(h)await h.close();});
 async function signIn(page){
- await page.goto(h.c.origin+'/maxim');
+ await page.goto(h.c.origin+'/maxim?view=jobs');
  await page.getByLabel('Workspace access key').fill(h.c.bootstrapKey);
  await page.getByRole('button',{name:'Sign in',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Jobs',exact:true})).toBeVisible();

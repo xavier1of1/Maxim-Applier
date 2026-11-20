@@ -13,6 +13,7 @@ import {AgentPanel, ProposalReview} from './agent';
 import {CreateRoleDialog, JobsView} from './jobs';
 import {SettingsView} from './settings';
 import {ArchiveView} from './intelligence';
+import {HomeView} from './home';
 import {CandidateView} from './candidate';
 import {AnswersView} from './answers';
 import {DiscoveryView} from './discovery';
@@ -29,6 +30,7 @@ import type {Navigation, Proposal, Session, View, WorkspaceData} from './types';
 import {roleSort} from './role-fit';
 
 const navigation = [
+  {view: 'home' as const, label: 'Home', icon: LayoutGrid},
   {view: 'jobs' as const, label: 'Jobs', icon: BriefcaseBusiness},
   {view: 'archive' as const, label: 'Archive', icon: History},
   {view: 'discovery' as const, label: 'Discovery', icon: LayoutGrid},
@@ -121,7 +123,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
   const searchParams = useSearchParams();
   const query = searchParams.toString();
   const requestedView = searchParams.get('view');
-  const view: View = navigation.some(item => item.view === requestedView) ? requestedView as View : 'jobs';
+  const view: View = navigation.some(item => item.view === requestedView) ? requestedView as View : requestedView||searchParams.has('job')?'jobs':'home';
   const jobId = searchParams.get('job');
   const sort=roleSort(searchParams.get('sort'));
   const jobQuery=new URLSearchParams(query);jobQuery.set('limit','50');jobQuery.set('sort',sort);jobQuery.set('filter',searchParams.get('filter')==='archived'?'archived':'active');
@@ -192,12 +194,12 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
   }, [noteDirty]);
   const agent = useAgent({api, conversationId, jobId, navigate, refresh});
   const disabled = !online || Boolean(error);
-  const activeJobs = data?.jobs.filter(job => !job.archived).length;
-  const activeIntents = data?.applications.filter(application => application.status === 'intent').length;
+  const activeJobs = data?.totals?.leads??data?.jobs.filter(job => !job.archived).length;
+  const activeIntents = data?.totals?.applications??data?.applications.filter(application => application.status === 'intent').length;
   const currentNav = navigation.find(item => item.view === view)!;
   const counts: Partial<Record<View, number>> = {jobs: activeJobs, applications: activeIntents, activity: data?.events.length};
   const identity = data?.workspace ?? session.workspace;
-  const navItems = (mobile=false) => <>{navigation.filter(item=>!mobile||['jobs','candidate','applications','discovery'].includes(item.view)).map(item => <button type="button" key={item.view}
+  const navItems = (mobile=false) => <>{navigation.filter(item=>!mobile||['home','jobs','candidate','applications'].includes(item.view)).map(item => <button type="button" key={item.view}
     className={'nav-item' + (view === item.view ? ' current' : '')} aria-current={view === item.view ? 'page' : undefined}
     onClick={() => navigate({view: item.view, filter: null})}>
     <item.icon size={18} aria-hidden="true" /><span>{item.label}</span>
@@ -228,16 +230,17 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
         <div className="page-heading-actions"><span className="last-sync">{data ? 'Updated ' + formatDate(data.asOf, true) : 'Connecting...'}</span>
           {view === 'jobs' && <Button label="New role" variant="primary" icon={<Glyph icon={Plus} />} onClick={() => setCreateOpen(true)} isDisabled={!data || disabled} />}</div>
       </div>
-      {data && !['settings','candidate','answers'].includes(view) && <div className="workspace-stats" aria-label="Workspace totals">
-        <div><span className="stat-icon stat-green"><BriefcaseBusiness size={16} aria-hidden="true" /></span><span>Unarchived roles<strong className="tabular">{activeJobs}</strong></span></div>
+      {data && !['home','settings','candidate','answers'].includes(view) && <div className="workspace-stats" aria-label="Workspace totals">
+        <div><span className="stat-icon stat-green"><BriefcaseBusiness size={16} aria-hidden="true" /></span><span>Active leads<strong className="tabular">{activeJobs}</strong></span></div>
         <div><span className="stat-icon stat-amber"><Send size={16} aria-hidden="true" /></span><span>Applications<strong className="tabular">{activeIntents}</strong></span></div>
         <div><span className="stat-icon stat-coral"><FileCheck2 size={16} aria-hidden="true" /></span><span>Pending reviews<strong className="tabular">{data.proposals.length}</strong></span></div>
-        <div><span className="stat-icon"><Activity size={16} aria-hidden="true" /></span><span>Recorded events<strong className="tabular">{data.events.length}</strong></span></div>
+        <div><span className="stat-icon"><Activity size={16} aria-hidden="true" /></span><span>Recorded events<strong className="tabular">{data.totals?.events??data.events.length}</strong></span></div>
       </div>}
       <div id="workspace-content" className={'workspace-content view-' + view} tabIndex={-1} aria-busy={!data && refreshing}>
         {!data ? error ? <EmptyState icon={WifiOff} title="Unable to load workspace" detail="No records have been loaded."
           action={<Button label="Retry" icon={<Glyph icon={RefreshCw} />} onClick={() => void refresh()} isDisabled={!online || refreshing} />} />
           : <div className="workspace-skeleton" role="status"><span className="visually-hidden">Loading workspace</span><i /><i /><i /><i /></div>
+          : view === 'home' ? <HomeView api={api} disabled={disabled} asOf={data.asOf} navigate={navigate}/>
           : view === 'jobs' ? <JobsView data={data} api={api} disabled={disabled} refresh={refresh} navigate={navigate}
             selectedId={jobId} filter={filter} sort={sort} onCreate={() => setCreateOpen(true)} onDirtyChange={setNoteDirty}
             onAgent={() => { setAgentOpen(true); if (conversationId && agent.detail && agent.detail.conversation.job_id !== jobId && !agent.isRunning) void agent.newConversation(); }} />
