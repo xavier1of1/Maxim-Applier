@@ -39,6 +39,7 @@ const plain=compile({wordwrap:false,limits:{maxInputLength:100000,maxDepth:30,ma
 export function upstreamNormalize(source:Source,row:UpstreamRow):NormalizedJob{
  const title=String(row.title||'').trim().slice(0,200),company=String(row.company||'').trim().slice(0,180);
  invariant(title&&company,'posting_identity_missing','A board result must identify its actual employer and title.');
+ invariant(capability(source.provider)?.kind!=='board_wide'||company!==source.name,'posting_identity_missing','The board did not identify this posting\'s actual employer.');
  const url=publicUrl(row.url).href,applicationUrl=publicUrl(row.applicationUrl||row.url).href;
  const listing=row.listingIdentity;
  const key=listing?.ats_provider&&listing.board_slug&&listing.posting_id?`${listing.ats_provider}:${listing.board_slug}:${listing.posting_id}`:postingIdentity(applicationUrl,postingIdentity(url,'url:'+new URL(url).origin+new URL(url).pathname.replace(/\/$/,'')));
@@ -50,6 +51,6 @@ export function upstreamEntry(source:Source,terms:string[]){
  const entry={...(source as Source&{native_definition?:Record<string,unknown>}).native_definition,name:source.name,provider:source.provider,careers_url:source.careers_url,max_pages:2};
  if(source.provider==='builtin')return {...entry,builtin:{categories:['dev-engineering'],max_pages:2}};
  if(source.provider==='wellfound')return {...entry,wellfound:{locations:['washington-dc'],max_companies:0}};
- if(source.provider==='a16z-speedrun-talent')return {...entry,q:terms[0]||'software',max_pages:2};
+ if(source.provider==='a16z-speedrun-talent')return {...entry,max_pages:2};
  return entry;
 }

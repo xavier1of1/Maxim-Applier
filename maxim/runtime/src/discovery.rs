@@ -19,8 +19,10 @@ pub fn screen(input:&Value)->Value{
   }).collect();
   let target=aliases.iter().any(|a|contains(&title,a));let excluded=excludes.iter().any(|a|contains(&title,a));
   let rescue=groups.len()>=required;let full=job["full"].as_bool().unwrap_or(false);
+  let policy=crate::policy::evaluate(&json!({"job":{"description":description,"locationText":job["location"],"locations":job["locations"]}}));
+  let location_blocked=policy["flags"].as_array().into_iter().flatten().any(|f|f["flagType"]=="location"&&f["severity"]=="blocker");
   let reason=if excluded{"explicit_title_exclusion"}else if target{"title_alias"}else if rescue{"responsibility_rescue"}else if !full{"uninspected_needs_details"}else{"no_work_evidence"};
-  decisions.push(json!({"index":job["index"],"keep":!excluded&&(target||rescue),"explore":!excluded&&!full&&!target&&!rescue,"reason":reason,"matchedGroups":groups,"kind":"retrieval_rules_not_fit_score"}));
+  decisions.push(json!({"index":job["index"],"keep":!excluded&&(target||rescue),"explore":!excluded&&!full&&!target&&!rescue&&!location_blocked,"locationBlocked":location_blocked,"reason":reason,"matchedGroups":groups,"kind":"retrieval_rules_not_fit_score"}));
  }
  json!({"ok":true,"decisions":decisions})
 }

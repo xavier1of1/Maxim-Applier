@@ -17,7 +17,7 @@ import {discoverMarketJobs} from './upstream-discovery';
 
 const fallback='Review this source in a visible browser, or retry explicitly after fixing its configuration/cooldown. No access-control workaround is available.';
 type Posting={jobId:string;revision:number;externalId:string;openingKey:string};
-async function currentPosting(tx:PoolClient,item:WorkItem,source:Source,posting:Posting){
+export async function currentPosting(tx:PoolClient,item:WorkItem,source:Source,posting:Posting){
  const row=(await tx.query('SELECT j.title,j.company FROM jobs j JOIN job_source_aliases a ON a.workspace_id=j.workspace_id AND a.job_id=j.id WHERE j.workspace_id=$1 AND j.id=$2 AND j.revision=$3 AND j.opening_key=$4 AND NOT j.archived AND a.source_id=$5 AND a.external_id=$6 FOR UPDATE OF j',[item.workspace_id,posting.jobId,posting.revision,posting.openingKey,source.id,posting.externalId])).rows[0];
  invariant(row,'posting_changed','The stored role or source identity changed. Review it before requesting details again.',409);
  return row;

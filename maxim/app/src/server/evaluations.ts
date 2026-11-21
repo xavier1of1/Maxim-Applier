@@ -14,8 +14,12 @@ import {jobPolicy} from './application-material';
 import {applicationWritable} from './application-authority';
 import type {PoolClient} from 'pg';
 import {intelligenceLock} from './intelligence-policy';
+import {artifactBytes} from './private-artifacts';
+import {domain} from './domain';
+import {queueApplicationProjection} from './application-authority';
 
 const schema=z.discriminatedUnion('action',[
+ z.object({commandId:uuid,action:z.literal('revalidate_evaluation'),payload:z.object({evaluationId:uuid,expectedRevision:z.number().int().positive()}).strict()}).strict(),
  z.object({commandId:uuid,action:z.literal('start_evaluation'),payload:z.object({jobId:uuid,expectedJobRevision:z.number().int().positive(),expectedCandidateRevision:z.number().int().positive()}).strict()}).strict(),
  z.object({commandId:uuid,action:z.literal('cancel_evaluation'),payload:z.object({evaluationId:uuid,expectedRevision:z.number().int().positive()}).strict()}).strict(),
 ]);
@@ -24,6 +28,18 @@ export async function evaluationCommand(ctx:Context,raw:unknown){
  return command(ctx,c.commandId,c,async tx=>{
   await candidateLock(tx,ctx.workspaceId);
   await applicationWritable(tx,ctx.workspaceId);
+  if(c.action==='revalidate_evaluation'){
+   invariant(ctx.isOwner,'not_found','Record not found.',404);
+   const p=c.payload,e=(await tx.query('SELECT e.*,j.revision AS current_job,c.revision AS current_candidate FROM evaluations e JOIN jobs j ON j.id=e.job_id AND j.workspace_id=e.workspace_id JOIN candidates c ON c.workspace_id=e.workspace_id WHERE e.workspace_id=$1 AND e.id=$2 FOR UPDATE OF e',[ctx.workspaceId,p.evaluationId])).rows[0];
+   if(!e)throw notFound();
+   invariant(e.revision===p.expectedRevision&&e.status==='review_required'&&e.job_revision===e.current_job&&e.candidate_revision===e.current_candidate,'evaluation_changed','Only a current held report can be revalidated; no model request will be made.',409);
+   invariant(e.input_snapshot.engine?.hash===(await engineSnapshot()).hash&&!(await tx.query("SELECT 1 FROM fact_dependencies WHERE workspace_id=$1 AND entity_id=$2 AND status='invalidated' LIMIT 1",[ctx.workspaceId,e.id])).rowCount,'evaluation_stale','The saved report uses superseded evaluation inputs. A new evaluation is required.',409);
+   const {bytes}=await artifactBytes(tx,ctx.workspaceId,e.report_artifact_id,e.job_id),parsed=domain({operation:'parse_evaluation',report:bytes.toString('utf8'),company:e.input_snapshot.job.company,title:e.input_snapshot.job.title});
+   const job=await jobFor(tx,ctx,e.job_id),policy=await jobPolicy(tx,ctx.workspaceId,job,String(parsed.tier));
+   await tx.query("UPDATE evaluations SET status='completed',score=$1,tier=$2,explanation=$3,archetype=$4,legitimacy=$5,policy=$6,error_code=null,revision=revision+1 WHERE workspace_id=$7 AND id=$8",[parsed.score,parsed.tier,parsed.explanation,parsed.archetype,parsed.legitimacy,JSON.stringify(policy),ctx.workspaceId,e.id]);
+   await event(tx,ctx,e.id,'careerops_report_revalidated',{score:parsed.score,tier:parsed.tier,reportArtifactId:e.report_artifact_id,modelRequests:0},e.revision+1);
+   await queueApplicationProjection(tx,ctx.workspaceId);return {id:e.id,status:'completed',score:parsed.score,tier:parsed.tier,modelRequests:0};
+  }
   if(c.action==='cancel_evaluation'){
    const p=c.payload,e=(await tx.query('SELECT * FROM evaluations WHERE workspace_id=$1 AND id=$2 FOR UPDATE',[ctx.workspaceId,p.evaluationId])).rows[0];if(!e)throw notFound();
    invariant(e.revision===p.expectedRevision&&['queued','running'].includes(e.status),'evaluation_changed','Evaluation changed or already finished.',409);
@@ -40,6 +56,7 @@ export async function queueCareerOpsEvaluation(tx:PoolClient,ctx:Pick<Context,'w
   invariant(candidate.ownership==='canonical','candidate_authority_required','Review and activate Candidate knowledge before evaluation.',409);
   invariant(j.revision===p.expectedJobRevision&&candidate.revision===p.expectedCandidateRevision,'revision_conflict','Candidate/job changed; review the current versions.',409);
   invariant(!j.archived&&j.description.trim().length>=50,'job_description_required','A current full job description is required before evaluation.',409);
+  invariant(!['summary','missing','unavailable'].includes(j.discovery_policy?.detailStatus),'job_description_required','This posting contains a summary or unavailable description. Fetch verified posting details before evaluation.',409);
   const facts=(await tx.query("SELECT f.*,s.model_consent,s.classification FROM candidate_facts f JOIN candidate_sources s ON s.id=f.source_id AND s.workspace_id=f.workspace_id WHERE f.workspace_id=$1 AND f.status='current' AND f.sensitivity='standard' AND s.model_consent=true AND s.classification<>'restricted' AND s.deleted_at IS NULL AND s.revision=f.source_revision ORDER BY f.field_key",[ctx.workspaceId])).rows;
   invariant(facts.length>0&&facts.length<=300,'candidate_context_required','Approve model-disclosable facts within the bounded candidate context first.',409);
   facts.forEach(f=>assertDisclosureText(JSON.stringify(f.value)));assertDisclosureText(j.description);

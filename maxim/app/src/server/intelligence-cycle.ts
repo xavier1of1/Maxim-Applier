@@ -21,7 +21,7 @@ export function screeningSummaries(jobs:Record<string,any>[]){
  return jobs.map(j=>{
   const summary={id:j.id,company:clip(j.company,200),title:clip(j.title,240),description:clip(j.description,1400),ageHours:j.age_hours===null?null:Number(j.age_hours),
    blocked:!j.discovery_policy?.flags?.some((f:{flagType:string;severity:string})=>f.flagType==='location'&&f.severity==='positive')||j.discovery_policy?.flags?.some((f:{severity:string})=>f.severity==='blocker'),
-   hasEvaluation:Boolean(j.evaluation_id&&(j.current||['queued','running','failed','cancelled','review_required'].includes(j.evaluation_status))),priority:j.discovery_policy?.flags?.some((f:{flagType:string})=>f.flagType==='connection_overlay'),holdReason:typeof j.automatic_hold==='string'?j.automatic_hold.slice(0,120):null};
+   fullPosting:!['summary','missing','unavailable'].includes(j.discovery_policy?.detailStatus),hasEvaluation:Boolean(j.evaluation_id&&(j.current||['queued','running','failed','cancelled','review_required'].includes(j.evaluation_status))),priority:j.discovery_policy?.flags?.some((f:{flagType:string})=>f.flagType==='connection_overlay'),holdReason:typeof j.automatic_hold==='string'?j.automatic_hold.slice(0,120):null};
   while(Buffer.byteLength(JSON.stringify(summary))>2000)summary.description=summary.description.slice(0,Math.floor(summary.description.length/2));
   return summary;
  });

@@ -39,6 +39,7 @@ test('board-wide discovery admits unknown employers through the retained store a
   assert.equal(second.r.counts.created,1,'rotating window reaches the fifth employer');
   assert.equal(h.providerRequests.filter(r=>r.url.includes('greenhouse_companies.json')).length,1,'directory cached, not repeatedly copied');
   assert.ok(second.v.jobs.some(j=>j.company==='lastlabs'));
+  await apiCommand(h,'candidate','manual_fact',{fieldKey:'candidate.name',value:'Discovery Example',expectedFactRevision:0,modelConsent:true,reason:'Synthetic reviewed discovery fixture'});
   await apiCommand(h,'candidate','manual_fact',{fieldKey:'projects.summary',value:'Built software integrations and automated customer workflows.',expectedFactRevision:0,modelConsent:true,reason:'Synthetic reviewed discovery fixture'});
   const candidate=(await(await h.request(h.a,'/api/candidate')).json()).candidate;
   await command('save_search_profile',{expectedRevision:0,expectedCandidateRevision:candidate.revision,profile:{families:['software_delivery','product_engineering','automation','systems_integration']}});
@@ -50,10 +51,29 @@ test('board-wide discovery admits unknown employers through the retained store a
   assert.equal(third.r.counts.created,2);const unconventional=third.v.jobs.find(j=>j.company==='Unexpected Work Labs');
   assert.equal(unconventional.discovery_policy.screening.reason,'responsibility_rescue');
   assert.equal(third.v.jobs.find(j=>j.company==='Clearance Required Labs').discovery_policy.eligibility,'blocked');
+  const broad=pack.sources.find(s=>s.provider==='a16z-speedrun-talent');
+  h.providerRoutes.set('/api/v1/jobs',{body:{jobs:[{id:900,title:'Customer Delivery Builder',company:'Detail Labs',url:'https://speedrun-talent-network.com/jobs/900',location:'Arlington, VA',published_at:'2026-11-21T10:00:00Z'}],total_pages:1}});
+  h.providerRoutes.set('/jobs/900',async(req,res)=>{res.writeHead(200,{'Content-Type':'text/html'});res.end('<script type="application/ld+json">'+JSON.stringify({'@type':'JobPosting',title:'Customer Delivery Builder',hiringOrganization:{name:'Detail Labs'},description:'Build production software. Use REST APIs and automate workflows to serve customer requirements.',jobLocation:{address:{addressLocality:'Arlington',addressRegion:'VA'}}})+'</script>');});
+  const enriched=await command('start_search',{sourceIds:[broad.id],terms:['software engineer']});const fourth=await done(enriched.id);
+  assert.equal(fourth.r.counts.created,1,JSON.stringify(fourth.v.attempts.filter(a=>a.run_id===enriched.id)));
+  const detailed=fourth.v.jobs.find(j=>j.company==='Detail Labs');assert.equal(detailed.discovery_policy.detailStatus,'full');assert.equal(detailed.discovery_policy.screening.reason,'responsibility_rescue');
+  const prepared=(await(await h.request(h.a,'/api/candidate/cutover',{method:'POST',body:{commandId:crypto.randomUUID(),action:'prepare',expectedRevision:candidate.revision}})).json()).result;
+  assert.equal((await h.request(h.a,'/api/candidate/cutover',{method:'POST',body:{commandId:crypto.randomUUID(),action:'activate',expectedRevision:candidate.revision,transitionId:prepared.id}})).status,200);
+  await apiCommand(h,'evaluations','start_evaluation',{jobId:detailed.id,expectedJobRevision:detailed.revision,expectedCandidateRevision:candidate.revision});
+  for(let i=0;i<180;i++){if((await view()).jobs.find(j=>j.id===detailed.id)?.fit?.current)break;await delay(200);}
+  const evaluated=(await view()).jobs.find(j=>j.id===detailed.id);assert.equal(evaluated.fit.score,4.6);assert.equal(evaluated.fit.tier,'T3');
+  const requestsBefore=h.captured.length;
+  const held=(await h.sql("UPDATE evaluations SET status='review_required',error_code='score_conflict' WHERE workspace_id=$1 AND job_id=$2 RETURNING id,revision",[h.c.workspaceId,detailed.id])).rows[0];
+  const repaired=await apiCommand(h,'evaluations','revalidate_evaluation',{evaluationId:held.id,expectedRevision:held.revision});
+  assert.equal(h.captured.length,requestsBefore,'revalidation never sends another model request');
+  assert.equal((await view()).jobs.find(j=>j.id===detailed.id).fit.current,true);
+  const summaryId=crypto.randomUUID();await h.sql("INSERT INTO jobs(id,workspace_id,company,title,description,opening_key,discovery_policy) VALUES($1,$2,'Summary Labs','Software Engineer',$3,'summary:fixture','{\"detailStatus\":\"summary\"}')",[summaryId,h.c.workspaceId,'A long teaser without a verified full posting. '.repeat(5)]);
+  await apiCommand(h,'evaluations','start_evaluation',{jobId:summaryId,expectedJobRevision:1,expectedCandidateRevision:candidate.revision},409);
+  assert.equal(h.captured.length,requestsBefore,'summary is held before paid dispatch');
   await command('add_source',{name:'Forbidden',provider:'local-parser',configuration:{parser:{command:'cmd.exe'}}},400);
   h.providerRoutes.set('/api/remote-jobs',{status:403,body:{}});
   const failed=await command('start_search',{sourceIds:[s.id],terms:['software']});const f=await done(failed.id);
   assert.equal(f.r.status,'failed');assert.equal(f.v.attempts.find(a=>a.run_id===failed.id).error_code,'auth_or_challenge');
-  assert.equal((await h.sql('SELECT count(*)::int AS n FROM jobs WHERE workspace_id=$1',[h.c.workspaceId])).rows[0].n,8,'challenge cannot become empty results or corrupt prior jobs');
+  assert.equal((await h.sql('SELECT count(*)::int AS n FROM jobs WHERE workspace_id=$1',[h.c.workspaceId])).rows[0].n,10,'challenge cannot become empty results or corrupt prior jobs');
  }finally{if(worker)await h.stopWorker(worker);await h.close();}
 });

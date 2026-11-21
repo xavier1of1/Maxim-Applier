@@ -77,6 +77,16 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
   if(c.action==='fetch_posting_details'){
    const p=c.payload,j=await jobFor(tx,ctx,p.jobId);
    invariant(j.revision===p.expectedRevision&&!j.archived,'revision_conflict','This role changed; review it again.',409);
+   if(j.source_platform!=='greenhouse'){
+    const source=(await tx.query('SELECT s.*,a.external_id FROM job_source_aliases a JOIN discovery_sources s ON s.workspace_id=a.workspace_id AND s.id=a.source_id WHERE a.workspace_id=$1 AND a.job_id=$2 AND s.enabled ORDER BY a.created_at,a.id LIMIT 1 FOR SHARE OF s',[w,j.id])).rows[0];
+    invariant(source&&j.opening_key,'posting_details_unavailable','No enabled, verified discovery source is available. Paste the full posting text manually.',409);
+    invariant(!source.next_retry_at||new Date(source.next_retry_at).getTime()<=Date.now(),'source_cooldown','The source is still in cooldown.',409);
+    const prior=(await tx.query("SELECT r.id,r.status FROM discovery_runs r JOIN discovery_queries q ON q.workspace_id=r.workspace_id AND q.id=r.query_id JOIN work_items x ON x.workspace_id=r.workspace_id AND x.id=r.work_id WHERE r.workspace_id=$1 AND q.filters->'posting'->>'jobId'=$2 AND x.status IN ('queued','leased') LIMIT 1",[w,j.id])).rows[0];if(prior)return prior;
+    const queryId=crypto.randomUUID(),runId=crypto.randomUUID(),filters={engine:'careerops-1.40.0',upstreamCommit,posting:{jobId:j.id,revision:j.revision,externalId:source.external_id,openingKey:j.opening_key},maxRequests:1,maxSeconds:90};
+    await tx.query("INSERT INTO discovery_queries(id,workspace_id,terms,filters,source_snapshots) VALUES($1,$2,'{}',$3,$4)",[queryId,w,JSON.stringify(filters),JSON.stringify([source])]);
+    const work=await enqueue(tx,w,'discover_jobs',runId+':1',{runId,revision:1}),run=(await tx.query('INSERT INTO discovery_runs(id,workspace_id,query_id,work_id) VALUES($1,$2,$3,$4) RETURNING id,status',[runId,w,queryId,work.id])).rows[0];
+    await event(tx,ctx,j.id,'posting_details_queued',{runId,sourceId:source.id},j.revision);return run;
+   }
    invariant(j.source_platform==='greenhouse'&&j.opening_key,'posting_details_unavailable','No verified Greenhouse posting source is available.');
    const row=(await tx.query("SELECT s.*,a.external_id FROM job_source_aliases a JOIN discovery_sources s ON s.workspace_id=a.workspace_id AND s.id=a.source_id WHERE a.workspace_id=$1 AND a.job_id=$2 AND s.provider='greenhouse' AND s.enabled ORDER BY a.created_at,a.id LIMIT 1 FOR SHARE OF s",[w,j.id])).rows[0];
    invariant(row,'posting_details_unavailable','Enable this role\'s Greenhouse source before fetching details.',409);

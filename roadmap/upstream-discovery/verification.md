@@ -38,6 +38,18 @@ isolated integration passed. Current evidence-backed owner profile rescues an
 unexpected title and keeps active-clearance requirements blocked. Profile changes
 are revision checked and stale runs cannot publish against changed knowledge.
 
+Stage 5: 48 Rust tests and three detail-acquisition unit tests passed. Expanded
+isolated integration exercises a broad-board teaser, verified JSON-LD details,
+responsibility rescue and real retained evaluator execution against the fixture
+model. Summary records cannot enter paid scoring. A local revalidation command
+checks artifact hashes/current inputs and makes zero provider requests.
+
+Discovered live scoring defect: eight held reports had matching numeric scores,
+but Markdown bold/provisional suffixes were incorrectly parsed as conflicts.
+Rust now accepts those display formats while still rejecting genuine disagreement
+or ambiguous numbers. Stored reports can be repaired without purchasing another
+evaluation; live repairs and final counts remain to be recorded below.
+
 ## Remaining Setup And Limitations
 
 Local approved candidate evidence, an accessible configured evaluation model,

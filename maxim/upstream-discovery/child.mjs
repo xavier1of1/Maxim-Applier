@@ -42,12 +42,27 @@ process.once('message',async m=>{
   const {provider}=resolveProvider({...m.entry,provider:m.provider},new Map([[installed.id,installed]]),{skipIds:['local-parser']});
   const {normalizeUrl,aggregatorPostingId}=await import(new URL('url-key.mjs',base));
   const ctx={...transport.makeHttpCtx(),normalizePostingUrl:normalizeUrl,aggregatorPostingId,titleWanted:()=>true};
+  const comments=new Map();
+  if(m.provider==='hackernews'){
+   const {parseHnComment}=await import(new URL('providers/hackernews.mjs',base));
+   const {htmlToText}=await import(new URL('providers/_html-to-text.mjs',base));
+   ctx.fetchJson=async(url,opts)=>{
+    const payload=await transport.fetchJson(url,opts);
+    if(Array.isArray(payload?.children))for(const child of payload.children){
+     if(!child||child.dead||child.deleted||typeof child.text!=='string')continue;
+     const fallback=`https://news.ycombinator.com/item?id=${child.id||child.objectID||''}`,parsed=parseHnComment(child.text,fallback);
+     if(parsed)comments.set(parsed.url,htmlToText(child.text).slice(0,50000));
+    }
+    return payload;
+   };
+  }
   const jobs=await provider.fetch(m.entry,ctx);
   if(!Array.isArray(jobs))throw new Error('Provider did not return a job array.');
   const {boardTruncation}=await import(new URL('lib/board-truncation.mjs',base));
   const out=[],max=m.maxRecords||500;let bytes=0;
   for(const j of jobs.slice(0,max)){
    const row=JSON.parse(JSON.stringify(j));
+   if(comments.has(row.url)){row.description=comments.get(row.url);row.descriptionEvidence={kind:'hiring_comment_not_full_jd'};}
    for(const key of Object.keys(row))if(typeof row[key]==='string')row[key]=row[key].slice(0,key==='description'?50000:4000);
    bytes+=Buffer.byteLength(JSON.stringify(row));if(bytes>8*1024*1024)break;out.push(row);
   }

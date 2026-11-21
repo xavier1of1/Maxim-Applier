@@ -40,7 +40,7 @@ pub fn shortlist(input:&Value)->Value{
   let reason=if let Some(hold)=job["holdReason"].as_str(){Some(hold)}
    else if !all_scanned&&job["blocked"].as_bool().unwrap_or(true){Some("policy_blocked_or_unreviewed_location")}
    else if job["hasEvaluation"].as_bool().unwrap_or(false){Some("already_evaluated_or_pending")}
-   else if job["description"].as_str().unwrap_or("").trim().len()<50{Some("full_posting_required")}
+   else if job["fullPosting"].as_bool()==Some(false)||job["description"].as_str().unwrap_or("").trim().len()<50{Some("full_posting_required")}
    else if !all_scanned&&age.is_none()&&!p["allowUnknownDates"].as_bool().unwrap_or(false){Some("posted_date_unknown")}
    else if !all_scanned&&age.map(|v|v<0.0||v>max_age).unwrap_or(false){Some("outside_freshness_window")}
    else if !all_scanned&&excluded.iter().any(|s|title.contains(s)){Some("excluded_title")}

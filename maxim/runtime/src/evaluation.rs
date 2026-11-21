@@ -24,9 +24,11 @@ pub fn parse(input:&Value)->Value{
  if ["A","B","C","D","E","F","G"].iter().any(|b|found.iter().filter(|s|s==b).count()!=1){return fail("incomplete_report");}
  if score>=4.5&&!found.iter().any(|b|b=="H"){return fail("high_conviction_block_missing");}
  let visible=Regex::new(r"(?m)^\*\*Score:\*\*\s*(.*?)\s*$").unwrap();
+ let value_pattern=Regex::new(r"^\*{0,2}([1-5](?:\.\d+)?)\s*(?:/\s*5)?(?:\*{0,2})(?:\s*(?:[-–—:(]|$))").unwrap();
+ let repeated=Regex::new(r"([1-5](?:\.\d+)?)\s*/\s*5").unwrap();
  for c in visible.captures_iter(report){
-  let value=c[1].trim().strip_suffix("/5").unwrap_or(c[1].trim()).trim().parse::<f64>();
-  if value.ok()!=Some(score){return fail("score_conflict");}
+  let value=value_pattern.captures(c[1].trim()).and_then(|m|m[1].parse::<f64>().ok());
+  if value!=Some(score)||repeated.captures_iter(&c[1]).any(|m|m[1].parse::<f64>().ok()!=Some(score)){return fail("score_conflict");}
  }
  let tier=crate::handle(&json!({"operation":"tier","score":score}))["tier"].clone();
  json!({"ok":true,"score":score,"tier":tier,"company":company,"title":role,"archetype":archetype,"legitimacy":legitimacy,"explanation":report.split("---SCORE_SUMMARY---").next().unwrap_or("").trim()})
@@ -47,4 +49,6 @@ mod tests{
   let mut v=fixture("4.6");v["report"]=json!(v["report"].as_str().unwrap().replace("## H.","## Z."));assert_eq!(parse(&v)["ok"],false);
  }
  #[test]fn duplicate_summary_is_ambiguous(){let mut v=fixture("4.2");v["report"]=json!(v["report"].as_str().unwrap().repeat(2));assert_eq!(parse(&v)["ok"],false);}
+ #[test]fn visible_markdown_and_qualifiers_do_not_invent_a_conflict(){for line in ["**Score:** 3.4/5 — provisional","**Score:** **3.4/5**","**Score:** **3.4/5 — provisional**","**Score:** 3.4 / 5 - review requirements"]{let mut v=fixture("3.4");v["report"]=json!(format!("{}\n{}",line,v["report"].as_str().unwrap()));assert_eq!(parse(&v)["score"],3.4,"{}",line);}}
+ #[test]fn real_visible_disagreement_and_ambiguous_multiple_scores_still_fail(){for line in ["**Score:** 3.8/5","**Score:** 3.4/5 (adjusted to 2.0/5)","**Score:** unknown","**Score:** 3.4oops"]{let mut v=fixture("3.4");v["report"]=json!(format!("{}\n{}",line,v["report"].as_str().unwrap()));assert_eq!(parse(&v)["ok"],false,"{}",line);}}
 }

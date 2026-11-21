@@ -10,9 +10,10 @@ import {type Source,matchesRoleTerms} from '../server/discovery-providers';
 import {capability,publicUrl,upstreamEntry,upstreamNormalize,upstreamRun,upstreamCommit,type UpstreamRow} from '../server/upstream-discovery';
 import {finishWork,type WorkItem} from '../server/work';
 import {queueApplicationProjection} from '../server/application-authority';
-import {active,publishJob} from './discovery';
+import {active,publishJob,currentPosting} from './discovery';
 import {inventoryBatch} from './discovery-inventory';
 import {screenDiscovery} from '../server/discovery-screen';
+import {enrichPosting} from '../server/discovery-details';
 
 export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal){
  const signal=AbortSignal.any([AbortSignal.timeout(85000),...(parentSignal?[parentSignal]:[])]),w=item.workspace_id;
@@ -23,6 +24,7 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
   return (await tx.query('SELECT * FROM discovery_queries WHERE workspace_id=$1 AND id=$2',[w,run.query_id])).rows[0];
  });
  const counts={matched:0,created:0,identityConflicts:0,successfulSources:0,failedSources:0,partialSources:0,requests:0,bytes:0,returned:0,uninspected:0,missingDescriptions:0,uniqueEmployers:0,sourceCount:query.source_snapshots.length};
+ const posting=query.filters.posting;
  const employers=new Set<string>();
  for(const source of query.source_snapshots as Source[]){
   if(signal.aborted)break;
@@ -37,7 +39,7 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
    invariant(!live?.next_retry_at||new Date(live.next_retry_at).getTime()<=Date.now(),'quota_exceeded','Source cooldown has not elapsed.',409);
    const hosts=[...new Set([...(capability(source.provider)?.hosts||[]),publicUrl(source.careers_url).hostname])];
    async function request(url:string,options:{method?:string;body?:string;headers?:Record<string,string>}={}){
-    invariant(counts.requests<18&&sourceRequests<12&&counts.bytes<20*1024*1024,'request_budget','Public search resource cap reached. Remaining coverage is uninspected.');
+    invariant(counts.requests<(posting?1:18)&&sourceRequests<12&&counts.bytes<20*1024*1024,'request_budget','Public search resource cap reached. Remaining coverage is uninspected.');
     const parsed=publicUrl(url),method=options.method||'GET';
     validateFeedUrl(url,hosts);
     invariant(method==='GET'||method==='POST'&&source.provider.replace(/^reverse:/,'')==='workday'&&parsed.hostname.endsWith('.myworkdayjobs.com')&&/^\/wday\/cxs\/[^/]+\/[^/]+\/jobs$/.test(parsed.pathname),'request_method_refused','Only public reads and the audited Workday search POST are allowed.');
@@ -62,7 +64,11 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
     }
    }
    let result;
-   if(source.provider.startsWith('reverse:')){
+   if(posting){
+    const job=await transaction(async tx=>{await active(tx,item,source);await currentPosting(tx,item,source,posting);return (await tx.query('SELECT * FROM jobs WHERE workspace_id=$1 AND id=$2',[w,posting.jobId])).rows[0];});
+    const raw=(await database().query('SELECT raw_fields FROM job_observations WHERE workspace_id=$1 AND job_id=$2 AND source_id=$3 ORDER BY observed_at DESC LIMIT 1',[w,job.id,source.id])).rows[0]?.raw_fields||{};
+    result={jobs:[{...raw,title:job.title,company:job.company,url:job.url,applicationUrl:job.application_url||job.url,location:job.location,description:job.description}] as UpstreamRow[],returned:1,partial:null};
+   }else if(source.provider.startsWith('reverse:')){
     const batch=await inventoryBatch(item,source,signal,request,host=>hosts.push(host));
     Object.assign(coverage,{kind:'reverse_ats',...batch.coverage,attemptedTenants:0,failedTenants:0});
     result={jobs:[] as UpstreamRow[],returned:0,partial:batch.coverage.uninspected?{reason:'inventory_window'}:null};
@@ -88,8 +94,30 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
    counts.uninspected+=Number(coverage.uninspected||0);
    const jobs=result.jobs,ids=new Set<string>();
    const profile=query.filters.searchProfile;
-   const full=(row:UpstreamRow)=>capability(source.provider)?.description==='full_when_present'&&String(row.description||'').trim().length>=50;
-   const decisions=profile?screenDiscovery(jobs,profile,full):null;
+   const fullRows=new Set<UpstreamRow>(jobs.filter(row=>!posting&&capability(source.provider)?.description==='full_when_present'&&String(row.description||'').trim().length>=50));
+   const full=(row:UpstreamRow)=>fullRows.has(row);
+   let decisions=profile?screenDiscovery(jobs,profile,full):null;
+   const wanted=jobs.map((row,index)=>({row,index,decision:decisions?.find(d=>d.index===index)})).filter(x=>!full(x.row)&&(posting||!x.decision?.locationBlocked&&(x.decision?x.decision.keep||x.decision.explore:matchesRoleTerms({title:x.row.title,description:String(x.row.description||'')},query.terms,query.filters.matchIn))));
+   const detailLimit=profile?.detailRequestsPerSource??4,exploreLimit=profile?.explorationPerSource??3;
+   let detailRequests=0,explorations=0;
+   const offset=await transaction(async tx=>{
+    await active(tx,item,source);
+    const r=(await tx.query('INSERT INTO discovery_source_cursors(workspace_id,source_id,record_offset) VALUES($1,$2,$3) ON CONFLICT(workspace_id,source_id) DO UPDATE SET record_offset=discovery_source_cursors.record_offset+EXCLUDED.record_offset RETURNING record_offset',[w,source.id,Math.max(1,detailLimit)])).rows[0];return Math.max(0,Number(r.record_offset)-Math.max(1,detailLimit));
+   });
+   const candidates=wanted.length?[...wanted.slice(offset%wanted.length),...wanted.slice(0,offset%wanted.length)]:[];
+   for(const candidate of candidates){
+    if(detailRequests>=detailLimit||sourceRequests>=11||counts.requests>=17||signal.aborted)break;
+    if(candidate.decision?.explore&&explorations>=exploreLimit)continue;
+    if(candidate.decision?.explore)explorations++;
+    detailRequests++;
+    const detail=await enrichPosting(candidate.row,request,host=>hosts.push(host));jobs[candidate.index]=detail.row;
+    if(detail.full)fullRows.add(detail.row);
+    else{partial=true;coverage.lastDetailHold=detail.errorCode||detail.status;if(['auth_or_challenge','quota_exceeded','request_budget'].includes(detail.errorCode||''))break;}
+   }
+   coverage.detailRequests=detailRequests;coverage.exploredTitleMisses=explorations;coverage.uninspectedDetails=Math.max(0,wanted.length-detailRequests);
+   if(Number(coverage.uninspectedDetails)>0)partial=true;
+   if(profile)decisions=screenDiscovery(jobs,profile,full);
+   if(posting)invariant(fullRows.size===1,'posting_details_unavailable','No verified full description was returned. The stored role was not overwritten.');
    coverage.titleRescues=0;coverage.needsExploration=0;coverage.workFiltered=0;
    const pageId=crypto.randomUUID();
    // Raw HTML/JSON feed bodies are not stored. Retain compact normalized provenance once.
@@ -100,16 +128,17 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
     if(admitted>=quota){partial=true;counts.uninspected++;continue;}
     try{
      const job=upstreamNormalize(source,row as UpstreamRow);
+     if(posting){job.openingKey=posting.openingKey;job.externalId=posting.externalId;}
      if(ids.has(job.externalId))continue;ids.add(job.externalId);
      const decision=decisions?.find(d=>d.index===index);
      if(decision){
       if(!decision.keep){if(decision.explore)coverage.needsExploration=Number(coverage.needsExploration)+1;else coverage.workFiltered=Number(coverage.workFiltered)+1;continue;}
       job.raw.screening=decision;
       if(decision.reason==='responsibility_rescue')coverage.titleRescues=Number(coverage.titleRescues)+1;
-     }else if(!matchesRoleTerms(job,query.terms,query.filters.matchIn))continue;
-     const summary=capability(source.provider)?.description!=='full_when_present'||job.description.length<50;
+     }else if(!posting&&!matchesRoleTerms(job,query.terms,query.filters.matchIn))continue;
+     const summary=!full(row);
      job.raw.discoveryProvenance={provider:source.provider,publisherUrl:job.url,applicationUrl:job.applicationUrl,upstreamCommit,description:summary?'summary_or_missing':'provider_full'};
-     const saved=await transaction(async tx=>{await active(tx,item,source);return publishJob(tx,item,source,{id:pageId,captured_at:captured},job,summary);});
+     const saved=await transaction(async tx=>{await active(tx,item,source);if(posting)await currentPosting(tx,item,source,posting);return publishJob(tx,item,source,{id:pageId,captured_at:captured},job,summary);});
      if(['capacity_hold','intake_limit'].includes(String(saved.eligibility))){partial=true;counts.uninspected++;continue;}
      if(saved.eligibility==='archived_compact')continue;
      admitted++;counts.matched++;if(saved.created)counts.created++;if(saved.identityConflict)counts.identityConflicts++;if(summary)counts.missingDescriptions++;employers.add(job.company);
@@ -126,7 +155,8 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
   await transaction(async tx=>{
    await active(tx,item,source);
    await tx.query('UPDATE discovery_attempts SET status=$1,error_code=$2,fallback=$3,record_count=$4,page_count=$5,coverage=$6,completed_at=now() WHERE workspace_id=$7 AND id=$8',[status,errorCode,errorCode?'Review source configuration/access or retry after its cooldown. No challenge bypass is attempted.':partial?'Bounded search; records outside the inspected window are not a negative finding.':null,admitted,sourceRequests,JSON.stringify(coverage),w,attempt]);
-   await tx.query("UPDATE discovery_sources SET status=$1,status_reason=$2,checked_at=now(),next_retry_at=CASE WHEN $3>0 THEN now()+$3*interval '1 second' ELSE null END WHERE workspace_id=$4 AND id=$5 AND revision=$6",[status,errorCode,cooldown,w,source.id,source.revision]);
+   if(!posting)await tx.query("UPDATE discovery_sources SET status=$1,status_reason=$2,checked_at=now(),next_retry_at=CASE WHEN $3>0 THEN now()+$3*interval '1 second' ELSE null END WHERE workspace_id=$4 AND id=$5 AND revision=$6",[status,errorCode,cooldown,w,source.id,source.revision]);
+   else if(cooldown)await tx.query("UPDATE discovery_sources SET next_retry_at=greatest(next_retry_at,now()+$1*interval '1 second') WHERE workspace_id=$2 AND id=$3 AND revision=$4",[cooldown,w,source.id,source.revision]);
   });
  }
  counts.uniqueEmployers=employers.size;
