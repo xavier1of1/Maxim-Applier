@@ -12,6 +12,7 @@ import {finishWork,type WorkItem} from '../server/work';
 import {queueApplicationProjection} from '../server/application-authority';
 import {active,publishJob} from './discovery';
 import {inventoryBatch} from './discovery-inventory';
+import {screenDiscovery} from '../server/discovery-screen';
 
 export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal){
  const signal=AbortSignal.any([AbortSignal.timeout(85000),...(parentSignal?[parentSignal]:[])]),w=item.workspace_id;
@@ -86,17 +87,26 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
    returned=result.returned;counts.returned+=returned;partial=partial||Boolean(result.partial);coverage.truncation=result.partial;
    counts.uninspected+=Number(coverage.uninspected||0);
    const jobs=result.jobs,ids=new Set<string>();
+   const profile=query.filters.searchProfile;
+   const full=(row:UpstreamRow)=>capability(source.provider)?.description==='full_when_present'&&String(row.description||'').trim().length>=50;
+   const decisions=profile?screenDiscovery(jobs,profile,full):null;
+   coverage.titleRescues=0;coverage.needsExploration=0;coverage.workFiltered=0;
    const pageId=crypto.randomUUID();
    // Raw HTML/JSON feed bodies are not stored. Retain compact normalized provenance once.
    await transaction(async tx=>{await active(tx,item,source);await tx.query('INSERT INTO discovery_pages(id,workspace_id,run_id,source_id,attempt_id,source_revision,page_number,request_url,payload,content_hash,record_count,captured_at,complete) VALUES($1,$2,$3,$4,$5,$6,0,$7,$8,$9,$10,$11,$12)',[pageId,w,item.input.runId,source.id,attempt,source.revision,source.careers_url,JSON.stringify({engine:upstreamCommit,returned,retained:jobs.length}),digest(JSON.stringify(jobs)),jobs.length,captured,!partial]);});
    const quota=query.filters.automation?.maxMatches??100;
-   for(const row of jobs){
+   for(const [index,row] of jobs.entries()){
     if(signal.aborted)break;
     if(admitted>=quota){partial=true;counts.uninspected++;continue;}
     try{
      const job=upstreamNormalize(source,row as UpstreamRow);
      if(ids.has(job.externalId))continue;ids.add(job.externalId);
-     if(!matchesRoleTerms(job,query.terms,query.filters.matchIn))continue;
+     const decision=decisions?.find(d=>d.index===index);
+     if(decision){
+      if(!decision.keep){if(decision.explore)coverage.needsExploration=Number(coverage.needsExploration)+1;else coverage.workFiltered=Number(coverage.workFiltered)+1;continue;}
+      job.raw.screening=decision;
+      if(decision.reason==='responsibility_rescue')coverage.titleRescues=Number(coverage.titleRescues)+1;
+     }else if(!matchesRoleTerms(job,query.terms,query.filters.matchIn))continue;
      const summary=capability(source.provider)?.description!=='full_when_present'||job.description.length<50;
      job.raw.discoveryProvenance={provider:source.provider,publisherUrl:job.url,applicationUrl:job.applicationUrl,upstreamCommit,description:summary?'summary_or_missing':'provider_full'};
      const saved=await transaction(async tx=>{await active(tx,item,source);return publishJob(tx,item,source,{id:pageId,captured_at:captured},job,summary);});

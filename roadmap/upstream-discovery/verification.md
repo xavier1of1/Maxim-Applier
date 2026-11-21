@@ -32,6 +32,12 @@ four-tenant window, reports partial coverage, then reaches the fifth employer on
 the next run without downloading the directory again. Cursor updates commit only
 against current authorization. Workable's large feed stays explicitly deferred.
 
+Stage 4: 46 Rust tests passed, including six new responsibility/title cases;
+two TypeScript-to-Rust profile tests passed. Production build and the expanded
+isolated integration passed. Current evidence-backed owner profile rescues an
+unexpected title and keeps active-clearance requirements blocked. Profile changes
+are revision checked and stale runs cannot publish against changed knowledge.
+
 ## Remaining Setup And Limitations
 
 Local approved candidate evidence, an accessible configured evaluation model,

@@ -5,6 +5,7 @@ mod policy;
 mod evaluation;
 mod tracker;
 mod intelligence;
+mod discovery;
 
 fn failure(code: &str) -> Value {
     json!({"ok":false,"error":{"code":code,"message":"The supplied value does not satisfy the candidate data contract."}})
@@ -102,6 +103,7 @@ fn validate_fact(f: &Value) -> Result<Value, &'static str> {
 }
 pub fn handle(input: &Value) -> Value {
     match input["operation"].as_str() {
+        Some("screen_discovery") => discovery::screen(input),
         Some("screen_jobs") => intelligence::shortlist(input),
         Some("application_flow") => intelligence::flow(input),
         Some("job_metadata") => intelligence::metadata(input),

@@ -27,8 +27,12 @@ export async function active(tx:PoolClient,item:WorkItem,source?:Source){
  await checkLease(tx,item);
  const run=(await tx.query('SELECT * FROM discovery_runs WHERE workspace_id=$1 AND id=$2 FOR UPDATE',[item.workspace_id,item.input.runId])).rows[0];
  invariant(run&&run.revision===item.input.revision&&run.work_id===item.id&&['queued','running'].includes(run.status),'search_superseded','Search no longer authorizes this result.',409);
- const grant=(await tx.query('SELECT filters->\'automation\' AS grant FROM discovery_queries WHERE workspace_id=$1 AND id=$2',[item.workspace_id,run.query_id])).rows[0]?.grant;
- await checkScanGrant(tx,item.workspace_id,grant);
+ const filters=(await tx.query('SELECT filters FROM discovery_queries WHERE workspace_id=$1 AND id=$2',[item.workspace_id,run.query_id])).rows[0]?.filters;
+ await checkScanGrant(tx,item.workspace_id,filters?.automation);
+ if(filters?.searchProfile){
+  const current=(await tx.query('SELECT p.revision,p.candidate_revision,c.revision AS current_candidate FROM discovery_search_profiles p JOIN candidates c ON c.workspace_id=p.workspace_id WHERE p.workspace_id=$1 FOR SHARE OF p,c',[item.workspace_id])).rows[0];
+  invariant(current?.revision===filters.searchProfile.revision&&current.candidate_revision===current.current_candidate&&current.current_candidate===filters.searchProfile.candidateRevision,'search_profile_changed','Search profile or candidate knowledge changed. Review and start a new search.',409);
+ }
  if(source){
   const live=(await tx.query('SELECT revision,enabled FROM discovery_sources WHERE workspace_id=$1 AND id=$2 FOR SHARE',[item.workspace_id,source.id])).rows[0];
   invariant(live?.enabled&&live.revision===source.revision,'source_changed','Source changed; start a new search.',409);

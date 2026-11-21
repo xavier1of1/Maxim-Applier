@@ -13,6 +13,7 @@ import {invariant,notFound} from './errors';
 import {applicationLock} from './application-authority';
 import {jobFitJoin} from './job-fit';
 import {engineSnapshot} from './evaluation-native';
+import {capability} from './upstream-discovery';
 
 export async function scannedScoringSummary(tx:PoolClient,w:string){
  const engine=await engineSnapshot();
@@ -36,7 +37,7 @@ async function save(tx:PoolClient,ctx:Context,revision:number,changes:z.infer<ty
  invariant(p.revision===revision,'revision_conflict','Discovery settings changed. Refresh and review them again.',409);
  if(v.autoScan||v.autoScore||v.cleanupEnabled)invariant(ack,'automation_consent_required','Confirm scheduled requests, their spending allowance and cleanup protection policy.',409);
  if(v.autoScore){const c=config();invariant(Boolean(c.model.apiKey)&&v.pricingModel===c.model.model&&v.inputUsdPerMillion>0&&v.outputUsdPerMillion>0&&v.dailyBudgetCents>=reserveCost(v).cents&&v.dailyTokenBudget>=reserveCost(v).tokens,'pricing_review_required','Select the current model, review input/output prices and allow at least one conservatively reserved request.',409);}
- if(v.autoScan){const sources=(await tx.query("SELECT id FROM discovery_sources WHERE workspace_id=$1 AND id=ANY($2::uuid[]) AND enabled AND provider IN ('greenhouse','lever','ashby')",[w,v.sourceIds])).rows;invariant(sources.length>0&&sources.length===v.sourceIds.length,'select_public_sources','Select an enabled public-board rotation pool.',409);}
+ if(v.autoScan){const sources=(await tx.query("SELECT id,provider FROM discovery_sources WHERE workspace_id=$1 AND id=ANY($2::uuid[]) AND enabled",[w,v.sourceIds])).rows;invariant(sources.length>0&&sources.length===v.sourceIds.length&&sources.every(s=>['greenhouse','lever','ashby'].includes(s.provider)||capability(s.provider)?.state==='available'&&s.provider!=='reverse:workable'),'select_public_sources','Select an enabled public-board rotation pool.',409);}
  await tx.query('INSERT INTO discovery_policies(workspace_id,value) VALUES($1,$2) ON CONFLICT(workspace_id) DO UPDATE SET value=EXCLUDED.value,revision=discovery_policies.revision+1,updated_at=now(),next_scan_at=now(),next_score_at=now(),next_cleanup_at=now()',[w,JSON.stringify(v)]);
  await event(tx,ctx,w,'discovery_policy_saved',{revision:revision+1,autoScan:v.autoScan,autoScore:v.autoScore,cleanupEnabled:v.cleanupEnabled,maxActiveJobs:v.maxActiveJobs},revision+1);
  return {revision:revision+1};
