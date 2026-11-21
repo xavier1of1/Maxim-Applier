@@ -31,11 +31,12 @@ export async function screening(tx:PoolClient,w:string){
  const facts=(await tx.query("SELECT f.field_key,f.value FROM candidate_facts f JOIN candidate_sources s ON s.id=f.source_id AND s.workspace_id=f.workspace_id WHERE f.workspace_id=$1 AND f.status='current' AND f.sensitivity='standard' AND s.model_consent AND s.deleted_at IS NULL AND s.revision=f.source_revision AND s.classification<>'restricted'",[w])).rows;
  const evidenceTerms=[...new Set<string>(facts.filter(f=>f.field_key.startsWith('skills.')).flatMap(f=>(Array.isArray(f.value)?f.value:[f.value]).filter((v:unknown):v is string=>typeof v==='string').flatMap((v:string)=>v.split(/[,;\n|]+/)).map((v:string)=>v.trim()).filter((v:string)=>v.length>=3&&v.length<=60)))].slice(0,80);
  const targetTerms=p.value.terms.length?p.value.terms:facts.filter(f=>f.field_key==='preferences.roles').flatMap(f=>Array.isArray(f.value)?f.value:[]).slice(0,10);
- const total=Number((await tx.query('SELECT count(*) FROM jobs j WHERE j.workspace_id=$1 AND '+activeLead,[w])).rows[0].count),cycleCount=Number((await tx.query('SELECT count(*) FROM intelligence_cycles WHERE workspace_id=$1',[w])).rows[0].count),windowOffset=total>200?cycleCount*200%total:0;
+ const cohort=activeLead+(p.value.scoringScope==='all_scanned'?' AND j.opening_key IS NOT NULL':'');
+ const total=Number((await tx.query('SELECT count(*) FROM jobs j WHERE j.workspace_id=$1 AND '+cohort,[w])).rows[0].count),cycleCount=Number((await tx.query('SELECT count(*) FROM intelligence_cycles WHERE workspace_id=$1',[w])).rows[0].count),windowOffset=total>200?cycleCount*200%total:0;
  const jobSql=`SELECT j.id,j.company,j.title,left(j.description,1800) AS description,j.revision,j.posted_at,j.discovery_policy,h.reason AS automatic_hold,
  fit.id AS evaluation_id,fit.current,fit.status AS evaluation_status,EXTRACT(EPOCH FROM now()-j.posted_at)/3600 AS age_hours
  FROM jobs j ${jobFitJoin} LEFT JOIN intelligence_job_holds h ON h.workspace_id=j.workspace_id AND h.job_id=j.id AND h.job_revision=j.revision AND h.candidate_revision=(SELECT revision FROM candidates WHERE workspace_id=$1)
- WHERE j.workspace_id=$1 AND ${activeLead}
+ WHERE j.workspace_id=$1 AND ${cohort}
  ORDER BY (coalesce(j.discovery_policy->'flags' @> '[{"flagType":"location","severity":"positive"}]',false) AND (fit.id IS NULL OR NOT coalesce(fit.current,false) AND fit.status IN ('completed','stale'))) DESC,
  j.posted_at DESC NULLS LAST,j.first_seen_at DESC NULLS LAST,j.id`;
  const jobs=(await tx.query(jobSql+' LIMIT 200 OFFSET $3',[w,engine.hash,windowOffset])).rows;

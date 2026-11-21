@@ -29,6 +29,7 @@ pub fn shortlist(input:&Value)->Value{
  let jobs=match input["jobs"].as_array(){Some(j) if j.len()<=200=>j,_=>return json!({"ok":false,"error":{"code":"pool_limit","message":"At most 200 posting summaries may be screened."}})};
  let p=&input["policy"];let limit=p["evaluationsPerCycle"].as_u64().unwrap_or(5).min(20) as usize;
  let max_age=p["maxAgeDays"].as_f64().unwrap_or(7.0)*24.0;
+ let all_scanned=p["scoringScope"].as_str()==Some("all_scanned");
  let evidence:Vec<String>=strings(&input["evidenceTerms"]).into_iter().filter(|s|s.len()>=3).take(80).collect();
  let terms=strings(&input["targetTerms"]);let excluded=strings(&p["excludedTitleTerms"]);
  let mut eligible=Vec::new();let mut held=Vec::new();
@@ -37,13 +38,13 @@ pub fn shortlist(input:&Value)->Value{
   let text=format!("{} {}",title,job["description"].as_str().unwrap_or("").to_lowercase());
   let age=job["ageHours"].as_f64();let hits:Vec<_>=evidence.iter().filter(|s|text.contains(s.as_str())).cloned().collect();
   let reason=if let Some(hold)=job["holdReason"].as_str(){Some(hold)}
-   else if job["blocked"].as_bool().unwrap_or(true){Some("policy_blocked_or_unreviewed_location")}
+   else if !all_scanned&&job["blocked"].as_bool().unwrap_or(true){Some("policy_blocked_or_unreviewed_location")}
    else if job["hasEvaluation"].as_bool().unwrap_or(false){Some("already_evaluated_or_pending")}
    else if job["description"].as_str().unwrap_or("").trim().len()<50{Some("full_posting_required")}
-   else if age.is_none()&&!p["allowUnknownDates"].as_bool().unwrap_or(false){Some("posted_date_unknown")}
-   else if age.map(|v|v<0.0||v>max_age).unwrap_or(false){Some("outside_freshness_window")}
-   else if excluded.iter().any(|s|title.contains(s)){Some("excluded_title")}
-   else if hits.len()<p["minEvidenceMatches"].as_u64().unwrap_or(1) as usize{Some("insufficient_approved_evidence_overlap")}
+   else if !all_scanned&&age.is_none()&&!p["allowUnknownDates"].as_bool().unwrap_or(false){Some("posted_date_unknown")}
+   else if !all_scanned&&age.map(|v|v<0.0||v>max_age).unwrap_or(false){Some("outside_freshness_window")}
+   else if !all_scanned&&excluded.iter().any(|s|title.contains(s)){Some("excluded_title")}
+   else if !all_scanned&&hits.len()<p["minEvidenceMatches"].as_u64().unwrap_or(1) as usize{Some("insufficient_approved_evidence_overlap")}
    else {None};
   if let Some(reason)=reason{held.push(json!({"id":id,"reason":reason}));continue;}
   let target=terms.iter().any(|s|title.contains(s));let priority=job["priority"].as_bool().unwrap_or(false);
@@ -92,6 +93,8 @@ pub fn flow(input:&Value)->Value{
  fn job(id:&str,company:&str)->Value{json!({"id":id,"company":company,"title":"Full Stack Engineer","description":"Build reliable customer integrations in Rust and TypeScript with a small delivery team.","ageHours":2,"blocked":false})}
  #[test]fn selection_is_not_a_fit_score_and_is_diverse(){let r=shortlist(&json!({"jobs":[job("1","A"),job("2","A"),job("3","B")],"evidenceTerms":["Rust"],"policy":{"evaluationsPerCycle":2}}));assert_eq!(r["selected"][1]["id"],"3");assert!(r["selected"][0].get("score").is_none());}
  #[test]fn no_approved_evidence_means_no_automatic_evaluations(){assert_eq!(shortlist(&json!({"jobs":[job("1","A")]}))["selected"].as_array().unwrap().len(),0);}
+ #[test]fn all_scanned_evaluates_without_shortlist_preferences(){let mut j=job("x","A");j["title"]=json!("Principal Intern");j["blocked"]=json!(true);j["ageHours"]=Value::Null;let r=shortlist(&json!({"jobs":[j],"policy":{"scoringScope":"all_scanned","excludedTitleTerms":["intern"]}}));assert_eq!(r["selected"].as_array().unwrap().len(),1);assert!(r["selected"][0].get("score").is_none());}
+ #[test]fn all_scanned_keeps_pending_missing_and_explicit_holds(){for (key,value) in [("hasEvaluation",json!(true)),("description",json!("short")),("holdReason",json!("disclosure_review_required"))]{let mut j=job("x","A");j[key]=value;assert_eq!(shortlist(&json!({"jobs":[j],"policy":{"scoringScope":"all_scanned"}}))["selected"].as_array().unwrap().len(),0);}}
  #[test]fn unknown_blocked_old_and_evaluated_stay_held(){for (key,value) in [("blocked",json!(true)),("ageHours",json!(null)),("ageHours",json!(1000)),("hasEvaluation",json!(true))]{let mut j=job("x","A");j[key]=value;assert_eq!(shortlist(&json!({"jobs":[j],"evidenceTerms":["Rust"]}))["selected"].as_array().unwrap().len(),0);}}
  #[test]fn qualification_text_is_not_invented(){let m=metadata(&json!({"title":"Forward Deployed Engineer","description":"About us\nRequirements\nRust experience\nBenefits\nFree food"}));assert_eq!(m["lane"],"Forward deployed");assert_eq!(m["qualifications"],"Requirements\nRust experience\n");}
  #[test]fn absent_qualifications_remain_unknown(){assert_eq!(metadata(&json!({"description":"We build software"}))["qualifications"],"");}

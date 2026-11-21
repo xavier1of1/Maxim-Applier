@@ -1,5 +1,39 @@
 # Maxim Apply Implementation Status
 
+## Scanned Backlog Scoring Fix (2026-11-21)
+
+The reported chat failure was `context_budget_exceeded`: listing tools returned
+too much combined context, and only single-role evaluation/shortlist settings were
+available. Explicit requests such as "Can you score all of the roles you've
+scanned?" now prepare an aggregate owner-review proposal locally, with zero model
+calls for that request. The declared tool supports other model-routed phrasings.
+General workspace listing summaries are smaller and explicitly partial.
+
+Settings has a Score all scanned roles action and scoring-scope selector. The
+all-scanned scope bypasses cheap freshness/location/title/skill preselection, not
+Career-Ops, candidate disclosure, application policy, daily allowances or dispatch
+fences. It covers active unsubmitted discovered roles and future scans until
+paused; archived, incomplete, current, pending and failed/held records are not
+silently reevaluated. Chat opens the precise scoring setup section. Proposals and
+unsaved forms do not enable paid work or invent model prices/budgets.
+
+Verification: build/typecheck, 40 Rust tests, 52 app units, six relevant isolated
+integration tests and 12 Chromium journeys passed. A 500-posting fixture proves
+aggregate proposal creation without model enumeration, owner isolation, actual
+bounded scoring and daily-cap enforcement. Safety/privacy and diff checks passed.
+The local stack was restarted after checking it had no queued work or enabled
+automation. No production scoring policy, price, monetary allowance or consent
+was created. See [the operating steps](discovery-intelligence.md#scoring-the-entire-scanned-backlog).
+
+Owner setup follow-up: the owner specified a $5/day automatic-scoring maximum.
+A complete pending proposal now includes that cap, verified standard model prices,
+bounded cadence/batch/request limits, and explicitly disabled scans/cleanup.
+It is not an activated policy. Proposal cards have their own approval checkbox
+and a direct setup destination. A bounded, paced use of the existing verified
+Greenhouse detail-fetch commands recovered 273 missing descriptions; seven
+unavailable posting endpoints remain explicit holds. No candidate data was sent
+to those public endpoints and no paid model evaluations were started by setup.
+
 ## Discovery Intelligence Extension (2026-11-20)
 
 The [new staged roadmap](../../roadmap/discovery-intelligence/README.md) adds

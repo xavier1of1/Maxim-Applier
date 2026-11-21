@@ -171,10 +171,47 @@ deliberately rearchived before refresh, their known qualification snapshot remai
 
 ## Filters And Home Formulas
 
+### Scoring The Entire Scanned Backlog
+
+Ask the workspace agent: **Can you score all of the roles you've scanned?**
+This explicit request is handled locally with aggregate counts and a settings
+proposal, without enumerating job lists through the model. Other phrasings can
+use the declared `prepare_scanned_scoring` tool. A proposal never starts spending.
+
+1. Click **Review scoring setup** in chat. It opens the discovery settings section.
+2. Click **Score all scanned roles**. This stages the all-scanned scope and turns
+   on the scoring checkbox in the unsaved form, not in the running system.
+3. Review prices for your exact configured model and choose daily monetary,
+   token and evaluation limits, plus batch size and interval. Approve and save.
+   Existing zero budgets/prices are not fabricated or silently increased.
+4. The existing worker evaluates the backlog over bounded cycles. Monitor
+   Scoring preview, Recent cycles, reservations and Jobs sorted by score. Pause
+   automation to stop new dispatches; in-flight requests may still be billed.
+
+When a complete **Agent settings proposal** has already been prepared, review
+its exact values, check **I approve the proposed settings and automation limits**
+inside that card, then **Approve settings proposal**. No separate form editing is
+needed. Approval is specific to that proposal, not another draft or the form.
+
+`shortlist` remains the default scope. `all_scanned` removes freshness, unknown-date,
+excluded-title, location and skill-overlap **preselection** gates. It does not
+relax application policy, candidate authority/disclosure, descriptions, model
+configuration, revision fences, daily limits or ambiguous-send protections.
+It covers active, unsubmitted discovered roles, including future scans until
+paused, not compacted archive stubs or submitted history. Current scores are
+reused. Missing full descriptions, failed/pending evaluations and explicit holds
+are reported, not fabricated or silently retried. This is not an instantaneous,
+unlimited batch or a promise that every posting is suitable to apply to.
+
 Job predicates and score ordering are applied in PostgreSQL **before** the 50-row
 UI page. Current score means candidate/posting/engine/policy/dependency revisions
 match the retained evaluation. A selected record can remain inspectable outside
 the filtered list. Filters/page position persist in the URL, not local storage.
+Search and sorting stay visible above the job list. The sliders button beside
+search opens the remaining filters; its badge counts non-default filters. This
+bounded, scrollable panel keeps the list visible, supports keyboard activation
+and Escape, and includes reset. Header/title and summary spacing is compact on
+desktop and mobile; filtering does not change evaluation or scoring behavior.
 Industry is Unknown until confirmed as source metadata in Settings; it is not
 guessed from a company name. Role types are deterministic title classifications,
 not fit scores or candidate claims.

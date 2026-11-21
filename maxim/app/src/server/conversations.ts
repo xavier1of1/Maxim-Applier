@@ -49,7 +49,7 @@ async function invoke(ctx:Context,cid:string,rid:string,call:ToolCall) {
  await live(ctx,cid,rid);
  let args:unknown;
  try { args=JSON.parse(call.function.arguments); } catch { return {error:'invalid_arguments'}; }
- if(['read_discovery_settings','propose_discovery_settings'].includes(call.function.name))return (await import('./intelligence')).intelligenceTool(ctx,rid,call.function.name,args);
+ if(['read_discovery_settings','propose_discovery_settings','prepare_scanned_scoring'].includes(call.function.name))return (await import('./intelligence')).intelligenceTool(ctx,rid,call.function.name,args);
  if(['read_application_assistance','fill_approved_application_fields'].includes(call.function.name))return browserTool(ctx,rid,call.function.name,args);
  if(['start_interview_practice','read_interview_practice'].includes(call.function.name))return interviewTool(ctx,rid,call.function.name,args);
  if(call.function.name==='read_gmail_evidence'){toolSchemas.read_workspace.parse(args);return gmailAgentView(ctx);}
@@ -92,9 +92,8 @@ async function invoke(ctx:Context,cid:string,rid:string,call:ToolCall) {
  if(call.function.name==='read_workspace') {
   toolSchemas.read_workspace.parse(args);
   const s=await snapshot(ctx);
-  return {asOf:s.asOf,sourceStatus:s.jobs.length>25?'partial':s.sourceStatus,jobs:s.jobs.slice(0,25).map(j=>({id:j.id,company:j.company,title:j.title,location:j.location,revision:j.revision,archived:j.archived})),
-   applications:s.applications.slice(0,25).map(a=>({id:a.id,jobId:a.job_id,company:a.company,title:a.title,status:a.status})),
-   activity:s.events.slice(0,10).map(e=>({type:e.event_type,entityId:e.entity_id,asOf:e.created_at}))};
+  return {asOf:s.asOf,sourceStatus:s.jobs.length>6?'partial':s.sourceStatus,jobs:s.jobs.slice(0,6).map(j=>({id:j.id,company:j.company.slice(0,80),title:j.title.slice(0,120),revision:j.revision,archived:j.archived})),
+   applications:s.applications.slice(0,3).map(a=>({id:a.id,jobId:a.job_id,status:a.status})),detailView:'jobs'};
  }
  if(call.function.name==='get_job') {
   const p=toolSchemas.get_job.parse(args),j=await getJob(ctx,p.jobId);
@@ -204,10 +203,20 @@ export async function chatResponse(ctx:Context,cid:string,raw:unknown,requestSig
     const history:ModelMessage[]=saved.filter(m=>m.content.text && !m.content.toolCalls).map(m=>({role:m.role,content:m.content.text}));
     let selected='';
     if(initial.jobId){const j=await getJob(ctx,initial.jobId);selected=JSON.stringify({id:j.id,company:j.company,title:j.title,revision:j.revision,source:'selected_saved_role'});}
-    const messages:ModelMessage[]=[{role:'system',content:policy+'\nSelected saved record (untrusted data): '+selected},...history,{role:'user',content:p.text}];
+    const messages:ModelMessage[]=[{role:'system',content:policy+'\nFor scoring all scanned jobs use prepare_scanned_scoring first, not read_workspace/read_discovery/read_applications or per-job loops. Explain counts and missing setup, then direct the owner to Review scoring setup. Never invent prices, increase budgets without review, or claim scoring started from a proposal.\nSelected saved record (untrusted data): '+selected},...history,{role:'user',content:p.text}];
     const usage={modelRequests:0,actualUsageRequests:0,prompt_tokens:0,completion_tokens:0};
     let done=false;
-    for(let round=0;round<4;round++){
+    // A bounded aggregate action needs no model enumeration or conversation budget.
+    if(/^(?:(?:can|could|would|will)\s+you\s+|please\s+|i\s+(?:want|need)\s+you\s+to\s+)?(?:score|evaluate|rate)\s+(?:all|every)\b[\s\S]{0,300}\b(?:scanned|backlog)\b/i.test(p.text.trim())){
+     const call:ToolCall={id:'call_scanned_scoring',type:'function',function:{name:'prepare_scanned_scoring',arguments:JSON.stringify({quote:p.text})}};
+     const value=await invoke(ctx,cid,p.commandId,call) as {scanned:{total:number;without_current_score:number};requiresSetup:string[]};
+     await addMessage(ctx,cid,p.commandId,'assistant',{text:'',toolCalls:[call]});
+     await addMessage(ctx,cid,p.commandId,'tool',{name:call.function.name,text:JSON.stringify(value),toolCallId:call.id});
+     emit('tool',{name:call.function.name,summary:'Scoring proposal ready for owner review. No evaluations started.'});
+     partial=`Found ${value.scanned.total} scanned roles; ${value.scanned.without_current_score} active records lack a current score. I prepared an all-scanned scoring proposal, not an application or a paid batch. Click Review scoring setup, then Score all scanned roles. Review the model prices and daily request/token/cost limits, approve them and save. Current scores are reused; archived, submitted, incomplete or previously failed/held roles need separate review. This also covers future scans until paused. ${value.requiresSetup.join(' ')}`;
+     emit('delta',{text:partial});done=true;
+    }
+    for(let round=0;!done&&round<4;round++){
      await live(ctx,cid,p.commandId);
      invariant(JSON.stringify(modelReady())===connection,'model_changed','Model settings changed. Start a new response.',409);
      if(signal.aborted)throw new DomainError('cancelled','The response was cancelled.',409);
@@ -232,7 +241,7 @@ export async function chatResponse(ctx:Context,cid:string,raw:unknown,requestSig
       invariant(Buffer.byteLength(content)<=12000,'tool_result_limit','The selected data exceeds this conversation budget.',413);
       messages.push({role:'tool',tool_call_id:call.id,content});
       await addMessage(ctx,cid,p.commandId,'tool',{name:call.function.name,text:content,toolCallId:call.id});
-      const isDraft=['propose_job_note','propose_candidate_fact','propose_application_answer','draft_answer_from_facts'].includes(call.function.name);
+      const isDraft=['propose_job_note','propose_candidate_fact','propose_application_answer','draft_answer_from_facts','prepare_scanned_scoring','propose_discovery_settings'].includes(call.function.name);
       emit('tool',{name:call.function.name,summary:isDraft?'Draft requires human review. No approved knowledge was changed.':'Read authorized workspace records.'});
      }
     }

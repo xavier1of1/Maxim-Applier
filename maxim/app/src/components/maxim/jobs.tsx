@@ -13,7 +13,7 @@ import {Archive, ArchiveRestore, ArrowLeft, ArrowUpRight, BriefcaseBusiness, Che
 import {ApiError, errorMessage, type WorkspaceApi} from './api';
 import {Banner, EmptyState, Glyph, Pill, ToolButton, formatBytes, formatDate, initials, safeExternalUrl} from './shared';
 import type {Job, Navigation, RecordFilter, WorkspaceData} from './types';
-import {locationFilters,locationMatches,rolePolicyLabel} from './role-triage';
+import {rolePolicyLabel} from './role-triage';
 import {useBoundedRefresh} from './use-bounded-refresh';
 import {currentScore,fitLabel,roleSorts,sortRoles} from './role-fit';
 
@@ -93,7 +93,7 @@ export function CreateRoleDialog({open, onClose, api, disabled, onCreated}: {
 export function JobsView({data, api, disabled, refresh, navigate, selectedId, filter,sort, onCreate, onDirtyChange, onAgent}: SharedProps & {
   selectedId: string | null; filter: RecordFilter;sort:string; onCreate: () => void; onDirtyChange: (dirty: boolean) => void; onAgent: () => void;
 }) {
-  const params=useSearchParams(),search=params.get('q')||'',location=params.get('locationGroup')||'focus';
+  const params=useSearchParams(),search=params.get('q')||'';
   const matching=data.jobs.filter(job=>data.jobPage?data.jobPage.ids.includes(job.id):job.archived===(filter==='archived'));
   const jobs=sortRoles(matching,sort);
   const evaluated=jobs.filter(job=>currentScore(job.fit)!==null).length;
@@ -104,16 +104,8 @@ export function JobsView({data, api, disabled, refresh, navigate, selectedId, fi
     <section className="role-list" aria-label="Job records">
       <div className="list-controls">
         <JobFilters data={data} navigate={navigate}/>
-        <div className="list-filter-row">
-          <Selector label="Role status" isLabelHidden value={filter} size="sm" variant="ghost"
-            onChange={value => navigate({filter: value,offset:null})} options={[
-              {value: 'active', label: 'Active roles'}, {value: 'archived', label: 'Archived roles'},
-            ]} />
-          <span className="muted small tabular">{jobs.length} {jobs.length === 1 ? 'role' : 'roles'} / {employers} {employers===1?'employer':'employers'}</span>
-        </div>
-        {filter==='active'&&<Selector label="Filter roles by location" isLabelHidden value={location} onChange={value=>navigate({locationGroup:value,offset:null})} options={locationFilters} width="100%" size="sm"/>}
         <Selector label="Sort roles" isLabelHidden value={sort} onChange={value=>navigate({sort:value,offset:null})} options={roleSorts} width="100%" size="sm"/>
-        <span className="small muted tabular">{evaluated} evaluated / {jobs.length-evaluated} without a current score</span>
+        <span className="small muted tabular">{jobs.length} {filter==='archived'?'archived':'active'} roles / {employers} {employers===1?'employer':'employers'} · {evaluated} scored</span>
       </div>
       {data.jobPage&&<div className="list-filter-row page-controls"><ToolButton label="Previous jobs" icon={ArrowLeft} disabled={!data.jobPage.offset} onClick={()=>navigate({offset:String(Math.max(0,data.jobPage!.offset-data.jobPage!.limit))})}/><span className="small tabular">{data.jobPage.total} matches</span><ToolButton label="Next jobs" icon={ArrowUpRight} disabled={!data.jobPage.more} onClick={()=>navigate({offset:String(data.jobPage!.offset+data.jobPage!.limit)})}/></div>}
       <div className="role-rows">

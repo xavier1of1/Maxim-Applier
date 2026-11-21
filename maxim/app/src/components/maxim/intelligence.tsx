@@ -1,5 +1,6 @@
 'use client';
 import {useCallback,useEffect,useState} from 'react';
+import {useSearchParams} from 'next/navigation';
 import {Button} from '@astryxdesign/core/Button';
 import {TextInput} from '@astryxdesign/core/TextInput';
 import {Selector} from '@astryxdesign/core/Selector';
@@ -24,30 +25,36 @@ const fields:[keyof IntelligencePolicy,string,number,number,number?][]=[
  ['minEvidenceMatches','Minimum approved skill matches',1,10],['idleArchiveDays','Posting / idle retention (days)',1,365],['rawRetentionDays','Raw scan cache retention (days)',1,90],
 ];
 export function IntelligenceSettings({api,disabled,asOf,isOwner,refresh,navigate}:{api:WorkspaceApi;disabled:boolean;asOf:string;isOwner:boolean;refresh:()=>Promise<void>;navigate:(n:Navigation)=>void}){
+ const setup=useSearchParams().get('setup');
  const [data,setData]=useState<Data|null>(null),[draft,setDraft]=useState<IntelligencePolicy|null>(null),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[ack,setAck]=useState(false),[preview,setPreview]=useState<Cleanup|null>(null);
  const [baseRevision,setBaseRevision]=useState(0);
+ const [proposalAck,setProposalAck]=useState<string|null>(null);
  const [termsText,setTermsText]=useState(''),[excludedText,setExcludedText]=useState('');
  const resetDraft=useCallback((p:Data['policy'])=>{setDraft(p.value);setBaseRevision(p.revision);setTermsText(p.value.terms.join(', '));setExcludedText(p.value.excludedTitleTerms.join(', '));setAck(false);},[]);
  const load=useCallback(async()=>{try{const r=await api.get<Data>('/api/intelligence');setData(r);setError('');return r;}catch(e){setError(errorMessage(e));}},[api]);
  useEffect(()=>{void load().then(r=>{if(r)resetDraft(r.policy);});},[load,resetDraft]);
  useEffect(()=>{void load();},[asOf,load]);
+ useEffect(()=>{if(data&&['scoring','scoring-proposals'].includes(setup||''))document.getElementById(setup==='scoring-proposals'?'scoring-proposals':'scoring-setup')?.scrollIntoView({block:'start'});},[Boolean(data),setup]);
  const poll=useCallback(async()=>{await load();},[load]);
  useBoundedRefresh(Boolean(data?.cycles.some(c=>['queued','leased'].includes(c.work_status))),poll);
  const change=<K extends keyof IntelligencePolicy>(key:K,value:IntelligencePolicy[K])=>{setDraft(d=>d?{...d,[key]:value}:d);setNotice('');};
  async function act(action:string,payload:unknown,retention=false){
   if(busy||disabled||!isOwner)return;setBusy(true);setError('');setNotice('');
-  try{await api.post('/api/intelligence/'+(retention?'retention':'commands'),{commandId:crypto.randomUUID(),action,payload});setPreview(null);const r=await load();if(r)resetDraft(r.policy);setNotice(action==='pause'?'Scheduled work paused. A request already dispatched may still be charged.':'Saved.');await refresh();}
+  try{await api.post('/api/intelligence/'+(retention?'retention':'commands'),{commandId:crypto.randomUUID(),action,payload});setPreview(null);setProposalAck(null);const r=await load();if(r)resetDraft(r.policy);setNotice(action==='pause'?'Scheduled work paused. A request already dispatched may still be charged.':'Saved.');await refresh();}
   catch(e){setError(errorMessage(e));}finally{setBusy(false);}
  }
  if(!data||!draft)return <section className="settings-section">{error?<Banner>{error}<ToolButton label="Retry discovery settings" icon={RefreshCw} onClick={()=>void load().then(r=>{if(r)resetDraft(r.policy);})}/></Banner>:<p role="status">Loading discovery settings</p>}</section>;
  const locked=disabled||busy||!isOwner,automated=draft.autoScan||draft.autoScore||draft.cleanupEnabled;
- return <section className="settings-section intelligence-settings">
+ return <section id="scoring-setup" className="settings-section intelligence-settings">
   <div className="settings-section-title"><Clock size={19}/><h2>Discovery intelligence</h2><Pill tone={data.policy.active?'green':'amber'}>{data.policy.active?'Configured':'Setup required'}</Pill></div>
   {error&&<Banner>{error}</Banner>}{notice&&<Banner tone="success">{notice}</Banner>}
   <dl className="connection-limits"><div><dt>Active leads / capacity</dt><dd>{data.capacity.active} / {data.capacity.limit} ({data.capacity.protected} protected)</dd></div><div><dt>Automatic evaluations today</dt><dd>{data.budget.requests} / {data.policy.value.evaluationsPerDay}</dd></div><div><dt>Reserved + settled cost</dt><dd>${(data.budget.cents/100).toFixed(2)} / ${(data.policy.value.dailyBudgetCents/100).toFixed(2)}</dd></div><div><dt>Conservative request reservation</dt><dd>${(data.reservation.cents/100).toFixed(2)}; {data.reservation.tokens.toLocaleString()} tokens</dd></div></dl>
   {!data.capacity.available&&<Banner tone="warning">Lead capacity reached. Saved records and application evidence are protected.</Banner>}
   {baseRevision!==data.policy.revision&&<Banner tone="warning">Settings changed in another action. <button className="text-link" onClick={()=>resetDraft(data.policy)}>Reload current settings</button></Banner>}
   <form onSubmit={e=>{e.preventDefault();void act('save',{expectedRevision:baseRevision,changes:{...draft,terms:termsText.split(',').map(s=>s.trim()).filter(Boolean),excludedTitleTerms:excludedText.split(',').map(s=>s.trim()).filter(Boolean)},acknowledgeAutomation:ack});}}>
+   <div className="inline-actions"><Button label="Score all scanned roles" icon={<Glyph icon={Play}/>} variant="secondary" isDisabled={locked} onClick={()=>{change('scoringScope','all_scanned');change('autoScore',true);setAck(false);setNotice('All scanned active roles selected. Review model prices, daily request/token/cost limits, approve and save below. Nothing has started yet.');}}/></div>
+   <Selector label="Scoring scope" value={draft.scoringScope} onChange={v=>change('scoringScope',v as IntelligencePolicy['scoringScope'])} isDisabled={locked} options={[{value:'shortlist',label:'Fresh evidence-matched shortlist'},{value:'all_scanned',label:'All scanned active roles without a current score'}]}/>
+   {draft.scoringScope==='all_scanned'&&<Banner tone="info">Scoring includes old, unknown-date and low-priority postings, without relaxing application policy. Current scores are reused. Archived, submitted, incomplete and previously failed/held roles need separate review. This also covers future scans until paused; daily limits still apply.</Banner>}
    <div className="intelligence-toggles">{([['autoScan','Scheduled public-board scans'],['autoScore','Bounded automatic Career-Ops evaluations'],['cleanupEnabled','Daily unprotected lead compaction'],['allowUnknownDates','Admit unknown posting dates']]as const).map(([key,label])=><label key={key}><input type="checkbox" checked={draft[key]} disabled={locked} onChange={e=>change(key,e.target.checked)}/>{label}</label>)}</div>
    <div className="intelligence-grid">{fields.slice(0,11).map(([key,label,min,max,step])=><label key={key}>{label}<input type="number" min={min} max={max} step={step||1} value={Number(draft[key])} onChange={e=>change(key,Number(e.target.value))} disabled={locked} required/></label>)}</div>
    <TextInput label="Pricing reviewed for model ID" value={draft.pricingModel} onChange={v=>change('pricingModel',v)} isDisabled={locked} placeholder={data.model}/>
@@ -61,12 +68,19 @@ export function IntelligenceSettings({api,disabled,asOf,isOwner,refresh,navigate
   </form>
   <div className="section-divider"/>
   <h3>Scoring preview</h3>
-  {!data.preview.evidenceAvailable&&<Banner tone="warning">No current model-permitted skill evidence. <button className="text-link" onClick={()=>navigate({view:'candidate'})}>Candidate review</button></Banner>}
+  {draft.scoringScope==='shortlist'&&!data.preview.evidenceAvailable&&<Banner tone="warning">No current model-permitted skill evidence. <button className="text-link" onClick={()=>navigate({view:'candidate'})}>Candidate review</button></Banner>}
   <div className="intelligence-preview">{data.preview.selected.map(s=>{const j=data.preview.jobs.find(j=>j.id===s.id);return <div className="intelligence-preview-row" key={s.id}><button className="text-link" onClick={()=>navigate({view:'jobs',job:s.id})}>{j?.company} / {j?.title}</button><span className="muted small">{s.evidenceTerms.join(', ')}; {Object.keys(s.reasons).filter(k=>s.reasons[k]).join(', ')||'eligible evidence match'}</span></div>;})}</div>
   <details><summary>{data.preview.held.length} held from automatic scoring</summary><div className="intelligence-preview">{data.preview.held.slice(0,25).map(s=>{const j=data.preview.jobs.find(j=>j.id===s.id);return <div className="intelligence-preview-row" key={s.id}><button className="text-link" onClick={()=>navigate({view:'jobs',job:s.id})}>{j?.company} / {j?.title}</button><span className="small muted">{s.reason.replaceAll('_',' ')}</span></div>;})}</div></details>
   <h3>Recent cycles</h3>{!data.cycles.length?<p className="muted small">No cycles recorded.</p>:data.cycles.slice(0,5).map(c=><div className="intelligence-preview-row" key={c.id}><span>{formatDate(c.created_at,true)} / {c.work_status}</span><span className="muted small">{c.receipt.selected?.length||0} queued; {c.error_code||c.receipt.holds?.join(', ').replaceAll('_',' ')||'no holds'}</span></div>)}
   {data.reservations.some(r=>r.status==='uncertain')&&<Banner tone="warning">An interrupted request has uncertain usage. Its allowance remains reserved; no automatic retry will be sent.</Banner>}
-  {data.proposals.map(p=><div className="settings-proposal" key={p.id}><h3>Agent settings proposal</h3><p>{p.reason}</p><dl>{Object.entries(p.changes).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{JSON.stringify(value)}</dd></div>)}</dl><div className="inline-actions"><Button label="Approve settings proposal" icon={<Glyph icon={Check}/>} isDisabled={locked||p.expected_revision!==data.policy.revision||((data.policy.value.autoScan||data.policy.value.autoScore||data.policy.value.cleanupEnabled||p.changes.autoScan||p.changes.autoScore||p.changes.cleanupEnabled)&&!ack)} onClick={()=>void act('approve_proposal',{id:p.id,acknowledgeAutomation:ack})}/><Button label="Reject settings proposal" icon={<Glyph icon={X}/>} isDisabled={locked} onClick={()=>void act('reject_proposal',{id:p.id})}/></div></div>)}
+  <div id="scoring-proposals">{data.proposals.map(p=>{
+   const needsApproval=data.policy.value.autoScan||data.policy.value.autoScore||data.policy.value.cleanupEnabled||p.changes.autoScan||p.changes.autoScore||p.changes.cleanupEnabled;
+   return <div id={'settings-proposal-'+p.id} className="settings-proposal" key={p.id}><h3>Agent settings proposal</h3><p>{p.reason}</p>
+    <dl>{Object.entries(p.changes).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{JSON.stringify(value)}</dd></div>)}</dl>
+    {needsApproval&&<label className="consent-line"><input type="checkbox" checked={proposalAck===p.id} disabled={locked||p.expected_revision!==data.policy.revision} onChange={e=>setProposalAck(e.target.checked?p.id:null)}/>I approve the proposed settings and automation limits.</label>}
+    <div className="inline-actions"><Button label="Approve settings proposal" icon={<Glyph icon={Check}/>} isDisabled={locked||p.expected_revision!==data.policy.revision||Boolean(needsApproval&&proposalAck!==p.id)} onClick={()=>void act('approve_proposal',{id:p.id,acknowledgeAutomation:proposalAck===p.id})}/><Button label="Reject settings proposal" icon={<Glyph icon={X}/>} isDisabled={locked} onClick={()=>void act('reject_proposal',{id:p.id})}/></div>
+   </div>;
+  })}</div>
   <h3>Compact history</h3><div className="inline-actions"><Button label="Preview cleanup" icon={<Glyph icon={Archive}/>} isDisabled={locked||!data.policy.active} onClick={()=>{void api.get<Cleanup>('/api/intelligence/cleanup').then(setPreview).catch(e=>setError(errorMessage(e)));}}/><Button label="Open archive" icon={<Glyph icon={ArchiveRestore}/>} onClick={()=>navigate({view:'archive'})}/></div>
   <details><summary>Owner-confirmed source industries</summary><div className="intelligence-preview">{data.sources.map(s=><SourceIndustry key={s.id} source={s} api={api} disabled={locked} reload={poll}/>)}</div></details>
   <Dialog isOpen={Boolean(preview)} onOpenChange={v=>{if(!v)setPreview(null);}} width={600} purpose="form"><DialogHeader title="Review compact history" onOpenChange={()=>setPreview(null)}/><div className="dialog-form">{preview&&<><p>{preview.jobs.length} unprotected leads; {preview.runs} expired raw scan caches.</p>{preview.busy&&<Banner tone="warning">Active application work prevents cleanup.</Banner>}<ul>{preview.jobs.slice(0,10).map(j=><li key={j.id}>{j.company} / {j.title}</li>)}</ul><p className="small muted">Retained: identity, dates, location, qualifications, historical score and provenance. Full descriptions and unreferenced reports are removed. Saved jobs, notes, references and application evidence are protected.</p><Button label="Confirm compaction" icon={<Glyph icon={Trash2}/>} variant="destructive" isDisabled={locked||preview.busy||(!preview.jobs.length&&!preview.runs)} onClick={()=>void act('compact',{fingerprint:preview.fingerprint,confirmed:true},true)}/></>}</div></Dialog>

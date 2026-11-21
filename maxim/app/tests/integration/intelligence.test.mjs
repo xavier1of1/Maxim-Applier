@@ -4,6 +4,33 @@ import crypto from 'node:crypto';
 import {harness,streamResult} from '../support/harness.mjs';
 import {apiCommand,until} from '../support/assisted-application.mjs';
 
+test('score all scanned uses aggregate owner proposals and bounded evaluation, not shortlist gates',{timeout:180000},async t=>{
+ const h=await harness();t.after(()=>h.close());
+ await h.sql(`INSERT INTO jobs(id,workspace_id,company,title,location,description,opening_key,discovery_policy) SELECT gen_random_uuid(),$1,'Bulk Fixture','Principal Intern','Outside target',CASE WHEN n=500 THEN '' ELSE 'Build reliable customer software and operate production systems across the platform.' END,'fixture:bulk:'||n,'{"flags":[{"flagType":"location","severity":"blocker"}]}'::jsonb FROM generate_series(1,500) n`,[h.c.workspaceId]);
+ const read=async()=>(await(await h.request(h.a,'/api/intelligence')).json());
+ assert.equal((await read()).preview.selected.length,0);
+ const message="Can you score all of the roles you've scanned",conversation=(await(await h.request(h.a,'/api/conversations',{method:'POST',body:{commandId:crypto.randomUUID()}})).json()).conversation;
+ h.chatTools.set(message,{name:'prepare_scanned_scoring',args:{quote:message}});
+ await streamResult(await h.request(h.a,`/api/conversations/${conversation.id}/messages`,{method:'POST',body:{commandId:crypto.randomUUID(),text:message}}));
+ assert.equal(h.captured.length,0,'Exact all-scanned requests need no model enumeration or context budget');
+ let v=await read();assert.equal(v.scanned.total,500);assert.equal(v.scanned.missing_description,1);assert.equal(v.policy.value.autoScore,false);
+ assert.deepEqual(v.proposals[0].changes,{scoringScope:'all_scanned'});assert.equal(v.reservations.length,0);
+ await apiCommand(h,'intelligence','approve_proposal',{id:v.proposals[0].id},404,crypto.randomUUID(),h.b);
+ await apiCommand(h,'intelligence','approve_proposal',{id:v.proposals[0].id});
+ v=await read();assert.ok(v.preview.selected.length>0);assert.equal(v.policy.value.autoScore,false);
+ for(const [fieldKey,value]of [['candidate.name','Bulk Example'],['projects.summary','Built customer software and production integrations.']])await apiCommand(h,'candidate','manual_fact',{fieldKey,value,expectedFactRevision:0,modelConsent:true,reason:'Synthetic backlog test'});
+ const candidate=(await(await h.request(h.a,'/api/candidate')).json()).candidate;
+ const prepared=(await(await h.request(h.a,'/api/candidate/cutover',{method:'POST',body:{commandId:crypto.randomUUID(),action:'prepare',expectedRevision:candidate.revision}})).json()).result;
+ assert.equal((await h.request(h.a,'/api/candidate/cutover',{method:'POST',body:{commandId:crypto.randomUUID(),action:'activate',expectedRevision:candidate.revision,transitionId:prepared.id}})).status,200);
+ await apiCommand(h,'intelligence','save',{expectedRevision:v.policy.revision,changes:{autoScore:true,evaluationsPerDay:2,evaluationsPerCycle:2,dailyBudgetCents:1000,inputUsdPerMillion:1,outputUsdPerMillion:1,pricingModel:'fixture-model'},acknowledgeAutomation:true});
+ const worker=await h.startWorker();
+ await until(async()=>(await read()).reservations.filter(r=>r.status==='settled').length===2,'bounded all-scanned scores');
+ await apiCommand(h,'intelligence','run',{});await until(async()=>(await read()).cycles.some(c=>c.receipt.holds?.includes('evaluation_budget_exhausted')),'budget hold');
+ assert.equal(h.captured.filter(r=>r.body.stream===false).length,2);
+ assert.equal((await read()).scanned.current,2);
+ await apiCommand(h,'intelligence','pause',{});await h.stopWorker(worker);
+});
+
 test('bounded discovery settings, approved-evidence scoring, atomic allowances and owner proposals',{timeout:180000},async t=>{
  const h=await harness();t.after(()=>h.close());
  const read=async()=>{const r=await h.request(h.a,'/api/intelligence');assert.equal(r.status,200);return r.json();};

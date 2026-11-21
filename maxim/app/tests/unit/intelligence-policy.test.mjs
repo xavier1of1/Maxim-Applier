@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {defaults,intelligenceSchema,intelligencePatch} from '../../src/server/intelligence-policy.ts';
 test('discovery intelligence defaults are finite and never authorize spend or pruning',()=>{
  const p=defaults();assert.equal(p.maxActiveJobs,200);assert.equal(p.dailyBudgetCents,0);
+ assert.equal(p.scoringScope,'shortlist');assert.deepEqual(intelligencePatch.parse({scoringScope:'all_scanned'}),{scoringScope:'all_scanned'});
  for(const key of ['autoScan','autoScore','cleanupEnabled'])assert.equal(p[key],false);
  assert.equal(p.evaluationsPerCycle,5);assert.equal(p.sourceIds.length,0);
 });

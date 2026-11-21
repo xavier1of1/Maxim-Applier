@@ -3,6 +3,7 @@ import {z} from 'zod';
 
 export const intelligenceSchema=z.object({
  autoScan:z.boolean().default(false),autoScore:z.boolean().default(false),cleanupEnabled:z.boolean().default(false),
+ scoringScope:z.enum(['shortlist','all_scanned']).default('shortlist'),
  scanIntervalMinutes:z.number().int().min(30).max(10080).default(360),scoreIntervalMinutes:z.number().int().min(15).max(10080).default(60),
  maxActiveJobs:z.number().int().min(20).max(2000).default(200),maxMatches:z.number().int().min(1).max(500).default(100),
  evaluationsPerCycle:z.number().int().min(1).max(20).default(5),evaluationsPerDay:z.number().int().min(1).max(100).default(10),

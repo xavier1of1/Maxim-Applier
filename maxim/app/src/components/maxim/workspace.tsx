@@ -1,6 +1,6 @@
 'use client';
 
-import {useCallback, useEffect, useMemo, useRef, useState, type FormEvent} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent} from 'react';
 import {usePathname, useRouter, useSearchParams} from 'next/navigation';
 import {Button} from '@astryxdesign/core/Button';
 import {TextInput} from '@astryxdesign/core/TextInput';
@@ -199,13 +199,18 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
   const currentNav = navigation.find(item => item.view === view)!;
   const counts: Partial<Record<View, number>> = {jobs: activeJobs, applications: activeIntents, activity: data?.events.length};
   const identity = data?.workspace ?? session.workspace;
-  const navItems = (mobile=false) => <>{navigation.filter(item=>!mobile||['home','jobs','candidate','applications'].includes(item.view)).map(item => <button type="button" key={item.view}
+  const homeHref=pathname+'?view=home';
+  const goHome=(event:MouseEvent<HTMLAnchorElement>)=>{
+    if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+    event.preventDefault();navigate({view:'home',job:null,conversation:null,filter:null});
+  };
+  const navItems = (mobile=false) => <>{navigation.filter(item=>item.view!=='home'&&(!mobile||['jobs','candidate','applications'].includes(item.view))).map(item => <button type="button" key={item.view}
     className={'nav-item' + (view === item.view ? ' current' : '')} aria-current={view === item.view ? 'page' : undefined}
     onClick={() => navigate({view: item.view, filter: null})}>
     <item.icon size={18} aria-hidden="true" /><span>{item.label}</span>
     {counts[item.view] !== undefined && <span className="nav-count tabular">{counts[item.view]}</span>}
   </button>)}</>;
-  const sidebar = <div className="sidebar-inner"><Brand /><div className="workspace-identity"><LayoutGrid size={16} aria-hidden="true" />
+  const sidebar = <div className="sidebar-inner"><a className="brand-home" href={homeHref} onClick={goHome} aria-label="Maxim Apply" aria-current={view==='home'?'page':undefined}><Brand /></a><div className="workspace-identity"><LayoutGrid size={16} aria-hidden="true" />
     <span><strong>{identity.name}</strong><small>New workspace</small></span><LockKeyhole size={12} aria-hidden="true" /></div>
     <div className="sidebar-section-label">WORKSPACE</div><nav aria-label="Workspace navigation">{navItems()}</nav>
     <div className="sidebar-bottom"><div className="sidebar-privacy"><ShieldCheck size={17} aria-hidden="true" /><span>Private by default<small>{identity.is_owner ? 'Workspace owner' : 'Workspace member'}</small></span></div>
@@ -216,7 +221,7 @@ function AuthenticatedWorkspace({session, onExpired, onSignedOut}: {
     <aside className="sidebar" aria-label="Main navigation">{sidebar}</aside>
     <main className="workspace-main">
       <header className="topbar"><div className="topbar-brand"><span className="mobile-menu"><ToolButton label="Open navigation" icon={Menu} onClick={() => setMenuOpen(true)} /></span>
-        <h1>Maxim Apply</h1><ChevronRight size={14} aria-hidden="true" /><span className="topbar-current">{currentNav.label}</span></div>
+        <h1><a className="brand-home" href={homeHref} onClick={goHome} aria-current={view==='home'?'page':undefined}>Maxim Apply</a></h1><ChevronRight size={14} aria-hidden="true" /><span className="topbar-current">{currentNav.label}</span></div>
         <div className="topbar-actions">{session.testMode && <Pill tone="amber">Test workspace</Pill>}
           <span className="topbar-private"><PrivacyStamp /></span>
           <ToolButton label="Refresh workspace" icon={RefreshCw} onClick={() => void refresh()} disabled={!online || refreshing} busy={refreshing} />

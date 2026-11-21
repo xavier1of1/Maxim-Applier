@@ -32,6 +32,28 @@ test('a high-fit recommendation clears conflicting job filters',async({page})=>{
  await h.sql("UPDATE evaluations SET status='stale' WHERE job_id=$1",[f.job.id]);
 });
 test.afterAll(async()=>{if(h)await h.close();});
+for(const width of [1600,390])test('brand is the Home destination without a redundant tab at '+width,async({page})=>{
+ await page.setViewportSize({width,height:1000});await page.goto(h.c.origin+'/maxim?view=jobs');
+ await page.getByLabel('Workspace access key').fill(h.c.bootstrapKey);await page.getByRole('button',{name:'Sign in',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Home',exact:true})).toHaveCount(0);
+ const brand=width===1600?page.locator('.sidebar .brand-home'):page.locator('.topbar .brand-home');
+ await expect(brand).toHaveAttribute('href','/maxim?view=home');await brand.focus();await page.keyboard.press('Enter');
+ await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(brand).toHaveAttribute('aria-current','page');
+ if(width===1600){
+  await page.locator('.sidebar .nav-item').filter({hasText:/^Jobs/}).click();await page.locator('.role-row').first().click();
+  await page.getByRole('textbox',{name:'Working note',exact:true}).fill('Unsaved brand navigation fixture');await brand.click();
+  await expect(page.getByRole('heading',{name:'Discard unsaved note?',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Keep editing',exact:true}).click();
+  await expect(page.getByRole('textbox',{name:'Working note',exact:true})).toHaveValue('Unsaved brand navigation fixture');
+  await brand.click();await page.getByRole('button',{name:'Discard changes',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();
+ }
+ if(width===390){
+  await page.getByRole('button',{name:'Jobs',exact:true}).click();await page.getByRole('button',{name:'Open navigation',exact:true}).click();
+  await page.locator('.navigation-dialog .brand-home').click();
+  await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(page.locator('.navigation-dialog')).toBeHidden();
+ }
+});
 for(const width of [1600,390])test('Home flow is nonblank, truthful and bounded at '+width,async({page},info)=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width,height:1000});await page.goto(h.c.origin+'/maxim');
  await page.getByLabel('Workspace access key').fill(h.c.bootstrapKey);await page.getByRole('button',{name:'Sign in',exact:true}).click();
