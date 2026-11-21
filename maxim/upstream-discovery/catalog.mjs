@@ -1,4 +1,4 @@
-import {readFileSync,readdirSync} from 'node:fs';
+import {readFileSync,readdirSync,writeFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 
@@ -30,3 +30,4 @@ export function verifyBundle(){
  if(catalog.length!==153)throw new Error('The pinned discovery catalog must account for 153 providers.');
  return {commit:sourceLock.commit,providers:catalog.length,files:Object.keys(sourceLock.hashes).length};
 }
+if(process.argv.includes('--write'))writeFileSync(new URL('./catalog.json',import.meta.url),JSON.stringify({commit:sourceLock.commit,release:sourceLock.release,providers:catalog},null,2)+'\n');

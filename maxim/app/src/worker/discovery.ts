@@ -13,6 +13,7 @@ import {domain} from '../server/domain';
 import {applicationWritable,queueApplicationProjection} from '../server/application-authority';
 import {checkScanGrant} from '../server/intelligence-budget';
 import {intelligenceLock,capacity} from '../server/intelligence-policy';
+import {discoverMarketJobs} from './upstream-discovery';
 
 const fallback='Review this source in a visible browser, or retry explicitly after fixing its configuration/cooldown. No access-control workaround is available.';
 type Posting={jobId:string;revision:number;externalId:string;openingKey:string};
@@ -21,7 +22,7 @@ async function currentPosting(tx:PoolClient,item:WorkItem,source:Source,posting:
  invariant(row,'posting_changed','The stored role or source identity changed. Review it before requesting details again.',409);
  return row;
 }
-async function active(tx:PoolClient,item:WorkItem,source?:Source){
+export async function active(tx:PoolClient,item:WorkItem,source?:Source){
  await applicationWritable(tx,item.workspace_id);
  await checkLease(tx,item);
  const run=(await tx.query('SELECT * FROM discovery_runs WHERE workspace_id=$1 AND id=$2 FOR UPDATE',[item.workspace_id,item.input.runId])).rows[0];
@@ -34,7 +35,7 @@ async function active(tx:PoolClient,item:WorkItem,source?:Source){
  }
  return run;
 }
-async function publishJob(tx:PoolClient,item:WorkItem,source:Source,page:{id:string;captured_at:string},job:NormalizedJob,summaryOnly:boolean){
+export async function publishJob(tx:PoolClient,item:WorkItem,source:Source,page:{id:string;captured_at:string},job:NormalizedJob,summaryOnly:boolean){
  const w=item.workspace_id;
  await intelligenceLock(tx,w);
  await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[w+':opening:'+job.openingKey]);
@@ -45,7 +46,7 @@ async function publishJob(tx:PoolClient,item:WorkItem,source:Source,page:{id:str
  const age=job.postedAt?(Date.now()-Date.parse(job.postedAt))/3600000:null;
  const profile=(await tx.query('SELECT profile FROM workspace_policies WHERE workspace_id=$1',[w])).rows[0];
  const evaluated=profile?.profile==='xavier-v1'?domain({operation:'job_policy',job:{title:job.title,description:job.description,locations:job.locations,locationText:job.location,salary:job.salary,postedAgeHours:age}}):{ok:true,eligibility:'review',allowed:false,flags:[{flagType:'policy',severity:'review',reason:'No approved policy profile for this candidate.'}]};
- const policy={...evaluated,detailStatus:summaryOnly?'summary':'full',eligibility:summaryOnly&&evaluated.eligibility==='eligible'?'review':evaluated.eligibility};
+ const policy={...evaluated,detailStatus:summaryOnly?'summary':'full',provenance:job.raw.discoveryProvenance||null,screening:job.raw.screening||null,eligibility:summaryOnly&&evaluated.eligibility==='eligible'?'review':evaluated.eligibility};
  if(!existing){
   await tx.query('INSERT INTO jobs(id,workspace_id,company,title,location,url,description,opening_key,source_platform,application_url,posted_at,source_updated_at,first_seen_at,last_seen_at,discovery_policy,role_lane,industry,industry_provenance) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$13,$14,$15,$16,$17)',[id,w,job.company,job.title,job.location,job.url,job.description,job.openingKey,source.provider,job.applicationUrl,job.postedAt,job.updatedAt,page.captured_at,JSON.stringify(policy),domain({operation:'job_metadata',title:job.title}).lane,(source as Source&{industry?:string}).industry||null,(source as Source&{industry?:string}).industry?'Owner-confirmed source industry':null]);
  }else if(!identityConflict&&summaryOnly&&existing.description.trim().length>=50&&(!job.updatedAt||job.updatedAt===existing.source_updated_at?.toISOString())){
@@ -61,6 +62,8 @@ async function publishJob(tx:PoolClient,item:WorkItem,source:Source,page:{id:str
  return {created:!existing,identityConflict,eligibility:policy.eligibility};
 }
 export async function discoverJobs(item:WorkItem,parentSignal?:AbortSignal){
+ const kind=(await database().query('SELECT q.filters FROM discovery_runs r JOIN discovery_queries q ON q.workspace_id=r.workspace_id AND q.id=r.query_id WHERE r.workspace_id=$1 AND r.id=$2',[item.workspace_id,item.input.runId])).rows[0];
+ if(kind?.filters.engine==='careerops-1.40.0')return discoverMarketJobs(item,parentSignal);
  const signal=AbortSignal.any([AbortSignal.timeout(90000),...(parentSignal?[parentSignal]:[])]);
  const initial=await transaction(async tx=>{
   const run=await active(tx,item);

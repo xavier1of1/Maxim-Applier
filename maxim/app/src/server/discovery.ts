@@ -11,12 +11,14 @@ import {engineSnapshot} from './evaluation-native';
 import {jobFitJoin,jobFitOrder} from './job-fit';
 import type {PoolClient} from 'pg';
 import {capacity} from './intelligence-policy';
+import {upstreamCatalog,upstreamCommit,isMarketProvider,sourcePacks} from './upstream-discovery';
 
 const schema=z.discriminatedUnion('action',[
- z.object({commandId:uuid,action:z.literal('add_source'),payload:z.object({name:z.string().trim().min(1).max(180),provider:z.enum(['greenhouse','lever','ashby','manual']),board:z.string().max(100).default(''),careersUrl:z.string().url().max(2048).optional()}).strict()}).strict(),
+ z.object({commandId:uuid,action:z.literal('add_source'),payload:z.object({name:z.string().trim().min(1).max(180),provider:z.string().regex(/^(?:reverse:)?[a-z0-9-]{1,80}$/),board:z.string().max(100).default(''),careersUrl:z.string().url().max(2048).optional(),configuration:z.record(z.string(),z.unknown()).optional()}).strict()}).strict(),
+ z.object({commandId:uuid,action:z.literal('enable_source_pack'),payload:z.object({pack:z.enum(['us_tech','remote','reverse_ats'])}).strict()}).strict(),
  z.object({commandId:uuid,action:z.literal('set_source_enabled'),payload:z.object({sourceId:uuid,expectedRevision:z.number().int().positive(),enabled:z.boolean()}).strict()}).strict(),
  z.object({commandId:uuid,action:z.literal('set_source_industry'),payload:z.object({sourceId:uuid,expectedRevision:z.number().int().positive(),industry:z.string().trim().max(120)}).strict()}).strict(),
- z.object({commandId:uuid,action:z.literal('start_search'),payload:z.object({sourceIds:z.array(uuid).min(1).max(3),terms:z.array(z.string().trim().min(2).max(120)).max(10).default([]),matchIn:z.enum(['title','title_and_description']).default('title_and_description')}).strict()}).strict(),
+ z.object({commandId:uuid,action:z.literal('start_search'),payload:z.object({sourceIds:z.array(uuid).min(1).max(10),terms:z.array(z.string().trim().min(2).max(120)).max(10).default([]),matchIn:z.enum(['title','title_and_description']).default('title_and_description')}).strict()}).strict(),
  z.object({commandId:uuid,action:z.literal('fetch_posting_details'),payload:z.object({jobId:uuid,expectedRevision:z.number().int().positive()}).strict()}).strict(),
  z.object({commandId:uuid,action:z.enum(['cancel_search','retry_search']),payload:z.object({runId:uuid,expectedRevision:z.number().int().positive()}).strict()}).strict(),
  z.object({commandId:uuid,action:z.literal('set_discovery_state'),payload:z.object({jobId:uuid,expectedRevision:z.number().int().positive(),state:z.enum(['none','saved','dismissed'])}).strict()}).strict(),
@@ -25,6 +27,16 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
  const c=schema.parse(raw);
  return command(ctx,c.commandId,c,async tx=>{
   const w=ctx.workspaceId;
+  if(c.action==='enable_source_pack'){
+   invariant(ctx.isOwner,'not_found','Record not found.',404);await applicationWritable(tx,w);
+   const added=[];
+   for(const providerId of sourcePacks[c.payload.pack]){
+    const provider=c.payload.pack==='reverse_ats'?'reverse:'+providerId:providerId;
+    const d=sourceDefinition(provider,'',undefined),hash=digest(JSON.stringify(d)),deferred=provider==='reverse:workable';
+    const row=(await tx.query('INSERT INTO discovery_sources(id,workspace_id,name,provider,board,careers_url,identity_hash,native_definition,enabled,status,status_reason) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT(workspace_id,identity_hash) DO UPDATE SET enabled=EXCLUDED.enabled RETURNING *',[crypto.randomUUID(),w,providerId+(c.payload.pack==='reverse_ats'?' discovery':''),provider,d.board,d.careers_url,hash,JSON.stringify('native_definition' in d?d.native_definition:null),!deferred,deferred?'unconfigured':'not_checked',deferred?'Large global feed requires an explicit streaming/resource budget.':null])).rows[0];added.push(row);
+   }
+   await event(tx,ctx,w,'discovery_source_pack_enabled',{pack:c.payload.pack,sourceIds:added.map(s=>s.id)},1);return {sources:added};
+  }
   if(c.action==='set_source_industry'){
    invariant(ctx.isOwner,'not_found','Record not found.',404);await applicationWritable(tx,w);
    const p=c.payload,s=(await tx.query('UPDATE discovery_sources SET industry=$1,revision=revision+1 WHERE workspace_id=$2 AND id=$3 AND revision=$4 RETURNING *',[p.industry||null,w,p.sourceId,p.expectedRevision])).rows[0];
@@ -34,10 +46,10 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
   }
   if(['start_search','retry_search','set_discovery_state','fetch_posting_details'].includes(c.action))await applicationWritable(tx,w);
   if(c.action==='add_source'){
-   const p=c.payload,d=sourceDefinition(p.provider,p.board,p.careersUrl),id=crypto.randomUUID(),hash=digest(JSON.stringify(d));
+   const p=c.payload,d=sourceDefinition(p.provider,p.board,p.careersUrl,p.configuration),id=crypto.randomUUID(),hash=digest(JSON.stringify(d));
    const prior=(await tx.query('SELECT * FROM discovery_sources WHERE workspace_id=$1 AND identity_hash=$2',[w,hash])).rows[0];
    if(prior)return prior;
-   const row=(await tx.query('INSERT INTO discovery_sources(id,workspace_id,name,provider,board,careers_url,identity_hash) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *',[id,w,p.name,d.provider,d.board,d.careers_url,hash])).rows[0];
+   const row=(await tx.query('INSERT INTO discovery_sources(id,workspace_id,name,provider,board,careers_url,identity_hash,native_definition) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',[id,w,p.name,d.provider,d.board,d.careers_url,hash,JSON.stringify('native_definition' in d?d.native_definition:null)])).rows[0];
    await event(tx,ctx,id,'discovery_source_added',{provider:d.provider,automated:supported.includes(d.provider)},1);return row;
   }
   if(c.action==='set_source_enabled'){
@@ -104,10 +116,12 @@ export async function discoveryCommand(ctx:Context,raw:unknown){
 }
 export async function queueDiscoverySearch(tx:PoolClient,ctx:Pick<Context,'workspaceId'>,p:{sourceIds:string[];terms:string[];matchIn:string},automation?:{policyRevision:number;cycleId:string;maxMatches:number}){
    const w=ctx.workspaceId;await applicationWritable(tx,w);
-   invariant(p.sourceIds.length>=1&&p.sourceIds.length<=3,'source_limit','A single provider run is limited to one to three sources.');
+   invariant(p.sourceIds.length>=1&&p.sourceIds.length<=10,'source_limit','A single provider run is limited to ten sources.');
    const ids=[...new Set(p.sourceIds)],sources=(await tx.query('SELECT * FROM discovery_sources WHERE workspace_id=$1 AND id=ANY($2::uuid[]) ORDER BY id FOR SHARE',[w,ids])).rows;
    invariant(sources.length===ids.length,'not_found','Source not found.',404);
    invariant(sources.every(s=>s.enabled),'source_disabled','Enable the selected source before starting.',409);
+   const market=sources.some(s=>isMarketProvider(s.provider));
+   invariant(market||sources.length<=3,'source_limit','Legacy employer-feed runs remain limited to three sources.');
    invariant(sources.every(s=>!s.next_retry_at||new Date(s.next_retry_at).getTime()<=Date.now()),'source_cooldown','A selected source is still in its recorded cooldown.',409);
    const candidate=(await tx.query('SELECT id,revision FROM candidates WHERE workspace_id=$1',[w])).rows[0];
    const prefs=(await tx.query("SELECT f.id,f.revision,f.value FROM candidate_facts f JOIN candidate_sources s ON s.id=f.source_id AND s.workspace_id=f.workspace_id WHERE f.workspace_id=$1 AND f.field_key='preferences.roles' AND f.status='current' AND s.deleted_at IS NULL AND s.revision=f.source_revision",[w])).rows;
@@ -121,7 +135,7 @@ export async function queueDiscoverySearch(tx:PoolClient,ctx:Pick<Context,'works
     const row=(await tx.query('INSERT INTO discovery_source_cursors(workspace_id,source_id,record_offset) VALUES($1,$2,$3) ON CONFLICT(workspace_id,source_id) DO UPDATE SET record_offset=discovery_source_cursors.record_offset+EXCLUDED.record_offset RETURNING record_offset',[w,sources[i].id,quota])).rows[0];
     sourceCursors[sources[i].id]=Number(row.record_offset)-quota;
    }
-   const queryId=crypto.randomUUID(),runId=crypto.randomUUID(),filters={policy:'xavier-nova-dc-v1',matchIn:p.matchIn,maxSources:3,maxPagesPerSource:3,maxRequests:6,maxSeconds:90,...(automation?{automation:{...automation,sourceCursors}}:{})};
+   const queryId=crypto.randomUUID(),runId=crypto.randomUUID(),filters={policy:'xavier-nova-dc-v1',matchIn:p.matchIn,maxSources:market?10:3,maxPagesPerSource:market?2:3,maxRequests:market?18:6,maxSeconds:90,...(market?{engine:'careerops-1.40.0',upstreamCommit}:{}),...(automation?{automation:{...automation,sourceCursors}}:{})};
    await tx.query('INSERT INTO discovery_queries(id,workspace_id,terms,filters,source_snapshots,candidate_revision,preference_provenance) VALUES($1,$2,$3,$4,$5,$6,$7)',[queryId,w,terms,JSON.stringify(filters),JSON.stringify(sources),candidate.revision,JSON.stringify(p.terms.length?[]:prefs.map(f=>({id:f.id,revision:f.revision})))]);
    const work=await enqueue(tx,w,'discover_jobs',runId+':1',{runId,revision:1});
    const row=(await tx.query('INSERT INTO discovery_runs(id,workspace_id,query_id,work_id) VALUES($1,$2,$3,$4) RETURNING *',[runId,w,queryId,work.id])).rows[0];
@@ -137,6 +151,6 @@ export async function discoveryView(ctx:Context,sort:string|null=null){
   const attempts=(await tx.query('SELECT a.* FROM discovery_attempts a WHERE a.workspace_id=$1 AND a.run_id=ANY($2::uuid[]) ORDER BY a.started_at DESC',[w,runs.slice(0,50).map(r=>r.id)])).rows;
   const jobs=(await tx.query(`SELECT j.id,j.company,j.title,j.location,j.revision,j.archived,j.opening_key,j.url,j.source_platform,j.application_url,j.posted_at,j.first_seen_at,j.last_seen_at,j.updated_at,j.discovery_policy,coalesce(s.state,'none') AS discovery_state,row_to_json(fit) AS fit FROM jobs j LEFT JOIN job_discovery_states s ON s.job_id=j.id AND s.workspace_id=j.workspace_id ${jobFitJoin} WHERE j.workspace_id=$1 AND j.opening_key IS NOT NULL ORDER BY ${jobFitOrder(sort)} LIMIT 501`,[w,engine.hash])).rows;
   const observations=(await tx.query('SELECT job_id,run_id,source_id,identity_conflict,observed_at,date_basis FROM job_observations WHERE workspace_id=$1 AND run_id=ANY($2::uuid[]) ORDER BY observed_at DESC LIMIT 2001',[w,runs.slice(0,50).map(r=>r.id)])).rows;
-  return {sources:sources.slice(0,200).map(s=>({...s,stale:s.checked_at&&Date.now()-new Date(s.checked_at).getTime()>86400000})),runs:runs.slice(0,50),attempts,jobs:jobs.slice(0,500),observations:observations.slice(0,2000),partial:{sources:sources.length>200,runs:runs.length>50,jobs:jobs.length>500,observations:observations.length>2000},asOf:new Date().toISOString(),limits:{sourcesPerRun:3,pagesPerSource:3,requestsPerRun:6,secondsPerRun:90},coverage:'Selected public boards only; not LinkedIn/Indeed/Workday or universal site coverage.'};
+  return {catalog:{commit:upstreamCommit,providers:upstreamCatalog,packs:sourcePacks},sources:sources.slice(0,200).map(s=>({...s,stale:s.checked_at&&Date.now()-new Date(s.checked_at).getTime()>86400000})),runs:runs.slice(0,50),attempts,jobs:jobs.slice(0,500),observations:observations.slice(0,2000),partial:{sources:sources.length>200,runs:runs.length>50,jobs:jobs.length>500,observations:observations.length>2000},asOf:new Date().toISOString(),limits:{sourcesPerRun:10,pagesPerSource:2,requestsPerRun:18,secondsPerRun:90},coverage:'Pinned Career-Ops 1.40.0 catalog: 153 providers. Enabled boards and bounded reverse ATS discovery only; installed modules are not verified searches. No unrestricted LinkedIn/Indeed search.'};
  });
 }

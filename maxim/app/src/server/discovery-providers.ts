@@ -3,12 +3,13 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {DiscoveryError} from './discovery-network';
 import {invariant} from './errors';
+import {upstreamDefinition} from './upstream-discovery';
 
 export type Source={id:string;name:string;provider:string;board:string;careers_url:string;revision:number;enabled:boolean};
 export const supported=['greenhouse','lever','ashby'];
 export const providerHosts=['boards-api.greenhouse.io','boards.greenhouse.io','job-boards.greenhouse.io','job-boards.eu.greenhouse.io','api.lever.co','api.ashbyhq.com'];
-export function sourceDefinition(provider:string,board:string,careersUrl?:string){
- invariant(supported.includes(provider)||provider==='manual','invalid_provider','Select a supported public feed or manual source.');
+export function sourceDefinition(provider:string,board:string,careersUrl?:string,configuration?:Record<string,unknown>){
+ if(!supported.includes(provider)&&provider!=='manual')return upstreamDefinition(provider,board,careersUrl,configuration);
  if(provider==='manual'){
   invariant(careersUrl,'invalid_source','A manual source requires its careers URL.');
   const u=new URL(careersUrl||'');invariant(u.protocol==='https:'&&!u.username&&!u.password&&!u.hash,'invalid_source','Manual source must be a public HTTPS URL.');
@@ -42,7 +43,7 @@ export function pageRecords(provider:string,value:unknown):Record<string,unknown
 const text=compile({wordwrap:false,limits:{maxInputLength:100000,maxDepth:30,maxChildNodes:5000,maxBaseElements:1000},selectors:[{selector:'a',options:{ignoreHref:true}},{selector:'img',format:'skip'}]});
 const str=(v:unknown,max=50000)=>typeof v==='string'?v.slice(0,max):'';
 const date=(v:unknown)=>typeof v==='string'&&Number.isFinite(Date.parse(v))?new Date(v).toISOString():null;
-function postingIdentity(url:string,fallback:string){
+export function postingIdentity(url:string,fallback:string){
  const u=new URL(url),p=u.pathname.split('/').filter(Boolean);
  if(['jobs.lever.co','jobs.ashbyhq.com','job-boards.greenhouse.io','job-boards.eu.greenhouse.io','boards.greenhouse.io'].includes(u.hostname)&&p.length>=2){
   return u.hostname.replace('job-boards.eu.greenhouse.io','greenhouse').replace('job-boards.greenhouse.io','greenhouse').replace('boards.greenhouse.io','greenhouse')+':'+p[0]+':'+p.at(-1);

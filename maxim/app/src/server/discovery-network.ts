@@ -12,7 +12,7 @@ export class DiscoveryError extends DomainError{
 }
 export const networkLimits={bytes:5*1024*1024,deadlineMs:30000,maxHeaders:16384};
 type Address={address:string;family:number};
-type Options={allowedHosts:string[];fixtureOrigin?:string;deadlineMs?:number;byteLimit?:number;signal?:AbortSignal;resolve?:(host:string)=>Promise<Address[]>};
+type Options={allowedHosts:string[];fixtureOrigin?:string;deadlineMs?:number;byteLimit?:number;signal?:AbortSignal;resolve?:(host:string)=>Promise<Address[]>;content?:'public';method?:'GET'|'POST';body?:string;headers?:Record<string,string>};
 export function publicAddress(value:string){
  try{return ipaddr.process(value).range()==='unicast';}catch{return false;}
 }
@@ -46,8 +46,8 @@ export async function secureGet(input:string,options:Options):Promise<{text:stri
  try{return await new Promise((resolve,reject)=>{
   let settled=false,rawBytes=0,decodedBytes=0,connectedPeer='',bodyStream:Readable|undefined;
   const fail=(error:unknown)=>{if(!settled){settled=true;bodyStream?.destroy();request.destroy();reject(error instanceof DomainError?error:new DiscoveryError(signal.aborted?'request_cancelled':'transport_failed','Feed transport failed safely.'));}};
-  const request=(url.protocol==='https:'?https:http).request(url,{method:'GET',agent:false,maxHeaderSize:networkLimits.maxHeaders,family:selected.family,
-   headers:{Accept:'application/json','Accept-Encoding':'identity','User-Agent':'MaximApply-public-feed/1.0'},
+  const request=(url.protocol==='https:'?https:http).request(url,{method:options.method||'GET',agent:false,maxHeaderSize:networkLimits.maxHeaders,family:selected.family,
+   headers:{Accept:options.content==='public'?'application/json, text/html, application/xml, text/plain':'application/json',...options.headers,'Accept-Encoding':'identity','User-Agent':'MaximApply-public-feed/1.0'},
    ...(url.protocol==='https:'?{servername:url.hostname,rejectUnauthorized:true}:{}),signal,
    lookup:(_host,_opts,callback)=>callback(null,selected.address,selected.family),
   },response=>{
@@ -61,7 +61,7 @@ export async function secureGet(input:string,options:Options):Promise<{text:stri
    if(status===401||status===403){response.destroy();fail(new DiscoveryError('auth_or_challenge','Provider access requires manual review. No challenge workaround is attempted.',status));return;}
    if(status<200||status>=300){response.destroy();fail(new DiscoveryError(status===404?'source_not_found':'http_failure','Public feed returned HTTP '+status+'.',status));return;}
    const type=String(response.headers['content-type']||'').toLowerCase();
-   if(!/(?:application\/json|application\/[^;]+\+json)/.test(type)){response.destroy();fail(new DiscoveryError('unexpected_content','Expected JSON; review the source manually.',status));return;}
+   if(!(options.content==='public'?/(?:application\/(?:json|xml|rss\+xml|atom\+xml|[^;]+\+json)|text\/(?:html|plain|xml))/:/(?:application\/json|application\/[^;]+\+json)/).test(type)){response.destroy();fail(new DiscoveryError('unexpected_content','Unexpected public-source content type; review the source manually.',status));return;}
    const length=Number(response.headers['content-length']);
    if(Number.isFinite(length)&&length>cap){response.destroy();fail(new DiscoveryError('response_too_large','Feed response exceeds the byte limit.'));return;}
    const encoding=String(response.headers['content-encoding']||'identity').toLowerCase();
@@ -78,6 +78,7 @@ export async function secureGet(input:string,options:Options):Promise<{text:stri
      checkSignal();
      validateConnectedPeer(selected.address,connectedPeer);
      const text=new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks));
+     if(options.content==='public'&&/(?:cf-chl-|cf_chl_opt|captcha-delivery\.com|<title>\s*(?:Just a moment|Access Denied)|verify you are human)/i.test(text))throw new DiscoveryError('auth_or_challenge','Public source returned an access challenge. No workaround is attempted.',status);
      settled=true;resolve({text,status,bytes:decodedBytes,peer:normalizedAddress(connectedPeer),receivedAt:new Date().toISOString(),contentType:type});
     }catch(e){fail(e);}
    });
@@ -85,7 +86,7 @@ export async function secureGet(input:string,options:Options):Promise<{text:stri
   request.on('socket',socket=>socket.once('connect',()=>{
    try{connectedPeer=socket.remoteAddress||'';validateConnectedPeer(selected.address,connectedPeer);}catch(e){fail(e);}
   }));
-  request.on('error',fail);request.end();
+  request.on('error',fail);request.end(options.body);
  });}finally{clearTimeout(timer);}
 }
 

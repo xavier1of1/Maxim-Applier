@@ -1,0 +1,3051 @@
+{
+  "commit": "194933aa111aa4f2fd3ffa69048347fa6a974d27",
+  "release": "1.40.0",
+  "providers": [
+    {
+      "id": "4dayweek",
+      "kind": "board_wide",
+      "region": "remote",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "4dayweek.io"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "686eab91aa14211e027afb92f922bd87b76415dbca0acaf6385497bf290fb9ad"
+    },
+    {
+      "id": "a16z-speedrun-talent",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "speedrun-talent-network.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "4d2c13ba76bf4425055a3a6b3e43c6175f2a3a40c9c5f49c1cf1708a10e6b72a"
+    },
+    {
+      "id": "adp-myjobs",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "myjobs.adp.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "289d2fab6ca0295b22b8695867aee4235fb0b2cfdb7ef513ea1918670cb44b35"
+    },
+    {
+      "id": "adp-workforcenow",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "workforcenow.adp.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "11a11bb99934aae8c3d8db24003216602c01bb3039b72eb8810e9d543c5fc627"
+    },
+    {
+      "id": "agentic-jobs",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "provider_specific",
+      "description": "full_when_present",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "agentic-engineering-jobs.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "ce193304cb5b98ef24a5a828dd779e1668cd22daeca90c8faa7a55d1c7204df6"
+    },
+    {
+      "id": "aldi-nord",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "0abac320cddce223ac846cf21b4cf4ce10aa1febd5b81ffa401bc106087b52e0"
+    },
+    {
+      "id": "alibaba",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "talent.alibaba.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "5843da29f5ec0ab73955724a674fceee0b7f9ab83cde6e9c793d363b124829d4"
+    },
+    {
+      "id": "amazon",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.amazon.jobs"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "8a5b36765e484f100905fbba4a067e9a8f14a963503a4b387ec235f95c3a6177"
+    },
+    {
+      "id": "apple",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobs.apple.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "0c0d5feeb1777999ee6bcbd1a08f01baf8611d14efd739ded89832bd34836554"
+    },
+    {
+      "id": "applicantpro",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.applicantpro.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "f447e7061da9919774536553638077089f1101c18c84fe0c29867e855a72016c"
+    },
+    {
+      "id": "applitrack",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.applitrack.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "00adaa27c409e096305ab808706cbcf4cc60ed985bf5a78ad5f6ddb7cc6c09be"
+    },
+    {
+      "id": "arbeitnow",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.arbeitnow.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "b638ff1650fd24f52c107289b3eea14dfeec0ad0290e0290627edd51a57713eb"
+    },
+    {
+      "id": "arbeitsagentur",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "rest.arbeitsagentur.de",
+        "www.arbeitsagentur.de"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "1199c0f816fa9e7b69993f94b10f49bdbb35c1ad35b0859f3a423f187fb8deca"
+    },
+    {
+      "id": "ashby",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "full_when_present",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobs.ashbyhq.com",
+        "developers.ashbyhq.com",
+        "openai.com",
+        "api.ashbyhq.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "aead2772018e27730eae1c824993f07c892e49cb180ccb824d933b496c8056e8"
+    },
+    {
+      "id": "atlassian",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.atlassian.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "8b138f4ef20df1c0102e94455a785383326b518737096d9d110dcf8b30f89698"
+    },
+    {
+      "id": "avature",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "01fdc7b67280524e0e760f70251ad4e5df27fb891f733bd862d6665c9257beb6"
+    },
+    {
+      "id": "bamboohr",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "acme.bamboohr.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "2ff08e098018d78add49c90a98cb63ed4f273b61baffa6a00c95d9249097a85a"
+    },
+    {
+      "id": "beesite",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobs.mercedes-benz.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "46cfa2ace95bc0809bd063aaafca123ee36a64707a76120ef6f41658f12edcfa"
+    },
+    {
+      "id": "breezy",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "21dd0a7b2f7de2f3ee3f6136e05f2d7124212aa9725b94e72689a15bd124a19c"
+    },
+    {
+      "id": "builtin",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.builtinseattle.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "e22d14fc3fa20676cd4647b8ad48e638dbecdf6ee8635ee517f1ee8d61f5feb3"
+    },
+    {
+      "id": "bulldogjob",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "bulldogjob.pl"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "463c126ee58c14ee116b2fb440b636adc6722013d869212a47a3d6e5567c6fb6"
+    },
+    {
+      "id": "bwi",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.bwi.de"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "bb13f2f3ada4e345a6d22e33d2e3b2b1e0a368ad6724489b826e5d373cd0fb08"
+    },
+    {
+      "id": "careerpuck",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "app.careerpuck.com",
+        "api.careerpuck.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "5dfff07291c3b7c79ec320e118e6b6d0eb8674978854921f64ed08ca50f4c94d"
+    },
+    {
+      "id": "careerviet",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "careerviet.vn"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "871e5834b1b0d2c365a12c8b1ad8a9d4a5222ee60a9bb6666fec8ec29a1f59a1"
+    },
+    {
+      "id": "clearcompany",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "careers-content.clearcompany.com",
+        "careers-api.clearcompany.com",
+        "jobs.clearcompany.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "fad74b1efa4c45061cfc8ed66e8fe1f5573c55e3edb0d07ebcbf4ad0127ba520"
+    },
+    {
+      "id": "collage",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "api.collage.co"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "244248d6bd59ba494b10660a2f72a5f8d57d4a036422ee6f7284f6a92aafab58"
+    },
+    {
+      "id": "comeet",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.comeet.co"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "922b2b66ac55e656af6c332637ae5d9ea784552901d37d5c2720981c32bbbb6c"
+    },
+    {
+      "id": "computrabajo",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "co.computrabajo.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "08480c77bab9182c49bbbde103906cfc9fd0aae896966a7bfb6502a95d02a0c6"
+    },
+    {
+      "id": "consider",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobs.founderful.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "7da38507b32686ce71352c2858e9db4770cd5bf69d3ffd8c20594c86c3c3124e"
+    },
+    {
+      "id": "cryptocurrencyjobs",
+      "kind": "board_wide",
+      "region": "remote",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "cryptocurrencyjobs.co"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "37e39312188e019a46548935801b1f933161eb0f2f9d6bc3ce9ef787ee6a02ff"
+    },
+    {
+      "id": "csod",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "9f0a18727df4352cc916aae922882d09afa1140b3fc10095ba3b615424c02df9"
+    },
+    {
+      "id": "darwinbox",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "d211b76e1b29211552e9327910704de99c0f2d04897fcb2ecfb415106ce943a3"
+    },
+    {
+      "id": "dassault",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.3ds.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "1a516a8021a2df3418cdba51655b12b2bc419bf9e853fb94183eb13386d512ce"
+    },
+    {
+      "id": "deel",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobs.deel.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "ddc6a0afccc4411b251e4f17da12155b708bef8d4e811ccbeae95e16008a6855"
+    },
+    {
+      "id": "deutschebahn",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "6917bd2aed80db6cf6a10896984fe1f2291490b5e7d6dc88fed19db0d470019a"
+    },
+    {
+      "id": "dover",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "app.dover.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "ca941fab557e4df3fe18e09aeeb65bc7ebc5625df6c35a61fd076b5f78f9949b"
+    },
+    {
+      "id": "echojobs",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "echojobs.io"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "4dd0cc340d3aa413d090340c6758f76d5ef1dc4b5969caabc97e29aebdf72a68"
+    },
+    {
+      "id": "eightfold",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "careers.acme.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "3bf6fb2694a0a2059963e5b93f0498b6a8f15215604f5cd57b01ffafc59ed69c"
+    },
+    {
+      "id": "eploy",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "careers.example.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "2752362bec2a932a5c16b9f4f428ca1c39f9098fba3680bf222ee7629255aa5a"
+    },
+    {
+      "id": "factorial",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "acme.factorialhr.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "c86c22d56ed6a66116fcf99a7e960b4bc9f8beda64f9d6ebc629ba2e19dc88e9"
+    },
+    {
+      "id": "feishu-jobs",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobs.bytedance.com",
+        "vrfi1sk8a0.jobs.feishu.cn"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "39687b805540fbf5625815989f84bb76fb386ff18793c45b0d92574c57de04a6"
+    },
+    {
+      "id": "flowxtra",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "app.flowxtra.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "0ad2f45c122758aec1bc17a86fadef53967b6461c331762e8b4fc5aa802456b8"
+    },
+    {
+      "id": "garena",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "careers.garena.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "bc6b079c748ccf076730236e1464ff552fd64bdc2ee80bfcb4865b26b374053d"
+    },
+    {
+      "id": "gem",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobs.gem.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "1f743437c50af416e3acad4ad5d8f881f7cba51b163c7ed2c06200f53f9c0e27"
+    },
+    {
+      "id": "generalist-world",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "generalist.world"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "126e33e0a490e22b36f256ab30db5faec5873ee10f9cca28d7fc0c5f5a59830a"
+    },
+    {
+      "id": "germantechjobs",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "germantechjobs.de"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "19648a210e96b629d8fdd305287991f3e7202d77f29f4ffedb2e73b734d6c685"
+    },
+    {
+      "id": "getonbrd",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.getonbrd.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "fe1c57e0679a07e83255b36444a1323881f918afafb1bc8c019471ff2445aa26"
+    },
+    {
+      "id": "getro",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "api.getro.com",
+        "jobs.b2venture.vc"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "4f709d2d9f364a4b78623fbdce636c14f95c6be2d0a368f2964b750789dc066b"
+    },
+    {
+      "id": "glints",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "glints.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "b8228a794ac5b3219af363c0823fa3b955b47c4991e91ca0aa964524e8992c23"
+    },
+    {
+      "id": "goldman",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "api-higher.gs.com",
+        "higher.gs.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "8d78e34f6c9703a4828c48f6a52e5e91a40087f334bf1293feaea7ba1e879ef4"
+    },
+    {
+      "id": "google",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.google.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "f7935370afe55cab8f5f6c0046c91c16f0803c557e67ba76a2ea7bfdd533dca6"
+    },
+    {
+      "id": "greenhouse",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "full_when_present",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "developers.greenhouse.io",
+        "job-boards.greenhouse.io",
+        "boards-api.greenhouse.io"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "cdfcaf36ec6560f91782fca239fdb442d197aa0a7611b91f5aafdc5853e5e05d"
+    },
+    {
+      "id": "gupy",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "portal.gupy.io"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "de737001af80a90b57a2cb6c543afc3f69532e17b8ecee29c980876a5b164510"
+    },
+    {
+      "id": "hackernews",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "hn.algolia.com",
+        "news.ycombinator.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "c04fe1e782b4bf3d4c63b7d0c5574f5d6a0c39ab293f8cfd9035d581c18fa29d"
+    },
+    {
+      "id": "hecklerkoch",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "karriere.heckler-koch.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "52b493f49b5e31eebe021dbc2c7ba040f60cfb3cef1f980bcaaeddf3edb6cbd7"
+    },
+    {
+      "id": "hibob",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "acme.careers.hibob.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "a3693e63845273316911aa42ef3a90b21fffed118302c1541176614961a77f6b"
+    },
+    {
+      "id": "higheredjobs",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.higheredjobs.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "01cb262c9596e159422da253e13690ef21af9ad7e091382f3ea3bdaf46705fe1"
+    },
+    {
+      "id": "himalayas",
+      "kind": "board_wide",
+      "region": "remote",
+      "query": "provider_specific",
+      "description": "full_when_present",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "himalayas.app"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "9a5c23e4262aef9af92286c4683e4ffcef0020a2cf7f041b64d63f83abbab14b"
+    },
+    {
+      "id": "hirehive",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "d61fb45333d67badbedd995b9f8f256e1247f4e609c7b5697d47bd1dce8762b3"
+    },
+    {
+      "id": "hiringroom",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "growuphr.hiringroom.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "3987e7e3a1f936cc402f2ae6411bc44efa95a5a51fe41f3c7ed5bef7e981718d"
+    },
+    {
+      "id": "homerun",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "feed.homerun.co",
+        "404.homerun.co",
+        "acme.homerun.co"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "d5a4e4091909af8e4c705c7bd647debb69d0c291c0efba18b3bf7258797dde80"
+    },
+    {
+      "id": "ibm",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www-api.ibm.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "2d0b0f96b2d5cede0ed2ae5518b32216479de53292d168583c9b814eb010872f"
+    },
+    {
+      "id": "icims",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "careers-acme.icims.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "6e8877ac5d78fe987b0e1e6434a3332db0735ba77308a799e4f46ad94149b96d"
+    },
+    {
+      "id": "inhire",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "api.inhire.app"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "5b72f82c1a8df4d1de160bc72cd2675923c746352be63c81e224411a24a93b5a"
+    },
+    {
+      "id": "inrecruiting",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "63ca5b05e6159d8b677479e69dff084ab087b2fef4c2971d72e8b9a2bb791756"
+    },
+    {
+      "id": "itviec",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "itviec.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "35504d27f829d88e684661294bb3aa1a5ae581bbd59b4b0b59c5d364a37751bd"
+    },
+    {
+      "id": "jazzhr",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "1a033988af8423c5c8ce9f1e5227913ea3beb48ade8c640f8f782a8ee66a0ed5"
+    },
+    {
+      "id": "jibeapply",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "5a87b5a2647c64835f63840978065702c7db2ea1830aa2f91df3a24466160d3b"
+    },
+    {
+      "id": "jobbankca",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.jobbank.gc.ca"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "046f5cc431807d8d18f903733786609092b997ef37392dd7d56733bba27f7939"
+    },
+    {
+      "id": "jobicy",
+      "kind": "board_wide",
+      "region": "remote",
+      "query": "feed_local_filter",
+      "description": "full_when_present",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobicy.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "2079e3058e1cf66eaf152107d4cb12d05485744d03f13fee27bd720653d9e282"
+    },
+    {
+      "id": "jobscz",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.jobs.cz"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "529802acfba027f0985010947455a814c604c762ecccf497907f36741567b609"
+    },
+    {
+      "id": "jobspresso",
+      "kind": "board_wide",
+      "region": "remote",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobspresso.co"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "70c4761fd8719e661f1a342dc28329d312274f2d7acc0b332a41394daf26e492"
+    },
+    {
+      "id": "jobstreet",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "id.jobstreet.com",
+        "au.seek.com",
+        "www.seek.com.au"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "4238e2bc3e69f7c864be619af3b8dbc3a9692d5a462b6ef0f3d6a8342209454a"
+    },
+    {
+      "id": "jobvite",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobs.jobvite.com",
+        "app.jobvite.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "4fbba49961d9a9f505ca6573a278339abe42c4d3ae4e98406cfab48dfeabae63"
+    },
+    {
+      "id": "join",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "join.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "35ecc00a8c520c49b2d2216c369ff4396840f85fd398c2d178c39ba3698de484"
+    },
+    {
+      "id": "joinup",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "joinup.ch"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "3c37b4f1fbb5affb9d0c1c4f29372b3816fb95e6d49c8d5e7759727178e15a3f"
+    },
+    {
+      "id": "justjoin",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "justjoin.it"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "f6536dd6705d461dc299b67143a2283cbc29bc4cddf9f94e2553dc24445eeded"
+    },
+    {
+      "id": "kalibrr",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.kalibrr.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "999d6bfc18ac681c2fa4efbcd66c136c2398c9faa3f8cb9dee7d9983e82f93ac"
+    },
+    {
+      "id": "kariyer",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.kariyer.net",
+        "candidatewebapigw.kariyer.net"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "4e92de14c23c53fd3aa6c4ac4a4d445dc92921d244446f9f6472d61764995eb4"
+    },
+    {
+      "id": "keka",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "acme.keka.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "13dc2276c3010c4561e47286883b335261b6668b6fa6203b5e56a48517dade35"
+    },
+    {
+      "id": "kula",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "careers.kula.ai",
+        "kula.ai"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "6a2820e204c8511da92e017ab132aa55a906d4812af07216e3ecda01c98fe3dd"
+    },
+    {
+      "id": "landingjobs",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "landing.jobs"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "3650633058372536965793f2593e115abc2e178d583c16ecd2b57c4e54647af8"
+    },
+    {
+      "id": "larajobs",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "larajobs.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "f449c2b48cbe81d5e4b84008de2ffbfc9d175bd07a91e226d3a2a3f2983171fa"
+    },
+    {
+      "id": "lever",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "full_when_present",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.coalfire.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "2361dd642175620cc6913a353f8d2e18a6c4f4572b2b6351c5544b80d8f9a01c"
+    },
+    {
+      "id": "local-parser",
+      "kind": "local_parser",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "blocked",
+      "reason": "Executable local parsers require separate approval; never run by discovery.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "567dad2a04c6d87fb07e4440eb0494bb91d526199d755bd4bcd9c813291acd48"
+    },
+    {
+      "id": "magneto",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.magneto365.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "8ffcb0296cfdaeda515ed8402cabc8170845511ff441948c8b86b9bdaca891de"
+    },
+    {
+      "id": "manfred",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.getmanfred.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "945955c114ebc06ac007c11a331f4c78c224484445a7d9baf5f559356fc0f912"
+    },
+    {
+      "id": "meituan",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "zhaopin.meituan.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "2f7820a44fd431b5cad1aa1dd3ad2f198cd1a3920b6e154f4f4cc250265b64fd"
+    },
+    {
+      "id": "mokahr",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "blocked",
+      "reason": "Encrypted payload/session handling needs a separate transport review.",
+      "hosts": [
+        "app.mokahr.com",
+        "hire-r1.mokahr.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "99734edd64707bc4eeb2335050be811e2f16496cc442aecbd4d9bc1640f5b2c1"
+    },
+    {
+      "id": "mycareersfuture",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "api.mycareersfuture.gov.sg"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "2b52912b52affb60a01d0279e740ab56139b606e6dcfc1de494f8b8a039f9d56"
+    },
+    {
+      "id": "neogov",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.schooljobs.com",
+        "www.governmentjobs.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "ceb69dc6587f7504c2ce4f3754e7fb01b9c4d4509a90be56034079f407e8a07e"
+    },
+    {
+      "id": "nodesk",
+      "kind": "board_wide",
+      "region": "remote",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "nodesk.co"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "3cce7d42ceedcb900c247ad47d688407483d4ec25dc3e75f35d70ed3218877ec"
+    },
+    {
+      "id": "nofluffjobs",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "nofluffjobs.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "a6d45656ae31facb582101ec5560bdec9f8cb3a6f187a7f25d6dfc9edd7b5db5"
+    },
+    {
+      "id": "notion",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "acme.notion.site"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "edff4ea891da91627524989f836b20ba9ac4937e0a68a8d11b0f33e864c6c746"
+    },
+    {
+      "id": "occ",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.occ.com.mx"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "e21091dd8efdded98afee5d2cc99fcc202a0468a74f95c0f80ff515ebf20a994"
+    },
+    {
+      "id": "oraclecloud",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "efb053e752bd2a4e54c2fe24e544eb31549f9a9fd804b66c46bc5d0715b1206a"
+    },
+    {
+      "id": "pageup",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "careers.pageuppeople.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "ed60fc3311aacfcb14f3206fc10a819bafb486eafbf4581006d907da0b481db8"
+    },
+    {
+      "id": "paylocity",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "recruiting.paylocity.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "5f183ad3ad5a8e87cbe551deaaedb5edf48d46cd4f079693f66e9ec3db534d2c"
+    },
+    {
+      "id": "peoplesoft",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "blocked",
+      "reason": "Stateful session transport is not approved in the read-only bridge.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "0362a38eb050658dcfedee2e912a37be2a459a3d2343d382ca7cf512fb8d3a63"
+    },
+    {
+      "id": "personio",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "2da22af57ba907c627ba48da8857d55b5e2e7c27858e0a919cc545a5e6b239b2"
+    },
+    {
+      "id": "phenom",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "06b6d5996446c7c7c969f34e2479ee0bcbfb2ab3cf5fed6df847bb82e4515084"
+    },
+    {
+      "id": "pinpoint",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.youtube.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "6df845e0b3eb75dd36f6c570d7fe44376397e4296d3ed1a4b360fdf2cb33e11f"
+    },
+    {
+      "id": "platsbanken",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobsearch.api.jobtechdev.se",
+        "arbetsformedlingen.se"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "0f208c3d19b70e3773efc57cf6fcceb08face1283eceb822296bfeb2437ac855"
+    },
+    {
+      "id": "polymer",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobs.polymer.co",
+        "api.polymer.co"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "cae76764fa1f8a2909292a277f05ca7651f00453a4a79886b4cceb40eb6ba0f0"
+    },
+    {
+      "id": "pracecz",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.prace.cz"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "2507d4c621cbf88085f9d2f23ebb8235cbf79cfc6f1221b7968019e4c629fcf2"
+    },
+    {
+      "id": "prevueaps",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "11eb6b75a0f8e03af31f41102b5c7b4485889de930a1735662e3f7ea9dc86266"
+    },
+    {
+      "id": "pythonorg",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.python.org"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "b5ecc3b560865a8a06f7122093d9de3ddf65b7b5806fa6a1adfc87d9f6fe291e"
+    },
+    {
+      "id": "radancy",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "7ca7d53b39bb47e105b1a39b1f6ee9c5cc50cb6bf3c8bca596ff4eab3daa1827"
+    },
+    {
+      "id": "recruitee",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "90730af3ea72e8fd1f72b4389e1ddb8d37d66f0fd80ce6caa7242d279882ad7c"
+    },
+    {
+      "id": "redrover",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobs.redroverk12.com",
+        "api.redroverk12.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "1239c2ed4946d4eeb8e709e18899e240d82531f7ebaff6ecb884e8548f136906"
+    },
+    {
+      "id": "remote-com",
+      "kind": "board_wide",
+      "region": "remote",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "apply.remote.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "e4f29ade0a844ea4d8463de013b1af2872d203966526051bc53dcd8a1db36ca0"
+    },
+    {
+      "id": "remoteok",
+      "kind": "board_wide",
+      "region": "remote",
+      "query": "feed_local_filter",
+      "description": "full_when_present",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "remoteok.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "97423b09fef6c7aa990bfb3239375d285ea37ba7783323173ed315f20d23b333"
+    },
+    {
+      "id": "remotive",
+      "kind": "board_wide",
+      "region": "remote",
+      "query": "provider_specific",
+      "description": "full_when_present",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "remotive.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "6130ced6de93aae216287bc9968a2ef362fbeb1e48ea0bbdb24fb8548882dced"
+    },
+    {
+      "id": "remotli",
+      "kind": "board_wide",
+      "region": "remote",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "remotli.ch"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "080be4a8433a4e02382326124f2ee149bdc6147e5ae2bcc5f854c3cc2fdf9112"
+    },
+    {
+      "id": "rexx",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobs.exampleco.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "077c8c1bfcb71e392a7ee6905dda5007a85ceabc225d16405b6ee3989b3bf076"
+    },
+    {
+      "id": "rheinmetall",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.rheinmetall.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "4052aea4ab976702417ca2a3f2d54242e08c18864aa99f39aa4087183ee2f532"
+    },
+    {
+      "id": "rippling",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "ats.rippling.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "89e6b72e05ed7725b0bca4e805719a2283d41fde90bbad43b094ef71a3ba9778"
+    },
+    {
+      "id": "schoolspring",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "acme.schoolspring.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "d48d274e7a26d1c90602c09f736b3d20d689ff6bcef559229379f79f60f82387"
+    },
+    {
+      "id": "senjob",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "senjob.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "b4b520dd85b24a8a3fa9454ede3f39602df1eb371b965df6e65e07237814d41d"
+    },
+    {
+      "id": "sitemap",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.sitemaps.org",
+        "careers.example.com",
+        "schema.org"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "a1c6c2c3dedc66386b5eb3c426e0ae300690727bc8d4341ff726e5398c021b5f"
+    },
+    {
+      "id": "smartrecruiters",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "careers.smartrecruiters.com",
+        "api.smartrecruiters.com",
+        "jobs.smartrecruiters.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "045a04cd9801faab70d5309359427097bba8759cbca7ada2350ae44c41505d64"
+    },
+    {
+      "id": "softgarden",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "783822ba7a5daaee30a8e174c96787ce8e56a28ae7d229a673acf5e761ed91f4"
+    },
+    {
+      "id": "solidjobs",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "feed_local_filter",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "solid.jobs"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "bcd19db094a264b5fd3f2d80d242edc40835b52319cf6a34ba0cbfc4c4e95205"
+    },
+    {
+      "id": "startup-jobs",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "startup.jobs",
+        "cdn.startup.jobs"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "2b2fcee510dc30cf8e9868828800468124f604c5c2bdafda1cb4332676eee345"
+    },
+    {
+      "id": "successfactors-classic",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "blocked",
+      "reason": "Stateful session transport is not approved in the read-only bridge.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "da7fee02ecd70a2f814665e5fe5ffba3cdd5b2d7c1dd2e15c728cf5a29f25d20"
+    },
+    {
+      "id": "successfactors",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "9c553bfcc93567462d014316bd1e8d494aa063852c97da4c528bc40e9aec75ab"
+    },
+    {
+      "id": "taleez",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "taleez.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "207d8c6cc6857f5396c127b41d6d067225d5d16eb70e72738615853f30c82ec5"
+    },
+    {
+      "id": "talentlink",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "emea3.recruitmentplatform.com",
+        "careers.example.org"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "28527deb682927e1a957fcd0d560a75eb3b040a15161e80e270f87c0fcfa7980"
+    },
+    {
+      "id": "taleo",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "1699237ed84310e9a09890bc9fec1d7cf02e69a9e3ccf365ec95efeddfeb1f10"
+    },
+    {
+      "id": "teamtailor",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "4752ade0d469bb182798148873db589d75a02c603bf396d17f15dde53913cc77"
+    },
+    {
+      "id": "techinasia",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.techinasia.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "ffc472cde22a201a0a1fbd6761d1d11a789c076b243d2e1e5072a89e5e25491f"
+    },
+    {
+      "id": "telegram-channel",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "blocked",
+      "reason": "Not a public job-board API; requires a separate source policy.",
+      "hosts": [
+        "t.me",
+        "tabby.ai"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "d1312676d720bd20f8c65d1e570f81e4f71238e18dbad9e34af6453b449f44e1"
+    },
+    {
+      "id": "tencent",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "careers.tencent.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "5ef3d326296e22073583c3e33991e914d958cd52ee6c73be72641c6c2e5e8108"
+    },
+    {
+      "id": "tes",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.tes.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "7af1a3045409b1d31e3f0f55575f30d700babd0e6fa760cc074cdcf821d4f920"
+    },
+    {
+      "id": "thehub",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "thehub.io"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "5a0187bfe9f96ea1ccc2535b2d67deffcc7936702855486a33e00bffeabb919f"
+    },
+    {
+      "id": "themuse",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "blocked",
+      "reason": "Public endpoint has reported access challenges; not certified.",
+      "hosts": [
+        "www.themuse.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "10193436a341056096655286e61be9cbafea4caf9fd9a419a5c4c1207f7cc6fe"
+    },
+    {
+      "id": "tkms",
+      "kind": "single_employer",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "ab93c4cf26cc9358eea386299cd6ee46b5c6f7cc6299411778e2039878897125"
+    },
+    {
+      "id": "torre",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "retired",
+      "reason": "Upstream marks this service retired.",
+      "hosts": [
+        "search.torre.co",
+        "torre.ai"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "ae4d4a0b7fcd0242708b1d76a5a1ad136420c9029ccd5ef1e6c7bfd16c3559e2"
+    },
+    {
+      "id": "trakstar",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jsapi.recruiterbox.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "0d7e9eb886a3d47a324a8014ab1cbf55c0a89e8d32fa3d3211db2bd861919a50"
+    },
+    {
+      "id": "turbohire",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "thapi.azurewebsites.net"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "c5a6cc2b6323e10ad894905a2442b5573de3fd3e6823d3d4a11e8be3a13e5fdf"
+    },
+    {
+      "id": "ultipro",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "79e1c65766473847eea22995e60c51902d17983f009b012c85f96e40761c267f"
+    },
+    {
+      "id": "vdab",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.vdab.be"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "b24e19dcbc2b55d40318fe33410c709c203d7d66ba1080e4fd793f69cbf9b3b7"
+    },
+    {
+      "id": "velorahr",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "api.velorahr.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "fadeed7de9e91bec386022422a7150e19fa4638081653c54019dea15ca9c123b"
+    },
+    {
+      "id": "viterbit",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "careers.acme.example"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "aadbd763723a7c48b973f1790791d4fd053945dc65a0355e7f4452be743ac1aa"
+    },
+    {
+      "id": "wellfound",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "wellfound.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "9d12caec5c23915abc1a2833f0077b363538e13ee071416a5a162c5ae3500d70"
+    },
+    {
+      "id": "weworkremotely",
+      "kind": "board_wide",
+      "region": "remote",
+      "query": "feed_local_filter",
+      "description": "full_when_present",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "weworkremotely.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "db7e14a31caaaf9db7e026e8f969c9d54c929eed96d0de23615bf4df03e79009"
+    },
+    {
+      "id": "workable",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "apply.workable.com",
+        "www.workable.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "de6ec7a700e27c68eac916015b53e2733e138073a154c46692f2e97e38230f74"
+    },
+    {
+      "id": "workday",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "23andme.wd5.myworkdayjobs.com",
+        "www.ptc.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "bd05a4c9f9130228cf47e65cc3ec5edf567d5f700671027253cc8f0db5bd4ed8"
+    },
+    {
+      "id": "workingnomads",
+      "kind": "board_wide",
+      "region": "remote",
+      "query": "feed_local_filter",
+      "description": "full_when_present",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.workingnomads.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "4d3899480f1a3c1f3bf2e1e1b1d75295e376f9e39584b9d33c81c17eb75ca022"
+    },
+    {
+      "id": "wp-job-manager",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "jobs.example.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "9b210846026449f8e7fd7bc2ece8e7df571da64a164cbaa3a58c945877b9322d"
+    },
+    {
+      "id": "wttj",
+      "kind": "board_wide",
+      "region": "source_defined",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.welcometothejungle.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "9815eb67eabee8307db8c7c4855a12908e5d1f5170804dae8ee1b8dd40e52a0d"
+    },
+    {
+      "id": "yourator",
+      "kind": "board_wide",
+      "region": "regional",
+      "query": "provider_specific",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "www.yourator.co"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "282d622073c5ed898650eb6736ef6fe970e7ce988fc46ec0c62b7ca97cdb7f15"
+    },
+    {
+      "id": "zoho-recruit",
+      "kind": "tenant_ats",
+      "region": "source_defined",
+      "query": "tenant_or_employer",
+      "description": "summary_or_unknown",
+      "state": "available",
+      "reason": "Configuration and live source validation required.",
+      "hosts": [
+        "exampleco.zohorecruit.com"
+      ],
+      "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
+      "limits": {
+        "pages": 2,
+        "requests": 12,
+        "bytesPerResponse": 5242880,
+        "seconds": 80
+      },
+      "sha256": "a795efb936e4810566bb7eebb9751ea4663d8925af6a505f59654a6bcdf55db2"
+    }
+  ]
+}

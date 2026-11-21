@@ -19,6 +19,12 @@ file writes, private reads and subprocess execution; inherited secret is absent.
 Real Greenhouse provider parsing is exercised with an injected full-posting feed.
 These are fixtures, not a 153-provider live certification. No paid evaluation yet.
 
+Stage 2: production Next.js/Rust build and strict TypeScript passed. Isolated
+`upstream-discovery.test.mjs` passed, proving a board-wide result creates an
+opening for an unregistered employer, preserves its full description, deduplicates
+repeated retrieval, isolates another workspace and records a challenge as failure.
+Source-pack creation is idempotent. Raw feed bodies are not retained.
+
 ## Remaining Setup And Limitations
 
 Local approved candidate evidence, an accessible configured evaluation model,
