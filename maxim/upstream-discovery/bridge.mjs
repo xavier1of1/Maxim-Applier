@@ -3,7 +3,7 @@ import {fileURLToPath} from 'node:url';
 import {providerCapability,verifyBundle,vendorRoot} from './catalog.mjs';
 export {catalog,sourceLock,boardPack,remotePack,reverseFamilies,providerCapability,verifyBundle} from './catalog.mjs';
 let verified=false;
-export async function runProvider({provider,entry,maxRecords=500,signal,request,operation,forbiddenPath}){
+export async function runProvider({provider,entry,maxRecords=500,signal,request,operation,forbiddenPath,...contract}){
  const capability=providerCapability(provider);
  if(!operation&&(!capability||['blocked','retired'].includes(capability.state)))throw Object.assign(new Error(capability?.reason||'Unknown upstream provider.'),{code:'provider_unavailable'});
  if(!verified){verifyBundle();verified=true;}
@@ -30,6 +30,6 @@ export async function runProvider({provider,entry,maxRecords=500,signal,request,
     if(!done&&child.connected)child.send({type:'response',id:m.id,value});
    }catch(e){if(!done&&child.connected)child.send({type:'response',id:m.id,error:{code:e.code||'transport_failed',status:e.httpStatus,retryAfterSeconds:e.retryAfterSeconds,message:e.message}});}
   });
-  child.send({type:'execute',provider,entry,maxRecords,operation,forbiddenPath});
+  child.send({type:'execute',provider,entry,maxRecords,operation,forbiddenPath,...contract});
  });
 }

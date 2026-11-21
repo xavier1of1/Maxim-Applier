@@ -5,12 +5,13 @@ import {config} from '../server/config';
 import {digest} from '../server/auth';
 import {event} from '../server/commands';
 import {DomainError,invariant} from '../server/errors';
-import {secureGet} from '../server/discovery-network';
+import {secureGet,validateFeedUrl} from '../server/discovery-network';
 import {type Source,matchesRoleTerms} from '../server/discovery-providers';
 import {capability,publicUrl,upstreamEntry,upstreamNormalize,upstreamRun,upstreamCommit,type UpstreamRow} from '../server/upstream-discovery';
 import {finishWork,type WorkItem} from '../server/work';
 import {queueApplicationProjection} from '../server/application-authority';
 import {active,publishJob} from './discovery';
+import {inventoryBatch} from './discovery-inventory';
 
 export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal){
  const signal=AbortSignal.any([AbortSignal.timeout(85000),...(parentSignal?[parentSignal]:[])]),w=item.workspace_id;
@@ -37,7 +38,8 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
    async function request(url:string,options:{method?:string;body?:string;headers?:Record<string,string>}={}){
     invariant(counts.requests<18&&sourceRequests<12&&counts.bytes<20*1024*1024,'request_budget','Public search resource cap reached. Remaining coverage is uninspected.');
     const parsed=publicUrl(url),method=options.method||'GET';
-    invariant(method==='GET'||method==='POST'&&source.provider==='workday'&&parsed.hostname.endsWith('.myworkdayjobs.com')&&/^\/wday\/cxs\/[^/]+\/[^/]+\/jobs$/.test(parsed.pathname),'request_method_refused','Only public reads and the audited Workday search POST are allowed.');
+    validateFeedUrl(url,hosts);
+    invariant(method==='GET'||method==='POST'&&source.provider.replace(/^reverse:/,'')==='workday'&&parsed.hostname.endsWith('.myworkdayjobs.com')&&/^\/wday\/cxs\/[^/]+\/[^/]+\/jobs$/.test(parsed.pathname),'request_method_refused','Only public reads and the audited Workday search POST are allowed.');
     invariant(!options.body||typeof options.body==='string'&&Buffer.byteLength(options.body)<=16000,'request_body_refused','Public search body exceeds its bound.');
     const headers:Record<string,string>={};for(const [k,v] of Object.entries(options.headers||{}))if(['accept','accept-language','content-type'].includes(k.toLowerCase())&&typeof v==='string'&&v.length<200)headers[k]=v;
     const delay=await transaction(async tx=>{
@@ -58,8 +60,31 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
      await database().query("UPDATE discovery_requests SET status='failed',error_code=$1,http_status=$2,completed_at=now() WHERE workspace_id=$3 AND id=$4",[x.code||'transport_failed',x.httpStatus||null,w,id]);throw e;
     }
    }
-   const result=await upstreamRun(source.provider,upstreamEntry(source,query.terms),signal,request);
-   returned=result.returned;counts.returned+=returned;partial=Boolean(result.partial);coverage.truncation=result.partial;
+   let result;
+   if(source.provider.startsWith('reverse:')){
+    const batch=await inventoryBatch(item,source,signal,request,host=>hosts.push(host));
+    Object.assign(coverage,{kind:'reverse_ats',...batch.coverage,attemptedTenants:0,failedTenants:0});
+    result={jobs:[] as UpstreamRow[],returned:0,partial:batch.coverage.uninspected?{reason:'inventory_window'}:null};
+    let tenantErrors=0,consumed=0;
+    for(const entry of batch.entries){
+     if(signal.aborted||sourceRequests>=10){partial=true;break;}
+     try{
+      coverage.attemptedTenants=Number(coverage.attemptedTenants)+1;
+      consumed=Number(entry.inventoryOrdinal)+1;
+      const found=await upstreamRun(batch.family,{...entry,max_pages:2,greenhouse:{fetchDetails:false},workday:{fetchDetails:false}},signal,request);
+      for(const job of found.jobs)job.discoveryTenant=entry.careers_url;
+      result.jobs.push(...found.jobs);result.returned+=found.returned;if(found.partial)result.partial=found.partial;
+     }catch(e){tenantErrors++;coverage.failedTenants=tenantErrors;coverage.lastTenantError=(e as {code?:string}).code||'provider_failed';result.partial={reason:'tenant_failure'};
+      if(['quota_exceeded','auth_or_challenge','request_budget'].includes(String(coverage.lastTenantError)))break;
+     }
+    }
+    if(Number(coverage.attemptedTenants)===batch.entries.length)await batch.advance();
+    else{await batch.advance(consumed);result.partial={reason:'tenant_window_interrupted'};}
+    coverage.nextCursor=(Number(batch.coverage.cursor)+(Number(coverage.attemptedTenants)===batch.entries.length?batch.coverage.selected:consumed))%Math.max(batch.coverage.available,1);
+    if(tenantErrors&&tenantErrors===Number(coverage.attemptedTenants)&&batch.entries.length)errorCode=String(coverage.lastTenantError);
+   }else result=await upstreamRun(source.provider,upstreamEntry(source,query.terms),signal,request);
+   returned=result.returned;counts.returned+=returned;partial=partial||Boolean(result.partial);coverage.truncation=result.partial;
+   counts.uninspected+=Number(coverage.uninspected||0);
    const jobs=result.jobs,ids=new Set<string>();
    const pageId=crypto.randomUUID();
    // Raw HTML/JSON feed bodies are not stored. Retain compact normalized provenance once.
@@ -85,7 +110,7 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
    if(e instanceof DomainError&&['lease_lost','search_superseded','source_changed'].includes(e.code))throw e;
    errorCode=(e as {code?:string}).code||'provider_failed';status=errorCode;counts.failedSources++;
   }
-  if(!errorCode){counts.successfulSources++;if(!admitted)status='empty_success';}
+  if(!errorCode){counts.successfulSources++;if(!admitted)status='empty_success';}else if(status==='success'){counts.failedSources++;status=errorCode;}
   if(partial){status='partial';counts.partialSources++;}
   coverage.returned=returned;coverage.admitted=admitted;coverage.requests=sourceRequests;
   await transaction(async tx=>{

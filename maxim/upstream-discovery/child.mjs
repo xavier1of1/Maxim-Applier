@@ -5,6 +5,7 @@ import {spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import * as transport from './transport.mjs';
 const base=new URL('../vendor/career-ops-discovery/',import.meta.url),http=new URL('./transport.mjs',import.meta.url).href;
+const reverse=new URL('./reverse-contract.mjs',import.meta.url).href;
 const allowed=new Set(['fs','fs/promises','path','url','crypto','util','buffer','async_hooks']);
 registerHooks({resolve(specifier,context,next){
  if(specifier.endsWith('/_http.mjs')||specifier==='./_http.mjs')return {url:http,shortCircuit:true};
@@ -12,7 +13,7 @@ registerHooks({resolve(specifier,context,next){
   if(!allowed.has(specifier.replace(/^node:/,'')))throw Object.assign(new Error('Unapproved provider dependency.'),{code:'dependency_refused'});
  }
  const r=next(specifier,context);
- if(r.url.startsWith('file:')&&!r.url.startsWith(base.href)&&r.url!==http)throw Object.assign(new Error('Provider import outside pinned source.'),{code:'dependency_refused'});
+ if(r.url.startsWith('file:')&&!r.url.startsWith(base.href)&&r.url!==http&&r.url!==reverse)throw Object.assign(new Error('Provider import outside pinned source.'),{code:'dependency_refused'});
  return r;
 }});
 globalThis.fetch=transport.fetchResponse;
@@ -27,6 +28,14 @@ process.once('message',async m=>{
   const lock=JSON.parse(readFileSync(new URL('source-lock.json',base),'utf8'));
   // Integrity is checked again in the execution process before any provider import.
   for(const [file,hash] of Object.entries(lock.hashes))if(createHash('sha256').update(readFileSync(new URL(file,base))).digest('hex')!==hash)throw new Error('Pinned source integrity failure.');
+  if(m.operation==='inventory_contract'){
+   const {SOURCES}=await import(reverse),source=SOURCES[m.family];
+   if(!source)throw new Error('No upstream inventory for this family.');
+   let rows=m.rows||[];
+   if(m.text!==undefined)rows=source.parseDataset?source.parseDataset(m.text):JSON.parse(m.text);
+   if(!Array.isArray(rows)||rows.length>100000)throw new Error('Inventory must be a bounded array.');
+   process.send({type:'result',value:{dataset:source.dataset,restartOnResume:source.restartOnResume===true,rows:m.text!==undefined?rows:undefined,entries:rows.slice(0,m.maxEntries||20).map((row,index)=>{const entry=source.toEntry(row);return entry?{...entry,inventoryOrdinal:index}:null;}).filter(Boolean)}});return;
+  }
   if(!/^[a-z0-9-]+$/.test(m.provider)||['local-parser','torre'].includes(m.provider))throw new Error('Provider execution refused.');
   const {default:installed}=await import(new URL('providers/'+m.provider+'.mjs',base));
   const {resolveProvider}=await import(new URL('providers/_registry.mjs',base));

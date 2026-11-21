@@ -25,6 +25,13 @@ opening for an unregistered employer, preserves its full description, deduplicat
 repeated retrieval, isolates another workspace and records a challenge as failure.
 Source-pack creation is idempotent. Raw feed bodies are not retained.
 
+Stage 3: five bridge unit tests passed, including actual extracted upstream
+inventory normalization for eight tenant directories and the ninth Workable feed
+contract. Extended isolated integration passed: a five-tenant directory scans a
+four-tenant window, reports partial coverage, then reaches the fifth employer on
+the next run without downloading the directory again. Cursor updates commit only
+against current authorization. Workable's large feed stays explicitly deferred.
+
 ## Remaining Setup And Limitations
 
 Local approved candidate evidence, an accessible configured evaluation model,

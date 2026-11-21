@@ -33,3 +33,12 @@ test('restricted providers fail closed, provider drift is an error, cancellation
  await assert.rejects(()=>runProvider({provider:'lever',entry:{name:'Drift',careers_url:'https://jobs.lever.co/drift'},request:async()=>({status:200,contentType:'application/json',text:'{}'})}),e=>e.code==='provider_failed');
  const c=new AbortController();c.abort();await assert.rejects(()=>runProvider({provider:'builtin',entry:{},signal:c.signal,request:async()=>{}}),e=>e.code==='request_cancelled');
 });
+test('reverse inventory extraction retains upstream contracts without importing scanner writers',async()=>{
+ const fixtures={greenhouse:['new-labs','../../private'],lever:['new-labs'],ashby:['new-labs'],workday:['newlabs|wd5|Careers','wd5|wd5|Careers'],icims:['careers-newlabs'],bamboohr:['newlabs'],paylocity:[{guid:'01234567-89ab-cdef-0123-456789abcdef',name:'New &amp; Labs'}],join:['new-labs']};
+ for(const [family,rows] of Object.entries(fixtures)){
+  const c=await runProvider({operation:'inventory_contract',family,rows,request:async()=>{throw Error('Contract cannot fetch.');}});
+  assert.ok(c.dataset.startsWith('https:'));assert.equal(c.entries.length,1,family);assert.ok(c.entries[0].careers_url.startsWith('https:'));
+ }
+ const workable=await runProvider({operation:'inventory_contract',family:'workable',rows:[],request:async()=>{}});
+ assert.match(workable.dataset,/workable.xml$/);assert.equal(workable.restartOnResume,true);
+});

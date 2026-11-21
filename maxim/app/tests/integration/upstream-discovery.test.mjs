@@ -26,10 +26,22 @@ test('board-wide discovery admits unknown employers through the retained store a
   assert.equal((await(await h.request(h.b,'/api/discovery')).json()).jobs.length,0);
   assert.equal(v.catalog.providers.length,153);assert.equal(v.catalog.providers.find(c=>c.id==='torre').state,'retired');
   assert.ok(h.providerRequests.every(x=>!x.headers.cookie&&!x.headers.authorization));
+  const reverse=await command('enable_source_pack',{pack:'reverse_ats'});assert.equal(reverse.sources.length,9);
+  assert.equal(reverse.sources.find(s=>s.provider==='reverse:workable').enabled,false);
+  const directory=reverse.sources.find(s=>s.provider==='reverse:greenhouse');
+  h.providerRoutes.set('/Feashliaa/job-board-aggregator/main/data/greenhouse_companies.json',{body:['newlabs','secondlabs','thirdlabs','fourthlabs','lastlabs']});
+  for(const [i,slug] of ['newlabs','secondlabs','thirdlabs','fourthlabs','lastlabs'].entries())h.providerRoutes.set('/v1/boards/'+slug+'/jobs',{body:{jobs:[{id:700+i,title:'Software Engineer',absolute_url:'https://job-boards.greenhouse.io/'+slug+'/jobs/'+(700+i),location:{name:'Reston, VA'},content:'<p>Build customer software integrations and automate internal workflows using APIs.</p>'}]}});
+  const reversed=await command('start_search',{sourceIds:[directory.id],terms:['software']});const first=await done(reversed.id);
+  assert.equal(first.r.status,'partial',JSON.stringify(first.v.attempts.filter(a=>a.run_id===reversed.id)));assert.equal(first.r.counts.created,4);
+  const attempt=first.v.attempts.find(a=>a.run_id===reversed.id);assert.equal(attempt.coverage.available,5);assert.equal(attempt.coverage.nextCursor,4);assert.equal(attempt.coverage.uninspected,1);
+  const next=await command('start_search',{sourceIds:[directory.id],terms:['software']});const second=await done(next.id);
+  assert.equal(second.r.counts.created,1,'rotating window reaches the fifth employer');
+  assert.equal(h.providerRequests.filter(r=>r.url.includes('greenhouse_companies.json')).length,1,'directory cached, not repeatedly copied');
+  assert.ok(second.v.jobs.some(j=>j.company==='lastlabs'));
   await command('add_source',{name:'Forbidden',provider:'local-parser',configuration:{parser:{command:'cmd.exe'}}},400);
   h.providerRoutes.set('/api/remote-jobs',{status:403,body:{}});
   const failed=await command('start_search',{sourceIds:[s.id],terms:['software']});const f=await done(failed.id);
   assert.equal(f.r.status,'failed');assert.equal(f.v.attempts.find(a=>a.run_id===failed.id).error_code,'auth_or_challenge');
-  assert.equal((await h.sql('SELECT count(*)::int AS n FROM jobs WHERE workspace_id=$1',[h.c.workspaceId])).rows[0].n,1,'challenge cannot become empty results or corrupt prior job');
+  assert.equal((await h.sql('SELECT count(*)::int AS n FROM jobs WHERE workspace_id=$1',[h.c.workspaceId])).rows[0].n,6,'challenge cannot become empty results or corrupt prior jobs');
  }finally{if(worker)await h.stopWorker(worker);await h.close();}
 });
