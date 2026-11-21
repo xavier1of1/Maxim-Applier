@@ -4,6 +4,13 @@ Current extension: [Discovery intelligence roadmap](discovery-intelligence/READM
 adds bounded discovery/scoring, compact history, global filters and Home. Its stage
 numbers 0-5 are separate from the original MVP S0-S11 below.
 
+New research (2026-11-21): [Market-wide discovery and responsibility-based search](source-discovery-research.md)
+audits the retained fork against current upstream and proposes board-wide retrieval
+beyond company watchlists. Research only; no expanded-source capability is claimed.
+The owner rejected its connector-pilot approach. The replacement
+[upstream-native discovery proposal](upstream-discovery-design.md) adopts the
+1.40.0 discovery subsystem and accounts for the complete provider catalog.
+
 **Status:** Revision 0.5. S0-S5 verified; S6-S11 In progress with integrated code and outstanding final/live gates. See [current verification](reviews/mvp-completion-verification.md) and [operating guide](../docs/maxim/setup.md).
 **Updated:** 2026-11-17.
 **Demo target:** 2026-11-19. No claim that this entire roadmap fits before that date.
@@ -32,6 +39,8 @@ The refinement adds detailed stage plans, a code/design drift report and executa
 | [Shared stage contracts](stages/contracts.md) | Runtime binding, commands, identity, storage, worker and consumer contracts | Proposed implementation detail with S0 gates |
 | [Refinement and validation](reviews/roadmap-refinement.md) | Changes, executed tests, remaining runtime gaps | Actual evidence scope recorded |
 | [External component assessment](external-components-assessment.md) | All ten suggestions, deep Dossier review, licensing, adoption gates | Primary-source research, not a benchmark or integration claim |
+| [Market-wide discovery research](source-discovery-research.md) | Board-wide sources, current upstream audit, responsibility-led search, source terms and validation | Proposed direction; no new scanner deployed |
+| [Upstream-native discovery design](upstream-discovery-design.md) | Adopt 1.40.0 registry, board-wide execution and reverse ATS discovery behind a read-only bridge | Replacement proposal for owner review; not implemented |
 | [Operational setup and inputs](operational-setup.md) | Accounts, dependencies, private data, proposed settings, setup order | Checklist; distinguishes existing from planned configuration |
 | [Development workflow](development-workflow.md) | Installed EGM plugin and review/implementation discipline | Development instructions; formal review still requires its human gates |
 | [Original workflow and comments](current-system-workflow.md) | Current-system explanation and Xavier's unfinished annotations | Preserved without editing |
