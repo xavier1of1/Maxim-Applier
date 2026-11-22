@@ -31,7 +31,10 @@ export async function inventoryBatch(item:WorkItem,source:Source,signal:AbortSig
  }
  const offset=saved.record_offset,rows=rotateInventory(saved.entries,offset,4);
  const selected=await contract(family,signal,{rows,maxEntries:4});
- for(const entry of selected.entries){publicUrl(String(entry.careers_url));allowHost(new URL(String(entry.careers_url)).hostname);}
+ for(const entry of selected.entries){
+  publicUrl(String(entry.careers_url));allowHost(new URL(String(entry.careers_url)).hostname);
+  if(family==='icims'&&Array.isArray(entry.fallback_urls))for(const url of entry.fallback_urls){const u=publicUrl(String(url));invariant(u.hostname.endsWith('.icims.com'),'inventory_host_refused','Inventory fallback does not belong to its ATS.');allowHost(u.hostname);}
+ }
  return {family,entries:selected.entries,coverage:{dataset:definition.dataset,inventoryAsOf:new Date(saved.fetched_at).toISOString(),inventoryHash:saved.content_hash,available:saved.available,cursor:offset,selected:rows.length,uninspected:Math.max(0,saved.available-rows.length),invalidEntries:rows.length-selected.entries.length},
   advance:async(consumed=rows.length)=>transaction(async tx=>{await active(tx,item,source);await tx.query('UPDATE discovery_inventories SET record_offset=($1::integer+$2::integer)%greatest(available,1) WHERE workspace_id=$3 AND source_id=$4 AND content_hash=$5',[offset,consumed,item.workspace_id,source.id,saved.content_hash]);})};
 }

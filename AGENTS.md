@@ -78,6 +78,14 @@ This repository is Xavier Kubancik's controlled Maxim Apply fork of Career-Ops. 
 
 ### November 2026 Planning And Development
 
+- Upstream-native discovery: read `roadmap/upstream-discovery/README.md` and
+  `docs/maxim/upstream-discovery.md`. Keep the hash-pinned 1.40.0 bundle separate
+  from retained native engine behavior. All provider I/O runs through the bounded
+  read-only bridge and existing public-peer checks; never import native scanner
+  writers, executable parsers, credentials or private candidate context. Preserve
+  honest coverage, posting completeness, exact GraphQL-read restrictions and
+  current Career-Ops scoring. A source pack is not spending authorization.
+
 - Discovery intelligence: read `roadmap/discovery-intelligence/README.md` and
   `docs/maxim/discovery-intelligence.md`. Reuse the existing worker, strict policy
   schema and Career-Ops evaluator. Cheap screening is not a fit score. Do not

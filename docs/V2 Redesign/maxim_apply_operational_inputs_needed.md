@@ -8,6 +8,16 @@ See [the current planning index](../../roadmap/README.md) for accepted direction
 
 ## November Workspace Inputs
 
+**Discovery update (2026-11-21):** The enabled public market packs require no new
+job-search API key, LinkedIn account, Discord bot or paid search subscription.
+Review work families, experience levels, NoVA/DC scope and source packs in
+Discovery; see the [operating guide](../maxim/upstream-discovery.md). Scoring still
+needs approved professional facts, explicitly disclosed target roles/levels,
+a configured model and reviewed limits. Only role/experience-level disclosure
+was newly authorized; the original shared personal source stays local-only.
+Access challenges and the deferred Workable feed are not setup steps that can
+be resolved by inventing credentials or bypassing restrictions.
+
 **Current implementation update (2026-11-17):** Follow
 [the actual start/use guide](../maxim/setup.md),
 [implemented configuration inventory](../../roadmap/operational-setup.md) and

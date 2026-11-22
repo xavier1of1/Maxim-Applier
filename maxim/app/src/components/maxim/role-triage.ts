@@ -1,4 +1,4 @@
-export type PostingPolicy = {eligibility?:string;flags?:{flagType:string;reason:string;severity:string}[]};
+export type PostingPolicy = {eligibility?:string;detailStatus?:string;flags?:{flagType:string;reason:string;severity:string}[]};
 type AttributedRole={company:string;opening_key?:string|null;application_id?:string|null;discovery_state?:string;discovery_policy?:PostingPolicy};
 
 export const locationFilters=[

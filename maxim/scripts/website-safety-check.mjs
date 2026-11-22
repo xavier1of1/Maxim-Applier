@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {createHash} from 'node:crypto';
+import {verifyBundle} from '../upstream-discovery/catalog.mjs';
 
 import { fromRoot } from "../lib/path-utils.mjs";
 
@@ -33,11 +35,16 @@ function listFiles(root) {
 
 export function runSafetyCheck() {
   const findings = [];
+  const reviewed=[];
+  const audit=JSON.parse(fs.readFileSync(fromRoot('maxim/upstream-discovery/safety-review.json'),'utf8'));
+  try{if(audit.commit!=='194933aa111aa4f2fd3ffa69048347fa6a974d27')throw Error('Unreviewed source version');verifyBundle();}catch{findings.push({file:'maxim/vendor/career-ops-discovery',code:'pinned_source_integrity'});}
   for (const file of scannedRoots.flatMap(listFiles)) {
     const relative = path.relative(fromRoot(), file);
     const text = fs.readFileSync(file, "utf8");
     for (const check of prohibited) {
       if (check.pattern.test(text)) {
+        const normalized=relative.replaceAll('\\','/'),prefix='maxim/vendor/career-ops-discovery/',exception=normalized.startsWith(prefix)?audit.files[normalized.slice(prefix.length)]:null;
+        if(exception?.code===check.code&&createHash('sha256').update(text).digest('hex')===exception.sha256){reviewed.push({file:relative,code:check.code,reason:exception.reason});continue;}
         if (relative.includes("website-safety-check") || relative.includes("no-anti-bot")) {
           continue;
         }
@@ -48,6 +55,7 @@ export function runSafetyCheck() {
   return {
     ok: findings.length === 0,
     findings,
+    reviewedPinnedFindings:reviewed,
     scannedRoots,
     message:
       findings.length === 0

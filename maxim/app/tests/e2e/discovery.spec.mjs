@@ -22,6 +22,7 @@ for(const width of [1600,390]){
   ]}});
   await dialog.getByRole('button',{name:'Add source',exact:true}).click();await expect(dialog).toBeHidden();
   await page.getByRole('textbox',{name:/^Role terms/}).fill('Software');
+  await choose(page,'Match role terms in','Titles');
   await page.getByRole('checkbox',{name:'UI Discovery '+width+' greenhouse'}).check();
   await page.getByRole('button',{name:'Search jobs',exact:true}).click();
   const jobs=page.getByRole('region',{name:'Discovered jobs'});await expect(jobs).toContainText('Software Engineer '+width,{timeout:30000});

@@ -53,3 +53,15 @@ test('rotating screening windows reach eligible jobs beyond a held 200-row prefi
  await apiCommand(h,'intelligence','save',{expectedRevision:0,changes:policy,acknowledgeAutomation:true});await apiCommand(h,'intelligence','run',{});await h.startWorker();
  await until(async()=>(await h.sql("SELECT 1 FROM evaluations WHERE workspace_id=$1 AND job_id=$2 AND status='completed'",[h.c.workspaceId,good])).rowCount,'eligible role after held prefix');assert.equal(h.captured.length,1);
 });
+
+test('local complete candidates remain visible when the all-scanned window rotates into a global backlog',{timeout:120000},async t=>{
+ const h=await harness();t.after(()=>h.close());await person(h);
+ await h.sql("INSERT INTO jobs(id,workspace_id,company,title,location,description,opening_key,posted_at,discovery_policy) SELECT gen_random_uuid(),$1,'Global '||n,'Software Engineer','San Francisco, CA','Rust customer software integrations and useful production delivery.','global:'||n,now(),'{}' FROM generate_series(1,220) n",[h.c.workspaceId]);
+ const local=await job(h,'Rust customer software integrations and useful production delivery.',60);
+ await h.sql("UPDATE jobs SET opening_key='local:fixture' WHERE id=$1",[local]);
+ await apiCommand(h,'intelligence','save',{expectedRevision:0,changes:{...policy,autoScore:false,scoringScope:'all_scanned',evaluationsPerCycle:1},acknowledgeAutomation:false});
+ let v=await(await h.request(h.a,'/api/intelligence')).json();assert.equal(v.preview.selected[0].id,local);
+ await apiCommand(h,'intelligence','run',{});await h.startWorker();
+ await until(async()=>(await h.sql("SELECT 1 FROM intelligence_cycles WHERE workspace_id=$1 AND status='completed'",[h.c.workspaceId])).rowCount);
+ v=await(await h.request(h.a,'/api/intelligence')).json();assert.equal(v.preview.window.offset,200);assert.equal(v.preview.selected[0].id,local);assert.equal(h.captured.length,0);
+});

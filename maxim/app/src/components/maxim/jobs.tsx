@@ -156,6 +156,7 @@ function JobDetail({job, data, api, disabled, refresh, navigate, onDirtyChange, 
   const dirty = note !== base.note;
   const conflict = dirty && job.revision !== base.revision;
   const detailPending=['queued','running'].includes(job.posting_detail_work?.status||'');
+  const incomplete=(job.description||'').trim().length<50||['summary','missing','unavailable'].includes(job.discovery_policy?.detailStatus||'');
   useBoundedRefresh(detailPending,refresh);
   async function fetchPosting(){
     if(disabled||busy||detailPending)return;
@@ -175,7 +176,14 @@ function JobDetail({job, data, api, disabled, refresh, navigate, onDirtyChange, 
     try{await api.post('/api/evaluations/commands',{commandId:crypto.randomUUID(),action:'start_evaluation',payload:{jobId:job.id,expectedJobRevision:job.revision,expectedCandidateRevision:data.candidate.revision}});await refresh();}
     catch(failure){setError(errorMessage(failure));}finally{setBusy('');}
   }
+  async function revalidate(){
+    if(disabled||busy||!job.fit?.revision)return;
+    setBusy('revalidate');setError('');
+    try{await api.post('/api/evaluations/commands',{commandId:crypto.randomUUID(),action:'revalidate_evaluation',payload:{evaluationId:job.fit.id,expectedRevision:job.fit.revision}});await refresh();}
+    catch(failure){setError(errorMessage(failure));}finally{setBusy('');}
+  }
   const url = safeExternalUrl(job.url);
+  const applicationUrl = safeExternalUrl(job.application_url);
   useEffect(() => { onDirtyChange(dirty); return () => onDirtyChange(false); }, [dirty, onDirtyChange]);
   useEffect(() => {
     if (!dirty && job.revision >= base.revision) {
@@ -246,7 +254,8 @@ function JobDetail({job, data, api, disabled, refresh, navigate, onDirtyChange, 
         <span>{job.company}</span><Pill tone={job.archived ? 'neutral' : 'green'}>{job.archived ? 'Archived' : 'Active'}</Pill></div>
       <h2>{job.title}</h2>
       <div className="job-facts"><span><MapPin size={14} aria-hidden="true" />{job.location || 'Location not specified'}</span>
-        {url && <a href={url} target="_blank" rel="noopener noreferrer">Original posting<ArrowUpRight size={14} aria-hidden="true" /></a>}</div>
+        {url && <a href={url} target="_blank" rel="noopener noreferrer">Original posting<ArrowUpRight size={14} aria-hidden="true" /></a>}
+        {applicationUrl&&applicationUrl!==url&&<a href={applicationUrl} target="_blank" rel="noopener noreferrer">Application page<ArrowUpRight size={14} aria-hidden="true" /></a>}</div>
       <div className="job-actions">
         {application ? <Button label={application.status === 'archived' ? 'Archived intent' : 'Application intent'}
           icon={<Glyph icon={Check} />} onClick={() => navigate({view: 'applications',application:application.id, filter: application.status === 'archived' ? 'archived' : 'active'})} />
@@ -264,10 +273,11 @@ function JobDetail({job, data, api, disabled, refresh, navigate, onDirtyChange, 
         <div className="section-heading"><h3>Career-Ops fit</h3><Pill tone={fit.tone}>{fit.label}</Pill></div>
         {score!==null?<p className="small muted">Evaluated {job.fit?.completed_at?formatDate(job.fit.completed_at,true):''} / candidate revision {job.fit?.candidate_revision}</p>
           :<p className="small muted">{!job.fit?'Scanned or saved, but not yet evaluated against your approved experience.':job.fit.status==='completed'||job.fit.status==='stale'?'The saved evaluation is outdated. Evaluate the current candidate and posting.':fit.label+'. No current fit score is available.'}</p>}
-        {(job.description||'').trim().length<50&&<p className="small muted">A full job description is required before evaluation.</p>}
+        {incomplete&&<p className="small muted">A verified full job description is required before evaluation.</p>}
         <div className="inline-actions job-fit-actions">
           <Button label={score===null?'Evaluate with Career-Ops':'Re-evaluate with Career-Ops'} icon={<Glyph icon={FileText}/>} variant="secondary" onClick={()=>void evaluate()}
-            isLoading={busy==='evaluate'||evaluating} isDisabled={disabled||Boolean(busy)||evaluating||job.archived||!data.settings.model.configured||data.candidate?.ownership!=='canonical'||(job.description||'').trim().length<50}/>
+            isLoading={busy==='evaluate'||evaluating} isDisabled={disabled||Boolean(busy)||evaluating||job.archived||!data.settings.model.configured||data.candidate?.ownership!=='canonical'||incomplete}/>
+          {job.fit?.status==='review_required'&&job.fit.revision&&<Button label="Recheck saved report" size="sm" icon={<Glyph icon={RefreshCw}/>} isDisabled={disabled||Boolean(busy)} isLoading={busy==='revalidate'} onClick={()=>void revalidate()}/>}
           {job.fit?.report_artifact_id&&<a className="text-link" href={'/api/artifacts/'+job.fit.report_artifact_id} target="_blank" rel="noreferrer">{score===null?'Previous report':'Full evaluation report'}<ArrowUpRight size={14}/></a>}
           {data.candidate?.ownership!=='canonical'&&<Button label="Review candidate knowledge" variant="ghost" onClick={()=>navigate({view:'candidate',knowledge:'facts'})}/>}
           {!data.settings.model.configured&&<Button label="Configure evaluation model" variant="ghost" onClick={()=>navigate({view:'settings'})}/>}
@@ -276,7 +286,7 @@ function JobDetail({job, data, api, disabled, refresh, navigate, onDirtyChange, 
       <section className="record-section">
         <div className="section-heading"><h3><FileText size={16} aria-hidden="true" />Job description</h3></div>
         {job.description ? <p className="posting-text">{job.description}</p> : <p className="muted section-empty">{job.source_platform==='greenhouse'?'Board summary only':'No description added.'}</p>}
-        {job.source_platform==='greenhouse'&&!job.archived&&(!job.description||job.description.trim().length<50)&&<div className="inline-actions">
+        {job.opening_key&&!job.archived&&incomplete&&<div className="inline-actions">
           <Button label="Fetch full posting" icon={<Glyph icon={RefreshCw}/>} onClick={()=>void fetchPosting()} isDisabled={disabled||Boolean(busy)||detailPending} isLoading={busy==='posting'||detailPending}/>
           {detailPending&&<Pill tone="amber">{job.posting_detail_work?.status}</Pill>}
           {job.posting_detail_work?.error_code&&<Pill tone="coral">{job.posting_detail_work.error_code.replaceAll('_',' ')}</Pill>}

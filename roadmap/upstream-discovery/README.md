@@ -33,7 +33,7 @@ flowchart LR
 | 3. Reverse ATS | Extracted upstream inventory contracts for nine families without importing native writers. Eight bounded directory runners, 24-hour compact cache and persisted rotating tenant cursor. Workable global feed explicitly disabled/deferred. | Five bridge tests and isolated integration passed: a fifth unknown employer is found on the next window, one cached directory, honest partial coverage. Live probe in Stage 6. | Complete, Workable large feed deferred |
 | 4. Search profile | Versioned owner-reviewed profiles with current evidence references, title aliases and responsibility groups. Rust screening runs on descriptions before title rejection in both search lanes; profile/candidate changes revoke stale runs. | 46 Rust tests, two profile unit tests, production build and extended isolated integration passed. Unexpected title rescued; clearance-required role remains blocked. Detail exploration completes in Stage 5. | Complete |
 | 5. Description and scoring | Added bounded verified ATS/JSON-LD detail acquisition, rotating title-miss exploration, manual refresh and full-description scoring gates. Fixed formatting-only score conflicts; saved reports can be locally revalidated without model spend. | 48 Rust tests and three detail tests passed; isolated board/detail/rescue/evaluation integration passed. Local revalidation and summary-hold regression added; live proof follows in Stage 6. | Complete, final regression/live proof follows |
-| 6. Experience and proof | Compact discovery/profile/catalog/coverage controls; agent reads/proposes through existing approval boundaries. Document exact live results, failures, storage and scoring yield. | Desktop/mobile UI, full practical regression suite, native compatibility and privacy/safety checks. | Pending |
+| 6. Experience and proof | Compact profile/experience-level/catalog/coverage controls; owner/agent review; corrected local-first scoring windows and full-evidence priority. | Full 145-test backend and 43-journey browser regressions; focused post-audit checks; live new employers, seniority holds and a current 4.0/T2 result. Exact evidence and external limits below. | Complete |
 
 Each stage is a scoped commit. Stage boundaries may share interfaces; a stage is
 not complete merely because a fixture or a populated catalog exists.
@@ -48,7 +48,9 @@ not complete merely because a fixture or a populated catalog exists.
 - Public read-only search POSTs are permitted only where the audited provider
   requires them. Never allow arbitrary browser actions or application submission.
 - No source/profile change authorizes paid evaluation, cleanup or remote eligibility.
-- Use existing 200-lead capacity/protected history rules. Do not silently delete
+- Use existing default 200-lead capacity/protected history rules. The owner explicitly
+  selected 600 and archival of 150 original unprotected records during execution.
+  Do not silently delete
   the owner's existing over-capacity backlog to make a demonstration pass.
 - Report partial coverage and skipped/uninspected records. No exhaustive-web claim.
 
@@ -68,5 +70,8 @@ not complete merely because a fixture or a populated catalog exists.
 ## Execution Record
 
 Implementation and live/test results will be recorded in [verification](verification.md).
+The subsequent [experience-level investigation](fit-audit.md) explains why the
+initial sample lacked qualified matches, what was corrected, what remains
+uncertain and how the newly approved target context changed a real evaluation.
 External availability, source rights, credentials and owner approvals are not
 simulated. Unavailable providers remain visible with the exact reason.

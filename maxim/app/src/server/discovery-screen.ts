@@ -1,6 +1,6 @@
 import {domain} from './domain';
 import type {UpstreamRow} from './upstream-discovery';
-export type ScreeningDecision={index:number;keep:boolean;explore:boolean;locationBlocked:boolean;reason:string;matchedGroups:unknown[]};
+export type ScreeningDecision={index:number;keep:boolean;explore:boolean;seniority:string|null;seniorityCompatible:boolean;locationBlocked:boolean;locationCompatible:boolean;reason:string;matchedGroups:unknown[]};
 export function screenDiscovery(rows:UpstreamRow[],profile:Record<string,unknown>,full:(row:UpstreamRow)=>boolean){
  const decisions:ScreeningDecision[]=[];
  // Bounded batches keep the Rust stdin contract and synchronous work below its limits.

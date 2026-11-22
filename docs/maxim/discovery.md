@@ -1,5 +1,10 @@
 # Coverage-Aware Discovery
 
+The original S4 employer-feed workflow below is retained. Expanded board-wide,
+experience-aware and reverse-ATS discovery now uses the
+[upstream-native discovery guide](upstream-discovery.md), not a required company
+watchlist. [Experience-level audit](../../roadmap/upstream-discovery/fit-audit.md).
+
 S4 adds discovery to the existing Next/Astryx workspace and durable worker. Career-Ops
 Greenhouse, Lever and Ashby mapping functions are retained, not replaced by a second
 scanner. The native scanner remains independently usable before application cutover.

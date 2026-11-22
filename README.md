@@ -2,7 +2,8 @@
 
 Local-first job discovery and reviewed application preparation, built on Career-Ops.
 The workspace remembers approved candidate evidence, finds postings on selected
-public boards, and spends a bounded evaluation allowance on a small shortlist.
+public boards, and spends a bounded evaluation allowance on a selected shortlist
+or the active scanned backlog, according to the owner's reviewed settings.
 Career-Ops' **1.0-5.0** result remains the only fit score. Submission is manual.
 
 ## Start Here
@@ -26,9 +27,12 @@ Stop without deleting data: `npm run maxim:workspace:stop`.
 2. **Settings:** connect an OpenAI API model/key. Review discovery limits and public
    sources. Scheduled scans, automatic paid scoring and cleanup start **off**;
    the automatic monetary allowance starts at **zero**.
-3. **Discovery:** select Greenhouse, Lever or Ashby boards and target title terms.
-   Searches use public provider feeds, not an LLM, LinkedIn login or universal web
-   search. Confirm coverage/source health; a keyword match is not a fit score.
+3. **Discovery:** review your search profile and enable a source pack. US technology
+   searches Built In, Wellfound, Hacker News and the a16z talent network across
+   employers. Reverse ATS discovers boards from eight rotating public directories;
+   specific Greenhouse/Lever/Ashby employers remain an optional monitoring lane.
+   Confirm actual source coverage; installed modules and keyword matches are not
+   verified searches or fit scores. [Discovery guide](docs/maxim/upstream-discovery.md).
 4. **Home / Jobs:** inspect current high-fit lanes and scores. Filter globally by
    company, industry, role type, location, posting age or current score, and sort
    highest-first. Unknown dates, industry and unevaluated/stale fit remain explicit.
@@ -43,7 +47,7 @@ flowchart LR
  Sources[Resume / declared facts] --> Review[Candidate review + disclosure]
  Review --> Facts[(Approved versioned knowledge)]
  Boards[Selected public job boards] --> Discover[Bounded discovery]
- Facts --> Screen[Cheap Rust shortlist]
+ Facts --> Screen[Cheap Rust work / experience / location screening]
  Discover --> Screen
  Screen --> Score[Budgeted Career-Ops evaluation]
  Score --> Jobs[Home / filtered Jobs]
@@ -65,7 +69,8 @@ flowchart TD
  Worker --> Rust[Rust policy, screening, metadata, flow aggregation]
  Worker --> CO[Retained Career-Ops prompts and report contract]
  CO --> Model[Configured OpenAI API]
- Worker --> Feeds[Greenhouse / Lever / Ashby feeds]
+ Worker --> Bridge[Read-only pinned Career-Ops 1.40.0 provider bridge]
+ Bridge --> Feeds[Board-wide search / rotating reverse ATS / tracked employers]
  Worker --> Browser[Native agent-browser]
  PG --> Adapters[Explicit candidate / application projections]
  Adapters --> Native[Compatible native Career-Ops CLI and Go dashboard]
@@ -74,9 +79,30 @@ flowchart TD
 No new service, vector store or resident model agent was added. The existing
 worker checks due persisted policies once a minute. Missed intervals coalesce.
 TypeScript retains authentication, transactions and network I/O; Rust owns pure
-domain logic. Migrations 013-015 add the discovery policy, receipts, allowance
-ledger, compact archive, proposals, filter metadata, per-source cursors and
-revision-bound automatic scoring holds.
+domain logic. Migrations 013-018 add the discovery policy, allowance ledger,
+compact archive, reviewed search profiles/proposals, per-source inventories and
+bounded posting-window cursors. Discovery adopts 153 classified upstream modules;
+152 load under the tested bridge, while the executable local parser stays denied.
+That is not 153 certified live search engines. Retained scoring/PDF/CLI behavior
+is not replaced by a wholesale upstream upgrade.
+
+```mermaid
+flowchart LR
+ Profile[Reviewed work families + aliases] --> Boards[Board queries / categories / locations]
+ Profile --> Reverse[Rotating employer directories]
+ Boards --> Posts[Original provider postings]
+ Reverse --> Posts
+ Posts --> Detail[Bounded verified full-description reads]
+ Detail --> Rust[Responsibility rescue + geography policy]
+ Rust --> Store[(Same jobs / aliases / observations)]
+ Store --> Score[Same budgeted Career-Ops evaluator]
+ Score --> Sort[Jobs: highest current score first]
+```
+
+Discovery receives no candidate facts, API keys or application records in its
+provider subprocess. It uses reviewed public retrieval rules and parent-controlled
+HTTP with deadlines, byte/request limits and pacing. Trusted pinned-code
+containment is tested; it is not an OS network sandbox for arbitrary hostile code.
 
 ## Spend Attention And Tokens Selectively
 
@@ -84,7 +110,7 @@ revision-bound automatic scoring holds.
 flowchart TD
  Scan[Public-feed matches] --> Rules[Location / clearance / freshness / title / approved-skill evidence]
  Rules --> Hold[Unknown / blocked / incomplete: visible hold]
- Rules --> Batch[Small employer-diverse batch + cumulative exploration]
+ Rules --> Batch[Shortlist or explicit all-scanned scope]
  Batch --> Allowance{Daily request / token / cost room?}
  Allowance -->|No| Wait[Hold until reviewed or next local day]
  Allowance -->|Yes| Reserve[Persist conservative reservation]
@@ -99,6 +125,12 @@ The preselection reasons are **not another fit score**. Approved model-permitted
 skill terms support screening; a full posting and canonical candidate knowledge
 are still required before evaluation. Failed/ambiguous requests are not silently
 repeated. Model pricing must be reviewed for the configured model.
+
+All scanned mode retains the complete active backlog rather than silently applying
+shortlist exclusions. Local, experience-compatible work is prioritized within it;
+rotating global windows cannot hide the local foreground. Full evidence, consent
+and allowances remain required. A highest-ranked T0/T1 is still not a qualified
+recommendation. [Experience-level investigation](roadmap/upstream-discovery/fit-audit.md).
 
 ```mermaid
 stateDiagram-v2

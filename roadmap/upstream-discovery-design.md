@@ -1,6 +1,10 @@
 # Upstream-Native Discovery Design
 
-Date: 2026-11-21. Status: proposal for owner review, not implemented.
+Date: 2026-11-21. Status: accepted direction, implemented through the
+[six-stage delivery roadmap](upstream-discovery/README.md). Measured acceptance,
+live limitations and explicitly deferred Workable ingestion are recorded in
+[verification](upstream-discovery/verification.md). Original comment blocks remain
+available for review; future-tense requirements below describe the accepted design.
 This replaces the connector-pilot architecture proposed in
 [the research report](source-discovery-research.md). Its source audit remains
 useful; its proposal to start around one external market-index service is not

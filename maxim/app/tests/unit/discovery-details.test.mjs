@@ -11,7 +11,13 @@ test('full posting extraction requires unambiguous matching employer/title and r
  assert.equal(structuredPosting(html([posting,posting]),row),null);
  assert.equal(structuredPosting('<main>'+posting.description.repeat(3)+'</main>',row),null,'long page text alone is not a complete posting');
  assert.equal(structuredPosting(html({...posting,validThrough:'2000-01-01'}),row),null);
+ assert.ok(structuredPosting(html(posting).replace('ld+json','ld&#x2B;json'),row),'HTML-encoded script MIME is decoded, not silently missed');
 });
+test('publisher-declared expired postings are explicit holds rather than new full evidence',async()=>{
+ const r=await enrichPosting(row,async()=>({text:html({...posting,validThrough:'2000-01-01'})}),()=>{});
+ assert.equal(r.full,false);assert.equal(r.status,'posting_expired');assert.equal(r.row.description,row.description);
+});
+
 test('known ATS details verify identity, preserve real requirements and refuse restricted destinations',async()=>{
  const gh={...row,url:'https://job-boards.greenhouse.io/newlabs/jobs/42'};const urls=[];
  const r=await enrichPosting(gh,async url=>{urls.push(url);return {text:JSON.stringify({id:42,title:gh.title,content:'&lt;p&gt;Build software integrations. An active TS/SCI clearance is required. Deliver customer workflows.&lt;/p&gt;'})};},()=>{});
@@ -22,4 +28,11 @@ test('known ATS details verify identity, preserve real requirements and refuse r
 test('missing, malformed and challenged detail responses remain held, not fabricated full descriptions',async()=>{
  for(const response of ['not-json','<html>Generic careers</html>']){const r=await enrichPosting(row,async()=>({text:response}),()=>{});assert.equal(r.full,false);}
  const r=await enrichPosting(row,async()=>{throw Object.assign(Error('Stop'),{code:'auth_or_challenge'});},()=>{});assert.equal(r.full,false);assert.equal(r.errorCode,'auth_or_challenge');
+});
+test('board detail API preserves actual application link and rejects closed or changed identities',async()=>{
+ const source={...row,url:'https://speedrun-talent-network.com/jobs/example-42',externalId:'42'};
+ const payload={id:'42',title:row.title,company:row.company,status:'open',description_text:'Build customer software integrations with REST APIs and automate workflows for production users.',apply:{kind:'external',url:'https://jobs.ashbyhq.com/newlabs/opening-42/application'}};
+ let called='';const r=await enrichPosting(source,async url=>{called=url;return {text:JSON.stringify({job:payload})};},()=>{});
+ assert.equal(r.full,true);assert.equal(r.row.applicationUrl,payload.apply.url);assert.match(called,/\/api\/v1\/jobs\/42\?source=career-ops/);
+ const closed=await enrichPosting(source,async()=>({text:JSON.stringify({job:{...payload,status:'closed'}})}),()=>{});assert.equal(closed.status,'posting_closed');assert.equal(closed.full,false);
 });

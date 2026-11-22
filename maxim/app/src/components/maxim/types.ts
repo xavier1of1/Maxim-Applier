@@ -25,6 +25,7 @@ export interface Job {
   title: string;
   location: string | null;
   url: string | null;
+  application_url?: string | null;
   description: string | null;
   note: string | null;
   revision: number;

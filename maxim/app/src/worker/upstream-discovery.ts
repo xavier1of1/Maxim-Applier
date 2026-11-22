@@ -7,7 +7,7 @@ import {event} from '../server/commands';
 import {DomainError,invariant} from '../server/errors';
 import {secureGet,validateFeedUrl} from '../server/discovery-network';
 import {type Source,matchesRoleTerms} from '../server/discovery-providers';
-import {capability,publicUrl,upstreamEntry,upstreamNormalize,upstreamRun,upstreamCommit,type UpstreamRow} from '../server/upstream-discovery';
+import {capability,canonicalOpeningUrl,publicUrl,publicDiscoveryRead,upstreamEntry,upstreamNormalize,upstreamRun,upstreamCommit,type UpstreamRow} from '../server/upstream-discovery';
 import {finishWork,type WorkItem} from '../server/work';
 import {queueApplicationProjection} from '../server/application-authority';
 import {active,publishJob,currentPosting} from './discovery';
@@ -23,7 +23,7 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
   await tx.query("UPDATE discovery_requests SET status='interrupted',error_code='worker_interrupted',completed_at=now() WHERE workspace_id=$1 AND run_id=$2 AND status='running'",[w,run.id]);
   return (await tx.query('SELECT * FROM discovery_queries WHERE workspace_id=$1 AND id=$2',[w,run.query_id])).rows[0];
  });
- const counts={matched:0,created:0,identityConflicts:0,successfulSources:0,failedSources:0,partialSources:0,requests:0,bytes:0,returned:0,uninspected:0,missingDescriptions:0,uniqueEmployers:0,sourceCount:query.source_snapshots.length};
+ const counts={matched:0,created:0,identityConflicts:0,successfulSources:0,failedSources:0,partialSources:0,requests:0,bytes:0,returned:0,uninspected:0,uninspectedTenants:0,tenantsScanned:0,missingDescriptions:0,uniqueEmployers:0,sourceCount:query.source_snapshots.length};
  const posting=query.filters.posting;
  const employers=new Set<string>();
  for(const source of query.source_snapshots as Source[]){
@@ -38,11 +38,26 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
    const live=(await database().query('SELECT next_retry_at FROM discovery_sources WHERE workspace_id=$1 AND id=$2',[w,source.id])).rows[0];
    invariant(!live?.next_retry_at||new Date(live.next_retry_at).getTime()<=Date.now(),'quota_exceeded','Source cooldown has not elapsed.',409);
    const hosts=[...new Set([...(capability(source.provider)?.hosts||[]),publicUrl(source.careers_url).hostname])];
+   async function fetchBoard(provider:string,entry:Record<string,unknown>){
+    const key=digest(String(entry.careers_url||source.careers_url));
+    const state=await transaction(async tx=>{
+     await active(tx,item,source);await tx.query('INSERT INTO discovery_source_cursors(workspace_id,source_id,record_offset) VALUES($1,$2,0) ON CONFLICT DO NOTHING',[w,source.id]);
+     return (await tx.query('SELECT posting_offsets FROM discovery_source_cursors WHERE workspace_id=$1 AND source_id=$2',[w,source.id])).rows[0].posting_offsets as Record<string,{offset:number;seen:number}>;
+    });
+    const offset=state[key]?.offset||0,result=await upstreamRun(provider,entry,signal,request,{recordOffset:offset});
+    await transaction(async tx=>{
+     await active(tx,item,source);
+     const current=(await tx.query('SELECT posting_offsets FROM discovery_source_cursors WHERE workspace_id=$1 AND source_id=$2 FOR UPDATE',[w,source.id])).rows[0].posting_offsets;
+     current[key]={offset:(offset+result.jobs.length)%Math.max(1,result.returned),seen:Date.now()};
+     const bounded=Object.fromEntries(Object.entries(current as Record<string,{seen:number}>).sort((a,b)=>b[1].seen-a[1].seen).slice(0,200));
+     await tx.query('UPDATE discovery_source_cursors SET posting_offsets=$1 WHERE workspace_id=$2 AND source_id=$3',[JSON.stringify(bounded),w,source.id]);
+    });return result;
+   }
    async function request(url:string,options:{method?:string;body?:string;headers?:Record<string,string>}={}){
     invariant(counts.requests<(posting?1:18)&&sourceRequests<12&&counts.bytes<20*1024*1024,'request_budget','Public search resource cap reached. Remaining coverage is uninspected.');
     const parsed=publicUrl(url),method=options.method||'GET';
     validateFeedUrl(url,hosts);
-    invariant(method==='GET'||method==='POST'&&source.provider.replace(/^reverse:/,'')==='workday'&&parsed.hostname.endsWith('.myworkdayjobs.com')&&/^\/wday\/cxs\/[^/]+\/[^/]+\/jobs$/.test(parsed.pathname),'request_method_refused','Only public reads and the audited Workday search POST are allowed.');
+    invariant(publicDiscoveryRead(source.provider,parsed,method,options.body),'request_method_refused','Only public reads and exact audited Workday/join search POSTs are allowed.');
     invariant(!options.body||typeof options.body==='string'&&Buffer.byteLength(options.body)<=16000,'request_body_refused','Public search body exceeds its bound.');
     const headers:Record<string,string>={};for(const [k,v] of Object.entries(options.headers||{}))if(['accept','accept-language','content-type'].includes(k.toLowerCase())&&typeof v==='string'&&v.length<200)headers[k]=v;
     const delay=await transaction(async tx=>{
@@ -56,7 +71,7 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
     await transaction(async tx=>{await active(tx,item,source);await tx.query("INSERT INTO discovery_requests(id,workspace_id,run_id,source_id,attempt_id,request_url,status,fixture_transport,started_at) VALUES($1,$2,$3,$4,$5,$6,'running',$7,now())",[id,w,item.input.runId,source.id,attempt,url,Boolean(fixture)]);});
     counts.requests++;sourceRequests++;
     try{
-     const r=await secureGet(target,{allowedHosts:hosts,fixtureOrigin:fixture,content:'public',method:method as 'GET'|'POST',body:options.body,headers,byteLimit:5*1024*1024,signal});counts.bytes+=r.bytes;
+     const r=await secureGet(target,{allowedHosts:hosts,fixtureOrigin:fixture,content:'public',method:method as 'GET'|'POST',body:options.body,headers,byteLimit:Math.min(5*1024*1024,20*1024*1024-counts.bytes),signal});counts.bytes+=r.bytes;
      await transaction(async tx=>{await active(tx,item,source);await tx.query("UPDATE discovery_requests SET status='success',http_status=$1,bytes=$2,completed_at=now() WHERE workspace_id=$3 AND id=$4",[r.status,r.bytes,w,id]);});return r;
     }catch(e){
      const x=e as {code?:string;httpStatus?:number;retryAfterSeconds?:number};cooldown=Math.max(cooldown,x.retryAfterSeconds||(['auth_or_challenge','quota_exceeded'].includes(x.code||'')?86400:0));
@@ -78,10 +93,11 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
      try{
       coverage.attemptedTenants=Number(coverage.attemptedTenants)+1;
       consumed=Number(entry.inventoryOrdinal)+1;
-      const found=await upstreamRun(batch.family,{...entry,max_pages:2,greenhouse:{fetchDetails:false},workday:{fetchDetails:false}},signal,request);
+      const found=await fetchBoard(batch.family,{...entry,max_pages:2,greenhouse:{fetchDetails:false},workday:{fetchDetails:false}});
       for(const job of found.jobs)job.discoveryTenant=entry.careers_url;
       result.jobs.push(...found.jobs);result.returned+=found.returned;if(found.partial)result.partial=found.partial;
      }catch(e){tenantErrors++;coverage.failedTenants=tenantErrors;coverage.lastTenantError=(e as {code?:string}).code||'provider_failed';result.partial={reason:'tenant_failure'};
+      if(['quota_exceeded','auth_or_challenge'].includes(String(coverage.lastTenantError)))cooldown=Math.max(cooldown,86400);
       if(['quota_exceeded','auth_or_challenge','request_budget'].includes(String(coverage.lastTenantError)))break;
      }
     }
@@ -89,12 +105,13 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
     else{await batch.advance(consumed);result.partial={reason:'tenant_window_interrupted'};}
     coverage.nextCursor=(Number(batch.coverage.cursor)+(Number(coverage.attemptedTenants)===batch.entries.length?batch.coverage.selected:consumed))%Math.max(batch.coverage.available,1);
     if(tenantErrors&&tenantErrors===Number(coverage.attemptedTenants)&&batch.entries.length)errorCode=String(coverage.lastTenantError);
-   }else result=await upstreamRun(source.provider,upstreamEntry(source,query.terms),signal,request);
+   }else result=await fetchBoard(source.provider,upstreamEntry(source,query.terms,query.filters.searchProfile,query.filters.lookbackDays));
+   if(source.provider==='a16z-speedrun-talent'&&query.filters.searchProfile)coverage.publicFilters=upstreamEntry(source,query.terms,query.filters.searchProfile,query.filters.lookbackDays).maximPublicFilters;
    returned=result.returned;counts.returned+=returned;partial=partial||Boolean(result.partial);coverage.truncation=result.partial;
-   counts.uninspected+=Number(coverage.uninspected||0);
+   counts.uninspectedTenants+=Number(coverage.uninspected||0);counts.tenantsScanned+=Number(coverage.attemptedTenants||0);
    const jobs=result.jobs,ids=new Set<string>();
    const profile=query.filters.searchProfile;
-   const fullRows=new Set<UpstreamRow>(jobs.filter(row=>!posting&&capability(source.provider)?.description==='full_when_present'&&String(row.description||'').trim().length>=50));
+   const fullRows=new Set<UpstreamRow>(jobs.filter(row=>!posting&&capability(source.provider)?.description==='full_when_present'&&String(row.description||'').trim().length>=50)),closedRows=new Set<UpstreamRow>();
    const full=(row:UpstreamRow)=>fullRows.has(row);
    let decisions=profile?screenDiscovery(jobs,profile,full):null;
    const wanted=jobs.map((row,index)=>({row,index,decision:decisions?.find(d=>d.index===index)})).filter(x=>!full(x.row)&&(posting||!x.decision?.locationBlocked&&(x.decision?x.decision.keep||x.decision.explore:matchesRoleTerms({title:x.row.title,description:String(x.row.description||'')},query.terms,query.filters.matchIn))));
@@ -104,7 +121,8 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
     await active(tx,item,source);
     const r=(await tx.query('INSERT INTO discovery_source_cursors(workspace_id,source_id,record_offset) VALUES($1,$2,$3) ON CONFLICT(workspace_id,source_id) DO UPDATE SET record_offset=discovery_source_cursors.record_offset+EXCLUDED.record_offset RETURNING record_offset',[w,source.id,Math.max(1,detailLimit)])).rows[0];return Math.max(0,Number(r.record_offset)-Math.max(1,detailLimit));
    });
-   const candidates=wanted.length?[...wanted.slice(offset%wanted.length),...wanted.slice(0,offset%wanted.length)]:[];
+   const rotate=(pool:typeof wanted)=>pool.length?[...pool.slice(offset%pool.length),...pool.slice(0,offset%pool.length)]:[];
+   const candidates=[...rotate(wanted.filter(x=>!profile||x.decision?.locationCompatible)),...rotate(wanted.filter(x=>profile&&!x.decision?.locationCompatible))];
    for(const candidate of candidates){
     if(detailRequests>=detailLimit||sourceRequests>=11||counts.requests>=17||signal.aborted)break;
     if(candidate.decision?.explore&&explorations>=exploreLimit)continue;
@@ -112,19 +130,21 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
     detailRequests++;
     const detail=await enrichPosting(candidate.row,request,host=>hosts.push(host));jobs[candidate.index]=detail.row;
     if(detail.full)fullRows.add(detail.row);
+    else if(detail.status==='posting_closed')closedRows.add(detail.row);
     else{partial=true;coverage.lastDetailHold=detail.errorCode||detail.status;if(['auth_or_challenge','quota_exceeded','request_budget'].includes(detail.errorCode||''))break;}
    }
    coverage.detailRequests=detailRequests;coverage.exploredTitleMisses=explorations;coverage.uninspectedDetails=Math.max(0,wanted.length-detailRequests);
    if(Number(coverage.uninspectedDetails)>0)partial=true;
    if(profile)decisions=screenDiscovery(jobs,profile,full);
-   if(posting)invariant(fullRows.size===1,'posting_details_unavailable','No verified full description was returned. The stored role was not overwritten.');
+   if(posting)invariant(fullRows.size===1,coverage.lastDetailHold==='posting_expired'?'posting_expired':'posting_details_unavailable','No verified current full description was returned. The stored role was not overwritten.');
    coverage.titleRescues=0;coverage.needsExploration=0;coverage.workFiltered=0;
    const pageId=crypto.randomUUID();
    // Raw HTML/JSON feed bodies are not stored. Retain compact normalized provenance once.
    await transaction(async tx=>{await active(tx,item,source);await tx.query('INSERT INTO discovery_pages(id,workspace_id,run_id,source_id,attempt_id,source_revision,page_number,request_url,payload,content_hash,record_count,captured_at,complete) VALUES($1,$2,$3,$4,$5,$6,0,$7,$8,$9,$10,$11,$12)',[pageId,w,item.input.runId,source.id,attempt,source.revision,source.careers_url,JSON.stringify({engine:upstreamCommit,returned,retained:jobs.length}),digest(JSON.stringify(jobs)),jobs.length,captured,!partial]);});
-   const quota=query.filters.automation?.maxMatches??100;
+   const maxMatches=query.filters.automation?.maxMatches??100,sourceIndex=(query.source_snapshots as Source[]).findIndex(s=>s.id===source.id),quota=Math.floor(maxMatches/counts.sourceCount)+(sourceIndex<maxMatches%counts.sourceCount?1:0);
    for(const [index,row] of jobs.entries()){
     if(signal.aborted)break;
+    if(closedRows.has(row)){coverage.closedListings=Number(coverage.closedListings||0)+1;continue;}
     if(admitted>=quota){partial=true;counts.uninspected++;continue;}
     try{
      const job=upstreamNormalize(source,row as UpstreamRow);
@@ -132,13 +152,31 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
      if(ids.has(job.externalId))continue;ids.add(job.externalId);
      const decision=decisions?.find(d=>d.index===index);
      if(decision){
-      if(!decision.keep){if(decision.explore)coverage.needsExploration=Number(coverage.needsExploration)+1;else coverage.workFiltered=Number(coverage.workFiltered)+1;continue;}
+      if(decision.locationBlocked){coverage.policyFiltered=Number(coverage.policyFiltered||0)+1;continue;}
+      if(!decision.keep){if(decision.reason==='seniority_mismatch')coverage.seniorityFiltered=Number(coverage.seniorityFiltered||0)+1;else if(decision.explore)coverage.needsExploration=Number(coverage.needsExploration)+1;else coverage.workFiltered=Number(coverage.workFiltered)+1;continue;}
+      if(!decision.locationCompatible&&profile.includeUnverifiedLocations!==true){
+       coverage.locationReviewHeld=Number(coverage.locationReviewHeld||0)+1;
+       const preview=(coverage.locationReviewPreview||[]) as Record<string,string>[];
+       if(preview.length<10)preview.push({title:job.title,company:job.company,location:job.location,url:job.url});coverage.locationReviewPreview=preview;continue;
+      }
       job.raw.screening=decision;
       if(decision.reason==='responsibility_rescue')coverage.titleRescues=Number(coverage.titleRescues)+1;
      }else if(!posting&&!matchesRoleTerms(job,query.terms,query.filters.matchIn))continue;
      const summary=!full(row);
      job.raw.discoveryProvenance={provider:source.provider,publisherUrl:job.url,applicationUrl:job.applicationUrl,upstreamCommit,description:summary?'summary_or_missing':'provider_full'};
-     const saved=await transaction(async tx=>{await active(tx,item,source);if(posting)await currentPosting(tx,item,source,posting);return publishJob(tx,item,source,{id:pageId,captured_at:captured},job,summary);});
+     const saved=await transaction(async tx=>{
+      await active(tx,item,source);if(posting)await currentPosting(tx,item,source,posting);
+      if(!summary&&!posting){
+       await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[w+':opening:'+job.openingKey]);
+       const prior=(await tx.query('SELECT j.* FROM job_source_aliases a JOIN jobs j ON j.workspace_id=a.workspace_id AND j.id=a.job_id WHERE a.workspace_id=$1 AND a.source_id=$2 AND a.external_id=$3 FOR UPDATE OF j',[w,source.id,job.externalId])).rows[0];
+       if(prior&&prior.opening_key!==job.openingKey){
+        const target=(await tx.query('SELECT id FROM jobs WHERE workspace_id=$1 AND opening_key=$2',[w,job.openingKey])).rows[0];
+        invariant(!target&&prior.opening_key==='url:'+canonicalOpeningUrl(job.url)&&prior.company===job.company&&prior.title===job.title,'source_identity_conflict','A changed or already-recorded opening needs manual reconciliation.',409);
+        await tx.query('UPDATE jobs SET opening_key=$1 WHERE workspace_id=$2 AND id=$3',[job.openingKey,w,prior.id]);
+       }
+      }
+      return publishJob(tx,item,source,{id:pageId,captured_at:captured},job,summary);
+     });
      if(['capacity_hold','intake_limit'].includes(String(saved.eligibility))){partial=true;counts.uninspected++;continue;}
      if(saved.eligibility==='archived_compact')continue;
      admitted++;counts.matched++;if(saved.created)counts.created++;if(saved.identityConflict)counts.identityConflicts++;if(summary)counts.missingDescriptions++;employers.add(job.company);
@@ -148,6 +186,7 @@ export async function discoverMarketJobs(item:WorkItem,parentSignal?:AbortSignal
   }catch(e){
    if(e instanceof DomainError&&['lease_lost','search_superseded','source_changed'].includes(e.code))throw e;
    errorCode=(e as {code?:string}).code||'provider_failed';status=errorCode;counts.failedSources++;
+   if(['quota_exceeded','auth_or_challenge'].includes(errorCode))cooldown=Math.max(cooldown,86400);
   }
   if(!errorCode){counts.successfulSources++;if(!admitted)status='empty_success';}else if(status==='success'){counts.failedSources++;status=errorCode;}
   if(partial){status='partial';counts.partialSources++;}

@@ -24,7 +24,7 @@ export async function snapshot(ctx: Context,sort:string|null=null,selectedId:str
    JOIN work_items work ON work.workspace_id=r.workspace_id AND work.id=r.work_id
    WHERE q.workspace_id=j.workspace_id AND q.filters->'posting'->>'jobId'=j.id::text
    ORDER BY r.created_at DESC LIMIT 1
-  ) detail ON j.source_platform='greenhouse'
+  ) detail ON true
   ${jobFitJoin} WHERE j.workspace_id=$1`;
  const f=jobFilters(query,(await policyFor(db,w)).value.timezone),params=[w,engine.hash,...f.values];
  const page=(await db.query(jobSql+f.sql+` ORDER BY ${jobFitOrder(sort)} LIMIT ${f.limit+1} OFFSET ${f.offset}`,params)).rows;

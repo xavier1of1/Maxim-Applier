@@ -117,8 +117,10 @@ test('S4 discovery shared API, retained adapters, checkpoint recovery and honest
    assert.ok(events.some(e=>e.event==='done'));
    const chat=async text=>streamResult(await h.request(h.a,'/api/conversations/'+c.conversation.id+'/messages',{method:'POST',body:{commandId:crypto.randomUUID(),text}}));
    let j=(await view()).jobs.find(j=>j.url.endsWith('/1'));
+   const requestsBeforeSave=h.captured.length;
    let e=await chat('[case:discovery-save] save '+j.id+' rev '+j.revision);
-   assert.ok(e.some(x=>x.event==='done'));assert.equal((await view()).jobs.find(x=>x.id===j.id).discovery_state,'saved');
+   assert.ok(e.some(x=>x.event==='done'),JSON.stringify(e));assert.equal((await view()).jobs.find(x=>x.id===j.id).discovery_state,'saved');
+   assert.equal(h.captured.length,requestsBeforeSave+1,'durable discovery action needs no second model call');assert.ok(e.filter(x=>x.event==='delta').map(x=>x.data.text).join('').includes(j.id));
    j=(await view()).jobs.find(x=>x.id===j.id);
    e=await chat('[case:discovery-save] dismiss '+j.id+' rev '+j.revision);
    assert.ok(e.some(x=>x.event==='done'));assert.equal((await view()).jobs.find(x=>x.id===j.id).discovery_state,'dismissed');

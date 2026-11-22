@@ -108,6 +108,8 @@ export function AgentPanel({agent, data, conversationId, jobId, disabled, naviga
       {!agent.isRunning&&messages.some(m=>m.role==='tool'&&m.content.name==='propose_candidate_fact')&&
        <Button label="Review candidate facts" size="sm" variant="secondary" endContent={<Glyph icon={ArrowRight}/>}
         onClick={()=>{navigate({view:'candidate'});onClose?.();}}/>}
+      {!agent.isRunning&&messages.some(m=>m.role==='tool'&&['propose_search_profile','read_search_profile','start_market_search'].includes(m.content.name||''))&&
+       <Button label="Review discovery" size="sm" variant="secondary" endContent={<Glyph icon={ArrowRight}/>} onClick={()=>{navigate({view:'discovery'});onClose?.();}}/>}
       {!agent.isRunning&&messages.some(m=>m.role==='tool'&&['prepare_scanned_scoring','propose_discovery_settings'].includes(m.content.name||''))&&
        <Button label="Review scoring setup" size="sm" variant="secondary" endContent={<Glyph icon={ArrowRight}/>}
         onClick={()=>{navigate({view:'settings',setup:'scoring'});onClose?.();}}/>}

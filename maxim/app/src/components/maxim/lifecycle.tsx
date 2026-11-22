@@ -67,6 +67,7 @@ export function ApplicationWorkbench({api,disabled,refresh,asOf,selectedId,onSel
      onClick={()=>navigate({view:'jobs',job:app.job_id,filter:'active'})}/>}
     <div className="inline-actions"><Button label="Evaluate with Career-Ops" variant="primary" icon={<Glyph icon={FileCheck2}/>} isDisabled={locked||pending||!hasModel||data.candidate.ownership!=='canonical'||app.description.length<50||app.status==='archived'} onClick={()=>void mutate('evaluations','start_evaluation',{jobId:app.job_id,expectedJobRevision:app.job_revision,expectedCandidateRevision:data.candidate.revision})}/>
      {latest&&['queued','running'].includes(latest.status)&&<ToolButton label="Cancel evaluation" icon={X} disabled={locked} onClick={()=>void mutate('evaluations','cancel_evaluation',{evaluationId:latest.id,expectedRevision:latest.revision})}/>}
+     {latest?.status==='review_required'&&<Button label="Recheck saved report" size="sm" icon={<Glyph icon={RefreshCw}/>} isDisabled={locked} onClick={()=>void mutate('evaluations','revalidate_evaluation',{evaluationId:latest.id,expectedRevision:latest.revision})}/>}
      {latest?.report_artifact_id&&<a className="text-link" href={'/api/artifacts/'+latest.report_artifact_id} target="_blank" rel="noreferrer"><Download size={14}/> Full report</a>}
     </div>
     {latest?.error_code&&<Banner tone="warning">Evaluation held: {latest.error_code.replaceAll('_',' ')}</Banner>}

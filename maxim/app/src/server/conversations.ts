@@ -4,7 +4,7 @@ import { database, transaction } from './db';
 import { type Context, reauthorize, digest } from './auth';
 import { command, event, jobFor, uuid } from './commands';
 import { getJob, snapshot } from './reads';
-import { completion, modelReady, policy, type ModelMessage, type ToolCall } from './models';
+import { completion, modelReady, policy,toolsForRequest, type ModelMessage, type ToolCall } from './models';
 import { DomainError, invariant, notFound } from './errors';
 import {candidateContext,proposeConversationFact,assertDisclosureText} from './candidate-context';
 import {recallAnswers} from './answer-recall';
@@ -50,6 +50,17 @@ async function invoke(ctx:Context,cid:string,rid:string,call:ToolCall) {
  let args:unknown;
  try { args=JSON.parse(call.function.arguments); } catch { return {error:'invalid_arguments'}; }
  if(['read_discovery_settings','propose_discovery_settings','prepare_scanned_scoring'].includes(call.function.name))return (await import('./intelligence')).intelligenceTool(ctx,rid,call.function.name,args);
+ if(['read_search_profile','propose_search_profile'].includes(call.function.name))return (await import('./search-profile')).searchProfileTool(ctx,rid,call.function.name,args);
+ if(call.function.name==='start_market_search'){
+  const p=z.object({quote:z.string().min(3).max(4000),pack:z.enum(['us_tech','remote','reverse_ats'])}).strict().parse(args);
+  const user=(await database().query("SELECT content FROM messages WHERE workspace_id=$1 AND run_id=$2 AND role='user' ORDER BY sequence DESC LIMIT 1",[ctx.workspaceId,rid])).rows[0];
+  invariant(user?.content.text===p.quote&&/\b(search|find)\b/i.test(p.quote),'explicit_request_required','Quote the exact current request to find or search jobs.');
+  const {sourcePacks}=await import('./upstream-discovery'),d=await discoveryView(ctx);
+  invariant(d.searchProfile.current&&!d.searchProfile.current.stale,'search_profile_required','Review a current search profile in Discovery first.',409);
+  const providers=sourcePacks[p.pack].map(id=>p.pack==='reverse_ats'?'reverse:'+id:id),sources=d.sources.filter(s=>s.enabled&&providers.includes(s.provider));
+  invariant(sources.length,'source_pack_required','Enable the selected source pack in Discovery first.',409);
+  return discoveryCommand(ctx,{commandId:crypto.randomUUID(),action:'start_search',payload:{sourceIds:sources.map(s=>s.id),terms:[],matchIn:'title_and_description'}});
+ }
  if(['read_application_assistance','fill_approved_application_fields'].includes(call.function.name))return browserTool(ctx,rid,call.function.name,args);
  if(['start_interview_practice','read_interview_practice'].includes(call.function.name))return interviewTool(ctx,rid,call.function.name,args);
  if(call.function.name==='read_gmail_evidence'){toolSchemas.read_workspace.parse(args);return gmailAgentView(ctx);}
@@ -220,7 +231,7 @@ export async function chatResponse(ctx:Context,cid:string,raw:unknown,requestSig
      await live(ctx,cid,p.commandId);
      invariant(JSON.stringify(modelReady())===connection,'model_changed','Model settings changed. Start a new response.',409);
      if(signal.aborted)throw new DomainError('cancelled','The response was cancelled.',409);
-     const result=await completion(messages,signal,async text=>{await live(ctx,cid,p.commandId);partial+=text;emit('delta',{text});});
+     const result=await completion(messages,signal,async text=>{await live(ctx,cid,p.commandId);partial+=text;emit('delta',{text});},toolsForRequest(p.text));
      accounting.push({...result.accounting,providerUsage:result.usage});
      usage.modelRequests++;
      const reported=result.usage as {prompt_tokens?:number;completion_tokens?:number}|null;
@@ -241,8 +252,15 @@ export async function chatResponse(ctx:Context,cid:string,raw:unknown,requestSig
       invariant(Buffer.byteLength(content)<=12000,'tool_result_limit','The selected data exceeds this conversation budget.',413);
       messages.push({role:'tool',tool_call_id:call.id,content});
       await addMessage(ctx,cid,p.commandId,'tool',{name:call.function.name,text:content,toolCallId:call.id});
-      const isDraft=['propose_job_note','propose_candidate_fact','propose_application_answer','draft_answer_from_facts','prepare_scanned_scoring','propose_discovery_settings'].includes(call.function.name);
-      emit('tool',{name:call.function.name,summary:isDraft?'Draft requires human review. No approved knowledge was changed.':'Read authorized workspace records.'});
+      const isDraft=['propose_job_note','propose_candidate_fact','propose_application_answer','draft_answer_from_facts','prepare_scanned_scoring','propose_discovery_settings','propose_search_profile'].includes(call.function.name);
+      const acknowledged=result.calls.length===1&&['start_job_search','start_market_search','set_discovery_state'].includes(call.function.name)&&value&&typeof value==='object'&&!('error' in value);
+      emit('tool',{name:call.function.name,summary:isDraft?'Draft requires human review. No approved knowledge was changed.':acknowledged?'Discovery command recorded.':'Read authorized workspace records.'});
+      // The durable command receipt is the answer; a second model call cannot add authority.
+      if(acknowledged){
+       const saved=value as {id?:string;state?:string;status?:string};
+       partial=call.function.name==='set_discovery_state'?`Opening ${saved.id}: ${saved.state}. The change is saved.`:`Search ${saved.id} is ${saved.status||'queued'}. Check Discovery for actual results, coverage and any source failures. No application was submitted and no spending limit changed.`;
+       emit('delta',{text:partial});done=true;
+      }
      }
     }
     invariant(done,'tool_limit','The assistant reached its tool limit. Narrow the request and try again.',409);

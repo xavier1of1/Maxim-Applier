@@ -442,10 +442,10 @@
     },
     {
       "id": "careerpuck",
-      "kind": "board_wide",
+      "kind": "tenant_ats",
       "region": "source_defined",
       "query": "feed_local_filter",
-      "description": "summary_or_unknown",
+      "description": "full_when_present",
       "state": "available",
       "reason": "Configuration and live source validation required.",
       "hosts": [
@@ -940,7 +940,7 @@
     },
     {
       "id": "getro",
-      "kind": "tenant_ats",
+      "kind": "board_wide",
       "region": "source_defined",
       "query": "tenant_or_employer",
       "description": "summary_or_unknown",
@@ -1485,7 +1485,7 @@
       "kind": "tenant_ats",
       "region": "source_defined",
       "query": "tenant_or_employer",
-      "description": "summary_or_unknown",
+      "description": "full_when_present",
       "state": "available",
       "reason": "Configuration and live source validation required.",
       "hosts": [
@@ -1671,7 +1671,9 @@
       "state": "available",
       "reason": "Configuration and live source validation required.",
       "hosts": [
-        "www.coalfire.com"
+        "www.coalfire.com",
+        "api.lever.co",
+        "api.eu.lever.co"
       ],
       "permission": "Public access only; stop on authentication, challenges or publisher restrictions.",
       "limits": {
@@ -2870,7 +2872,7 @@
       "kind": "board_wide",
       "region": "source_defined",
       "query": "provider_specific",
-      "description": "summary_or_unknown",
+      "description": "full_when_present",
       "state": "available",
       "reason": "Configuration and live source validation required.",
       "hosts": [

@@ -17,7 +17,10 @@ export const tools = [
  {type:'function',function:{name:'read_notification_status',description:'Read whether owner-approved Discord delivery is enabled and current delivery counts. Never configure a destination, send, retry or approve through chat.',strict:true,parameters:{type:'object',properties:{},required:[],additionalProperties:false}}},
  {type:'function',function:{name:'read_applications',description:'Read canonical application IDs, current evaluation score/tier, workflow, outcome and packet readiness. No private artifact contents.',strict:true,parameters:{type:'object',properties:{},required:[],additionalProperties:false}}},
  {type:'function',function:{name:'evaluate_job',description:'Queue Career-Ops evaluation on a direct current request: Evaluate this role for the conversation job, or Evaluate followed by its UUID. Quote the entire user message. Does not approve, apply or submit.',strict:true,parameters:{type:'object',properties:{jobId:{type:'string'},expectedJobRevision:{type:'integer'},expectedCandidateRevision:{type:'integer'},quote:{type:'string'}},required:['jobId','expectedJobRevision','expectedCandidateRevision','quote'],additionalProperties:false}}},
- {type:'function',function:{name:'read_discovery',description:'Read authorized search history, source health and discovered job IDs/states. Limited summaries; no automatic coverage claim.',strict:true,parameters:{type:'object',properties:{},required:[],additionalProperties:false}}},
+ {type:'function',function:{name:'read_search_profile',description:'Read reviewed work families, aliases, responsibility groups, profile/candidate revisions and suggested profile fields. Search criteria are not qualifications.',strict:true,parameters:{type:'object',properties:{},required:[],additionalProperties:false}}},
+ {type:'function',function:{name:'propose_search_profile',description:'Propose search preferences using profile fields from read_search_profile. Quote the entire current request. Owner must approve in Discovery; never approves facts, spending or scans.',strict:true,parameters:{type:'object',properties:{quote:{type:'string'},profileJson:{type:'string'}},required:['quote','profileJson'],additionalProperties:false}}},
+ {type:'function',function:{name:'start_market_search',description:'Run an enabled broad-market source pack using its current owner-approved search profile. Requires exact current request to find/search jobs. Does not enable schedules or change model budget.',strict:true,parameters:{type:'object',properties:{quote:{type:'string'},pack:{type:'string',enum:['us_tech','remote','reverse_ats']}},required:['quote','pack'],additionalProperties:false}}},
+ {type:'function',function:{name:'read_discovery',description:'Read actual source/run coverage and discovered job summaries. Installed provider counts are not successful searches.',strict:true,parameters:{type:'object',properties:{},required:[],additionalProperties:false}}},
  {type:'function',function:{name:'start_job_search',description:'Start one bounded public-feed query only on an exact current user request. quote must include search/find and every role term; select existing enabled source IDs.',strict:true,parameters:{type:'object',properties:{sourceIds:{type:'array',items:{type:'string'}},terms:{type:'array',items:{type:'string'}},quote:{type:'string'}},required:['sourceIds','terms','quote'],additionalProperties:false}}},
  {type:'function',function:{name:'set_discovery_state',description:'Save, dismiss or restore an existing job only on the exact current user request quoting the action and job UUID. Same canonical command as Discovery UI.',strict:true,parameters:{type:'object',properties:{jobId:{type:'string'},expectedRevision:{type:'integer'},state:{type:'string',enum:['saved','dismissed','none']},quote:{type:'string'}},required:['jobId','expectedRevision','state','quote'],additionalProperties:false}}},
  {type:'function',function:{name:'draft_answer_from_facts',description:'Draft an extractive answer from current approved disclosable facts. Exact fact values only; no invented prose or permissions. Human reviews in Answers.',strict:true,parameters:{type:'object',properties:{question:{type:'string'},company:{type:'string'},roleLane:{type:'string'},facts:{type:'array',items:{type:'object',properties:{id:{type:'string'},revision:{type:'integer'}},required:['id','revision'],additionalProperties:false}}},required:['question','company','roleLane','facts'],additionalProperties:false}}},
@@ -37,14 +40,21 @@ export const policy = 'You are Maxim Apply, a local career workspace assistant. 
 export type ModelMessage = { role: string; content: string | null; tool_calls?: ToolCall[]; tool_call_id?: string;responseItems?:Record<string,any>[] };
 export type ToolCall = { id: string; type:'function'; function:{ name:string; arguments:string } };
 export type ModelResult = { text: string; calls: ToolCall[]; usage: unknown;accounting:ContextAccounting;responseItems?:Record<string,any>[] };
+export function toolsForRequest(text:string){
+ const added=new Set(['read_search_profile','propose_search_profile','start_market_search']);
+ const market=/\b(?:broad|market|source pack|search profile|search preferences|work families|untracked|new employers)\b/i.test(text)||/\b(?:find|search)\b/i.test(text)&&/\b(?:jobs?|roles?|openings?|postings?|employers?|opportunities)\b/i.test(text)&&!/\b[a-f0-9]{8}-[a-f0-9-]{27}\b/i.test(text);
+ if(!market)return tools.filter(t=>!added.has(t.function.name));
+ const names=new Set([...added,'read_discovery','start_job_search','set_discovery_state','read_discovery_settings','propose_discovery_settings','prepare_scanned_scoring','read_workspace','get_job','read_candidate_context','read_applications','evaluate_job']);
+ return tools.filter(t=>names.has(t.function.name));
+}
 export function modelReady() {
  const c=config();
  invariant(c.model.model && c.model.apiKey,'model_unconfigured','Connect a model in Settings before sending a message.',503);
  return c.model;
 }
-export async function completion(messages: ModelMessage[], signal: AbortSignal, delta: (text:string)=>Promise<void>): Promise<ModelResult> {
+export async function completion(messages: ModelMessage[], signal: AbortSignal, delta: (text:string)=>Promise<void>,availableTools=tools): Promise<ModelResult> {
  const model=modelReady();
- const compiled=prepareOpenAI({model:model.model,messages,tools,stream:true,stream_options:{include_usage:true},max_completion_tokens:1024,store:false},model.api,{testMode:config().testMode,totalBudget:config().contextBudget});
+ const compiled=prepareOpenAI({model:model.model,messages,tools:availableTools,stream:true,stream_options:{include_usage:true},max_completion_tokens:1024,store:false},model.api,{testMode:config().testMode,totalBudget:config().contextBudget});
  if(compiled.api==='responses'){
   let length=0;
   const result=await streamedResponses(model,compiled,signal,async text=>{length+=text.length;invariant(length<=20000,'model_output_limit','The response exceeded its output limit.',502);await delta(text);});

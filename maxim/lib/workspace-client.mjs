@@ -8,7 +8,7 @@ export async function withWorkspace(fn){
  if(origin.protocol!=='http:'||!['127.0.0.1','localhost'].includes(origin.hostname)||origin.username||origin.password)throw Error('Only the configured local workspace is supported.');
  let cookie='',csrf='';
  const request=async(route,body)=>{
-  if(!/^\/api\/[a-z/0-9?=&-]+$/i.test(route))throw Error('Unsupported workspace route.');
+  if(!/^\/api\/[a-z/0-9_?=&-]+$/i.test(route))throw Error('Unsupported workspace route.');
   const response=await fetch(origin.origin+route,{method:body?'POST':'GET',redirect:'error',signal:AbortSignal.timeout(10000),headers:{Origin:origin.origin,...(cookie?{Cookie:cookie}:{}),...(body?{'Content-Type':'application/json','X-CSRF-Token':csrf}:{})},...(body?{body:JSON.stringify(body)}:{})});
   if(route==='/api/auth/login')cookie=response.headers.get('set-cookie')?.split(';')[0]||'';
   const text=await response.text();if(Buffer.byteLength(text)>4*1024*1024)throw Error('Workspace result exceeds the CLI read bound.');

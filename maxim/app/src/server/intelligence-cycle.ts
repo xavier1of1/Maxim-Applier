@@ -15,6 +15,7 @@ import {queueDiscoverySearch} from './discovery';
 import {enqueue,checkLease,finishWork,type WorkItem} from './work';
 import {event} from './commands';
 import {invariant,DomainError} from './errors';
+import {seniorityPreferences} from './search-profile';
 
 export function screeningSummaries(jobs:Record<string,any>[]){
  const clip=(v:string,n:number)=>Buffer.from(v.replace(/[\x00-\x1f\x7f]/g,' ')).subarray(0,n).toString('utf8');
@@ -22,6 +23,7 @@ export function screeningSummaries(jobs:Record<string,any>[]){
   const summary={id:j.id,company:clip(j.company,200),title:clip(j.title,240),description:clip(j.description,1400),ageHours:j.age_hours===null?null:Number(j.age_hours),
    blocked:!j.discovery_policy?.flags?.some((f:{flagType:string;severity:string})=>f.flagType==='location'&&f.severity==='positive')||j.discovery_policy?.flags?.some((f:{severity:string})=>f.severity==='blocker'),
    fullPosting:!['summary','missing','unavailable'].includes(j.discovery_policy?.detailStatus),hasEvaluation:Boolean(j.evaluation_id&&(j.current||['queued','running','failed','cancelled','review_required'].includes(j.evaluation_status))),priority:j.discovery_policy?.flags?.some((f:{flagType:string})=>f.flagType==='connection_overlay'),holdReason:typeof j.automatic_hold==='string'?j.automatic_hold.slice(0,120):null};
+  Object.assign(summary,{locationCompatible:j.discovery_policy?.flags?.some((f:{flagType:string;severity:string})=>f.flagType==='location'&&f.severity==='positive')===true&&!j.discovery_policy?.flags?.some((f:{flagType:string;severity:string})=>f.flagType==='location'&&f.severity==='blocker')});
   while(Buffer.byteLength(JSON.stringify(summary))>2000)summary.description=summary.description.slice(0,Math.floor(summary.description.length/2));
   return summary;
  });
@@ -36,13 +38,17 @@ export async function screening(tx:PoolClient,w:string){
  const jobSql=`SELECT j.id,j.company,j.title,left(j.description,1800) AS description,j.revision,j.posted_at,j.discovery_policy,h.reason AS automatic_hold,
  fit.id AS evaluation_id,fit.current,fit.status AS evaluation_status,EXTRACT(EPOCH FROM now()-j.posted_at)/3600 AS age_hours
  FROM jobs j ${jobFitJoin} LEFT JOIN intelligence_job_holds h ON h.workspace_id=j.workspace_id AND h.job_id=j.id AND h.job_revision=j.revision AND h.candidate_revision=(SELECT revision FROM candidates WHERE workspace_id=$1)
- WHERE j.workspace_id=$1 AND ${cohort}
- ORDER BY (coalesce(j.discovery_policy->'flags' @> '[{"flagType":"location","severity":"positive"}]',false) AND (fit.id IS NULL OR NOT coalesce(fit.current,false) AND fit.status IN ('completed','stale'))) DESC,
- j.posted_at DESC NULLS LAST,j.first_seen_at DESC NULLS LAST,j.id`;
- const jobs=(await tx.query(jobSql+' LIMIT 200 OFFSET $3',[w,engine.hash,windowOffset])).rows;
- if(windowOffset&&jobs.length<200)jobs.push(...(await tx.query(jobSql+' LIMIT $3',[w,engine.hash,200-jobs.length])).rows);
+ WHERE j.workspace_id=$1 AND ${cohort}`;
+ const order=` ORDER BY (coalesce(j.discovery_policy->'flags' @> '[{"flagType":"location","severity":"positive"}]',false) AND (fit.id IS NULL OR NOT coalesce(fit.current,false) AND fit.status IN ('completed','stale'))) DESC,j.posted_at DESC NULLS LAST,j.first_seen_at DESC NULLS LAST,j.id`;
+ const window=(await tx.query(jobSql+order+' LIMIT 200 OFFSET $3',[w,engine.hash,windowOffset])).rows;
+ if(windowOffset&&window.length<200)window.push(...(await tx.query(jobSql+order+' LIMIT $3',[w,engine.hash,200-window.length])).rows);
+ const local=(await tx.query(jobSql+` AND coalesce(j.discovery_policy->'flags' @> '[{"flagType":"location","severity":"positive"}]',false)
+  AND (fit.id IS NULL OR NOT coalesce(fit.current,false) AND fit.status IN ('completed','stale')) AND length(trim(j.description))>=50
+  AND coalesce(j.discovery_policy->>'detailStatus','full') NOT IN ('summary','missing','unavailable')`+order+' LIMIT 40',[w,engine.hash])).rows;
+ const seen=new Set<string>(),jobs=[...local,...window].filter(j=>{if(seen.has(j.id))return false;seen.add(j.id);return true;}).slice(0,200);
  const offset=Number((await tx.query("SELECT count(*) FROM evaluation_reservations WHERE workspace_id=$1 AND status<>'released'",[w])).rows[0].count);
- const result=domain({operation:'screen_jobs',explorationOffset:offset,policy:p.value,evidenceTerms,targetTerms,jobs:screeningSummaries(jobs)});
+ const seniority=(await tx.query("SELECT f.value FROM candidate_facts f JOIN candidate_sources s ON s.id=f.source_id AND s.workspace_id=f.workspace_id WHERE f.workspace_id=$1 AND f.field_key='preferences.seniority' AND f.status='current' AND s.deleted_at IS NULL AND s.revision=f.source_revision",[w])).rows[0];
+ const result=domain({operation:'screen_jobs',explorationOffset:offset,policy:p.value,seniorityLevels:seniorityPreferences(seniority?.value),evidenceTerms,targetTerms,jobs:screeningSummaries(jobs)});
  return {policy:p,selected:result.selected as {id:string;reasons:unknown;evidenceTerms:string[]}[],held:result.held as {id:string;reason:string}[],jobs,targetTerms,evidenceAvailable:evidenceTerms.length>0,kind:result.kind,window:{offset:windowOffset,total,screened:jobs.length}};
 }
 export async function enqueueCycle(tx:PoolClient,w:string,kind='manual'){

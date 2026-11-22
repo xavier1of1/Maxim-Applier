@@ -444,4 +444,11 @@ pre { font:inherit; }
 .home-lane-list li {display:grid;grid-template-columns:36px minmax(0,1fr) 36px;align-items:center;gap:14px;padding:17px 0;border-bottom:1px solid #e6ece8}
 .home-lane-list h4 {font-size:15px;font-weight:500;margin:0 0 6px;overflow-wrap:anywhere}
 .lane-rank {font-size:13px;color:#76867d}
+.market-setup h3 {margin:0;font-size:16px}.market-pack-row,.market-catalog-filters {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;margin-bottom:16px;max-width:680px}
+.market-setup {padding-top:18px;padding-bottom:18px}.market-search-form {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:none}.market-search-form>details{grid-column:1/-1}.market-search-form>button {justify-self:start}
+.market-profile-form {display:grid;gap:16px;padding-top:12px;max-width:850px}.market-families {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;border:0;padding:0;margin:0}.market-families legend {font-size:12px;margin-bottom:12px}.market-families label {font-size:13px;line-height:1.5;align-items:flex-start}
+.market-profile-proposal {border-top:1px solid var(--ui-line);padding:16px 0}.market-profile-proposal h4 {font-size:14px;margin:0 0 12px}
+.market-coverage {display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin:16px 0}.market-coverage div {min-width:0}.market-coverage dt {font-size:11px;color:var(--ui-muted);overflow-wrap:anywhere}.market-coverage dd {margin:6px 0 0;font-size:19px;font-variant-numeric:tabular-nums}
+.market-catalog {font-size:12px}.market-catalog td {vertical-align:top}.market-catalog td:first-child {min-width:140px}.market-catalog details p {line-height:1.5;max-width:350px;white-space:normal}
+@media(max-width:800px){.market-coverage{grid-template-columns:repeat(3,minmax(0,1fr))}.market-pack-row,.market-catalog-filters,.market-search-form{grid-template-columns:minmax(0,1fr)}.market-families{grid-template-columns:minmax(0,1fr)}.market-pack-row button{justify-self:start}.market-catalog td:first-child{min-width:110px}}
 @media(max-width:700px){.home-view{padding:0 16px 30px}.home-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.home-metrics>div{padding:16px 8px}.home-metrics span{font-size:11px}.home-section-heading{flex-wrap:wrap;gap:10px}.home-section-heading h3{font-size:17px}}

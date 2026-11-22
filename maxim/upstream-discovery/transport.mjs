@@ -1,4 +1,6 @@
 // The child has no credential-bearing transport. Every request is authorized by the parent.
+import {isIP} from 'node:net';
+export {isIP};
 export const BROWSER_LIKE_USER_AGENT='MaximApply-public-discovery/1.0';
 export const MACOS_BROWSER_LIKE_USER_AGENT=BROWSER_LIKE_USER_AGENT;
 export const DEFAULT_MAX_BODY_BYTES=5242880;

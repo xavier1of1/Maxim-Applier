@@ -1,0 +1,60 @@
+{
+  "commit": "194933aa111aa4f2fd3ffa69048347fa6a974d27",
+  "files": {
+    "docs/SUPPORTED_JOB_BOARDS.md": {
+      "sha256": "a09e21601b08d32672da86fbe6913ace2b1c67f84cf9232bc2c2bddd58a01863",
+      "code": "anti_bot_evasion",
+      "reason": "Documentation explicitly excludes challenge/evasion-dependent boards; not executable code."
+    },
+    "providers/a16z-speedrun-talent.mjs": {
+      "sha256": "4d2c13ba76bf4425055a3a6b3e43c6175f2a3a40c9c5f49c1cf1708a10e6b72a",
+      "code": "anti_bot_evasion",
+      "reason": "Stealth names an undisclosed startup in job metadata, not browser behavior."
+    },
+    "lib/jd-parse.mjs": {
+      "sha256": "36e22b5079bbb9171854e1baaf747d96c7773d87c35d99bd44e0b290beaf50dc",
+      "code": "unbounded_retry_loop",
+      "reason": "Finite script scanning advances a cursor through a bounded document and terminates at EOF."
+    },
+    "path-resolver.mjs": {
+      "sha256": "57546c7e0007bc4f93ef659abc46a4f6b7f61d0fd9e43001604124072ac156f6",
+      "code": "unbounded_retry_loop",
+      "reason": "Directory ancestry traversal terminates at filesystem root; child file writes remain denied."
+    },
+    "providers/jobvite.mjs": {
+      "sha256": "4fbba49961d9a9f505ca6573a278339abe42c4d3ae4e98406cfab48dfeabae63",
+      "code": "unbounded_retry_loop",
+      "reason": "Finite XML job parsing advances through bounded response text."
+    },
+    "providers/pageup.mjs": {
+      "sha256": "ed60fc3311aacfcb14f3206fc10a819bafb486eafbf4581006d907da0b481db8",
+      "code": "unbounded_retry_loop",
+      "reason": "Finite HTML comment removal advances to the next comment or EOF."
+    },
+    "providers/personio.mjs": {
+      "sha256": "2da22af57ba907c627ba48da8857d55b5e2e7c27858e0a919cc545a5e6b239b2",
+      "code": "unbounded_retry_loop",
+      "reason": "Finite embedded JSON parsing advances through a bounded payload."
+    },
+    "providers/sitemap.mjs": {
+      "sha256": "a1c6c2c3dedc66386b5eb3c426e0ae300690727bc8d4341ff726e5398c021b5f",
+      "code": "unbounded_retry_loop",
+      "reason": "Finite XML comment scanning advances through a bounded document."
+    },
+    "providers/workable.mjs": {
+      "sha256": "de6ec7a700e27c68eac916015b53e2733e138073a154c46692f2e97e38230f74",
+      "code": "unbounded_retry_loop",
+      "reason": "Finite XML block splitter consumes its buffer; global large-feed execution is disabled."
+    },
+    "providers/_html-to-text.mjs": {
+      "sha256": "7dd12ba20959514159f828af53cc5112735d1db152a9abd3fc5def2d0fedaf01",
+      "code": "unbounded_retry_loop",
+      "reason": "Finite HTML comment removal advances a cursor; not a network retry."
+    },
+    "providers/_http.mjs": {
+      "sha256": "87bb831b27a3ff141957b2afe51453a54875eb758eb1000de8d786d81d137fb3",
+      "code": "unbounded_retry_loop",
+      "reason": "Original transport is replaced by the bridge; original loops consume byte-capped response streams."
+    }
+  }
+}

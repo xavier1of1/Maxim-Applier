@@ -31,12 +31,13 @@ pub fn shortlist(input:&Value)->Value{
  let max_age=p["maxAgeDays"].as_f64().unwrap_or(7.0)*24.0;
  let all_scanned=p["scoringScope"].as_str()==Some("all_scanned");
  let evidence:Vec<String>=strings(&input["evidenceTerms"]).into_iter().filter(|s|s.len()>=3).take(80).collect();
- let terms=strings(&input["targetTerms"]);let excluded=strings(&p["excludedTitleTerms"]);
+ let terms=strings(&input["targetTerms"]);let excluded=strings(&p["excludedTitleTerms"]);let levels=strings(&input["seniorityLevels"]);
  let mut eligible=Vec::new();let mut held=Vec::new();
  for job in jobs {
   let id=job["id"].as_str().unwrap_or("");let title=job["title"].as_str().unwrap_or("").to_lowercase();
   let text=format!("{} {}",title,job["description"].as_str().unwrap_or("").to_lowercase());
   let age=job["ageHours"].as_f64();let hits:Vec<_>=evidence.iter().filter(|s|text.contains(s.as_str())).cloned().collect();
+  let level=crate::discovery::seniority(&title);let level_mismatch=!levels.is_empty()&&level.map(|l|!levels.iter().any(|v|v==l)).unwrap_or(false);
   let reason=if let Some(hold)=job["holdReason"].as_str(){Some(hold)}
    else if !all_scanned&&job["blocked"].as_bool().unwrap_or(true){Some("policy_blocked_or_unreviewed_location")}
    else if job["hasEvaluation"].as_bool().unwrap_or(false){Some("already_evaluated_or_pending")}
@@ -44,27 +45,28 @@ pub fn shortlist(input:&Value)->Value{
    else if !all_scanned&&age.is_none()&&!p["allowUnknownDates"].as_bool().unwrap_or(false){Some("posted_date_unknown")}
    else if !all_scanned&&age.map(|v|v<0.0||v>max_age).unwrap_or(false){Some("outside_freshness_window")}
    else if !all_scanned&&excluded.iter().any(|s|title.contains(s)){Some("excluded_title")}
+   else if !all_scanned&&level_mismatch{Some("outside_target_seniority")}
    else if !all_scanned&&hits.len()<p["minEvidenceMatches"].as_u64().unwrap_or(1) as usize{Some("insufficient_approved_evidence_overlap")}
    else {None};
   if let Some(reason)=reason{held.push(json!({"id":id,"reason":reason}));continue;}
   let target=terms.iter().any(|s|title.contains(s));let priority=job["priority"].as_bool().unwrap_or(false);
-  eligible.push((id.to_string(),job["company"].as_str().unwrap_or("").to_lowercase(),age.unwrap_or(f64::MAX),target,priority,hits));
+  eligible.push((id.to_string(),job["company"].as_str().unwrap_or("").to_lowercase(),age.unwrap_or(f64::MAX),target,priority,hits,level_mismatch,job["locationCompatible"].as_bool().unwrap_or(false)));
  }
- eligible.sort_by(|a,b|b.4.cmp(&a.4).then(b.3.cmp(&a.3)).then(a.2.total_cmp(&b.2)).then(a.0.cmp(&b.0)));
+ eligible.sort_by(|a,b|a.6.cmp(&b.6).then(b.7.cmp(&a.7)).then(b.4.cmp(&a.4)).then(b.3.cmp(&a.3)).then(a.2.total_cmp(&b.2)).then(a.0.cmp(&b.0)));
  let mut selected=Vec::new();let mut used=HashSet::new();let mut companies:HashMap<String,usize>=HashMap::new();
  // Round-robin employers before taking another opening from the same company.
  for quota in 1..=limit {
-  for (id,company,age,target,priority,hits) in &eligible {
+  for (id,company,age,target,priority,hits,level_mismatch,local) in &eligible {
    if selected.len()>=limit{break;}
    if used.contains(id)||companies.get(company).copied().unwrap_or(0)>=quota{continue;}
    used.insert(id.clone());*companies.entry(company.clone()).or_default()+=1;
-   selected.push(json!({"id":id,"lane":lane(jobs.iter().find(|j|j["id"]==*id).and_then(|j|j["title"].as_str()).unwrap_or("")),"evidenceTerms":hits,"reasons":{"targetRole":target,"priorityOverlay":priority,"fresh24h":age<=&24.0}}));
+   selected.push(json!({"id":id,"lane":lane(jobs.iter().find(|j|j["id"]==*id).and_then(|j|j["title"].as_str()).unwrap_or("")),"evidenceTerms":hits,"reasons":{"targetRole":target,"priorityOverlay":priority,"fresh24h":age<=&24.0,"seniorityMismatch":level_mismatch,"locationCompatible":local}}));
   }
  }
  let offset=input["explorationOffset"].as_u64().unwrap_or(0) as usize;
  for index in 0..selected.len(){
   if (offset+index+1)%5!=0 {continue;}
-  if let Some((id,_,_,_,_,hits))=eligible.iter().find(|(id,_,_,target,_,_)|!used.contains(id)&&!*target){
+  if let Some((id,_,_,_,_,hits,_,_))=eligible.iter().find(|(id,_,_,target,_,_,mismatch,local)|!used.contains(id)&&!*target&&!*mismatch&&(!selected[index]["reasons"]["locationCompatible"].as_bool().unwrap_or(false)||*local)){
    let old=selected[index]["id"].as_str().unwrap_or("").to_string();used.remove(&old);used.insert(id.clone());
    selected[index]=json!({"id":id,"evidenceTerms":hits,"reasons":{"exploration":true}});
   }
@@ -94,7 +96,9 @@ pub fn flow(input:&Value)->Value{
  #[test]fn selection_is_not_a_fit_score_and_is_diverse(){let r=shortlist(&json!({"jobs":[job("1","A"),job("2","A"),job("3","B")],"evidenceTerms":["Rust"],"policy":{"evaluationsPerCycle":2}}));assert_eq!(r["selected"][1]["id"],"3");assert!(r["selected"][0].get("score").is_none());}
  #[test]fn no_approved_evidence_means_no_automatic_evaluations(){assert_eq!(shortlist(&json!({"jobs":[job("1","A")]}))["selected"].as_array().unwrap().len(),0);}
  #[test]fn all_scanned_evaluates_without_shortlist_preferences(){let mut j=job("x","A");j["title"]=json!("Principal Intern");j["blocked"]=json!(true);j["ageHours"]=Value::Null;let r=shortlist(&json!({"jobs":[j],"policy":{"scoringScope":"all_scanned","excludedTitleTerms":["intern"]}}));assert_eq!(r["selected"].as_array().unwrap().len(),1);assert!(r["selected"][0].get("score").is_none());}
+ #[test]fn experience_targets_prioritize_compatible_levels_but_do_not_silently_narrow_all_scanned(){let mut senior=job("1","A");senior["title"]=json!("Senior Software Engineer");let mut junior=job("2","B");junior["title"]=json!("Junior Software Engineer");let input=json!({"jobs":[senior,junior],"evidenceTerms":["Rust"],"seniorityLevels":["entry","junior","associate","mid"],"policy":{"scoringScope":"all_scanned","evaluationsPerCycle":2}});let r=shortlist(&input);assert_eq!(r["selected"][0]["id"],"2");assert_eq!(r["selected"].as_array().unwrap().len(),2);let mut shortlist_input=input.clone();shortlist_input["policy"]["scoringScope"]=json!("shortlist");let filtered=shortlist(&shortlist_input);assert_eq!(filtered["selected"].as_array().unwrap().len(),1);assert_eq!(filtered["held"][0]["reason"],"outside_target_seniority");}
  #[test]fn all_scanned_keeps_pending_missing_and_explicit_holds(){for (key,value) in [("hasEvaluation",json!(true)),("description",json!("short")),("holdReason",json!("disclosure_review_required"))]{let mut j=job("x","A");j[key]=value;assert_eq!(shortlist(&json!({"jobs":[j],"policy":{"scoringScope":"all_scanned"}}))["selected"].as_array().unwrap().len(),0);}}
+ #[test]fn local_target_jobs_precede_global_backlog_without_removing_it(){let mut local=job("z","Local");local["locationCompatible"]=json!(true);local["ageHours"]=json!(100);let global=job("a","Global");let r=shortlist(&json!({"jobs":[global,local],"policy":{"scoringScope":"all_scanned","evaluationsPerCycle":2}}));assert_eq!(r["selected"][0]["id"],"z");assert_eq!(r["selected"].as_array().unwrap().len(),2);}
  #[test]fn unknown_blocked_old_and_evaluated_stay_held(){for (key,value) in [("blocked",json!(true)),("ageHours",json!(null)),("ageHours",json!(1000)),("hasEvaluation",json!(true))]{let mut j=job("x","A");j[key]=value;assert_eq!(shortlist(&json!({"jobs":[j],"evidenceTerms":["Rust"]}))["selected"].as_array().unwrap().len(),0);}}
  #[test]fn qualification_text_is_not_invented(){let m=metadata(&json!({"title":"Forward Deployed Engineer","description":"About us\nRequirements\nRust experience\nBenefits\nFree food"}));assert_eq!(m["lane"],"Forward deployed");assert_eq!(m["qualifications"],"Requirements\nRust experience\n");}
  #[test]fn absent_qualifications_remain_unknown(){assert_eq!(metadata(&json!({"description":"We build software"}))["qualifications"],"");}

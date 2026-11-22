@@ -1,4 +1,4 @@
-export type JobFit={id:string;score:number|null;tier:string|null;status:string;current:boolean;report_artifact_id:string|null;completed_at:string|null;candidate_revision:number};
+export type JobFit={id:string;revision?:number;error_code?:string|null;score:number|null;tier:string|null;status:string;current:boolean;report_artifact_id:string|null;completed_at:string|null;candidate_revision:number};
 export const roleSorts=[{value:'score_desc',label:'Score: highest first'},{value:'score_asc',label:'Score: lowest first'},{value:'recent',label:'Recently updated'},{value:'company',label:'Company'}];
 export function roleSort(value:string|null){return roleSorts.some(s=>s.value===value)?value!:'score_desc';}
 export function currentScore(fit?:JobFit|null){return fit?.current&&typeof fit.score==='number'&&Number.isFinite(fit.score)&&fit.score>=1&&fit.score<=5?fit.score:null;}

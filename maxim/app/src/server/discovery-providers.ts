@@ -46,7 +46,8 @@ const date=(v:unknown)=>typeof v==='string'&&Number.isFinite(Date.parse(v))?new 
 export function postingIdentity(url:string,fallback:string){
  const u=new URL(url),p=u.pathname.split('/').filter(Boolean);
  if(['jobs.lever.co','jobs.ashbyhq.com','job-boards.greenhouse.io','job-boards.eu.greenhouse.io','boards.greenhouse.io'].includes(u.hostname)&&p.length>=2){
-  return u.hostname.replace('job-boards.eu.greenhouse.io','greenhouse').replace('job-boards.greenhouse.io','greenhouse').replace('boards.greenhouse.io','greenhouse')+':'+p[0]+':'+p.at(-1);
+  const id=['jobs.lever.co','jobs.ashbyhq.com'].includes(u.hostname)?p[1]:p.at(-1);
+  return u.hostname.replace('job-boards.eu.greenhouse.io','greenhouse').replace('job-boards.greenhouse.io','greenhouse').replace('boards.greenhouse.io','greenhouse')+':'+p[0]+':'+id;
  }
  return fallback;
 }

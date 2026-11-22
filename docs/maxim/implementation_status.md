@@ -1,5 +1,47 @@
 # Maxim Apply Implementation Status
 
+## Upstream-Native Discovery And Fit Correction (2026-11-21)
+
+Implemented the [six-stage roadmap](../../roadmap/upstream-discovery/README.md)
+in the existing workspace/worker/PostgreSQL system. Adopted all 153 classified
+Career-Ops 1.40.0 provider modules with hashes/license; board-wide packs, eight
+bounded reverse inventories, profile compilation, Rust work/seniority screening,
+verified full-description acquisition, honest coverage/catalog UI and owner/agent
+profile review are integrated. The large Workable feed is explicitly deferred.
+This is not a wholesale upgrade of the retained 1.8.1 scoring/PDF/native engine.
+
+The owner's requested 150 original unprotected jobs were archived, not deleted,
+and the active limit was raised to 600. Another 66 unprotected records created by
+the initial rollout probe were archived to correct uncertain/global admission;
+no additional original jobs or application evidence were changed by that correction.
+Backups excluded credentials; production migrations 016-018 were applied locally.
+
+Real scoring repaired eight formatting-only held reports without model requests,
+then reached 55 current active evaluations under the original profile. The
+[fit audit](../../roadmap/upstream-discovery/fit-audit.md) found unused experience
+preferences, incomplete model target context and a rotating-global-window priority
+gap. The owner approved disclosure of only roles/experience levels and a two-million
+token ceiling, retaining the $5/day and 100-evaluation limits. Native projections
+now express those approved targets; the original personal source stays local-only.
+Prior scores become historical after the candidate revision changes. Kaizen Labs
+re-evaluated from 3.8 to 4.0/T2 without a scoring-rubric or threshold change.
+The latest checkpoint has 19 current evaluations; the local top is now Thea
+Software Engineer 4.1/T2, followed by Kaizen and an early-career systems opening
+at 4.0/T2. The ledger is $2.42 with no in-flight reservations at that checkpoint.
+
+Verification includes two full backend runs (145 tests each), full desktop/mobile
+Chromium runs (43 journeys), subsequent focused consent/discovery/budget/queue
+regressions, Rust/unit/build checks, native baseline, Go dashboard, privacy/safety
+and roadmap checks. Exact final scope/counts and live limitations are in
+[verification](../../roadmap/upstream-discovery/verification.md).
+
+Run/use/setup: [upstream discovery operating guide](upstream-discovery.md).
+Public source packs require no new account or search API key. Real evaluations
+still require a configured model, approved disclosure and owner-reviewed prices
+and limits. Unsupported/challenged sites and missing/expired full evidence remain
+explicit holds. Existing candidate/application authority and manual submission
+boundaries are preserved. Older dated status entries below are historical.
+
 ## Scanned Backlog Scoring Fix (2026-11-21)
 
 The reported chat failure was `context_budget_exceeded`: listing tools returned

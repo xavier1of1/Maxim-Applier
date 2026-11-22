@@ -66,6 +66,11 @@ export function render(revision:number,facts:Array<Record<string,any>>){
  for(const [from,to]of[['candidate.name','full_name'],['candidate.location','location'],['candidate.linkedin','linkedin'],['candidate.github','github'],['candidate.portfolio','portfolio_url']])if(values.has(from))candidate[to]=values.get(from);
  profile.candidate=candidate;
  if(values.has('preferences.roles'))profile.target_roles={primary:values.get('preferences.roles')};
+ if(values.has('preferences.seniority')){
+  const levels=values.get('preferences.seniority'),roles=values.get('preferences.roles');
+  profile.target_roles={...(profile.target_roles as Record<string,unknown>||{}),seniority:levels,
+   ...(Array.isArray(roles)&&Array.isArray(levels)?{archetypes:roles.map(name=>({name,level:levels.join(' / '),fit:'primary'}))}:{})};
+ }
  if(values.has('positioning.headline'))profile.narrative={headline:values.get('positioning.headline')};
  const header='<!-- Generated approved, model-disclosable Career-Ops projection. Edit the candidate workspace, not this file. Revision '+revision+'. -->\n';
  return {

@@ -24,8 +24,8 @@ export async function harness({api}={}) {
  const captured=[],timers=new Set(),providerRequests=[],providerRoutes=new Map(),chatTools=new Map();
  const modelServer=http.createServer(async(req,res)=>{
   try{
-   if(req.method==='GET'){
-    providerRequests.push({url:req.url,at:Date.now(),headers:req.headers});
+   if(req.method==='GET'||req.method==='POST'&&(providerRoutes.has(req.url)||providerRoutes.has(req.url.split('?')[0]))){
+    providerRequests.push({url:req.url,method:req.method,at:Date.now(),headers:req.headers});
     const route=providerRoutes.get(req.url)||providerRoutes.get(req.url.split('?')[0]);
     if(typeof route==='function'){await route(req,res);return;}
     res.writeHead(route?.status||(route?200:404),{'Content-Type':'application/json',...(route?.headers||{})});
